@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-schibsted);
+}
+
+:root {
+  --ink: #000;
+  --paper: #fff;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+.inv ::selection {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+.inv :focus-visible {
+  outline-color: var(--paper);
+}
+
+/* Display type scale — one tracking value, three sizes */
+.display-1 {
+  font-size: clamp(1.6rem, 8.2vw, 8.2rem);
+  letter-spacing: -0.02em;
+}
+.display-2 {
+  font-size: clamp(2.4rem, 6vw, 5.5rem);
+  letter-spacing: -0.02em;
+}
+.display-3 {
+  font-size: clamp(1.7rem, 4.5vw, 3.8rem);
+  letter-spacing: -0.02em;
+}
+
+/* Elements hidden until their reveal animation initializes */
+.pre-reveal {
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pre-reveal {
+    visibility: visible;
+  }
+}
+
+/* Full-bleed section padding capped at 100rem */
+.shell {
+  padding-inline: max(1.25rem, calc((100vw - 100rem) / 2));
+}
+@media (min-width: 768px) {
+  .shell {
+    padding-inline: max(2.5rem, calc((100vw - 100rem) / 2));
+  }
+}
+
+/* Marquee */
+.marquee-track {
+  animation: marquee linear infinite;
+  will-change: transform;
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* 1-bit ink field: CSS fallback under the shader canvas */
+.ink-field {
+  background: repeating-linear-gradient(
+    115deg,
+    var(--ink) 0 10px,
+    var(--paper) 10px 20px
+  );
+}
+.ink-field canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Cuberto mouse-follower cursor */
+.mf-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 300;
+  contain: layout style size;
+  pointer-events: none;
+  will-change: transform;
+  mix-blend-mode: difference;
+}
+.mf-cursor::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--paper);
+  transform: scale(1);
+  transition: transform 0.25s ease-in-out, opacity 0.1s;
+}
+.mf-cursor.-pointer::before {
+  transform: scale(0.4);
+}
+.mf-cursor.-lg::before {
+  transform: scale(2.6);
+}
+.mf-cursor.-hidden::before {
+  transform: scale(0);
+}
+.mf-cursor.-text {
+  mix-blend-mode: normal;
+}
+.mf-cursor.-text::before {
+  transform: scale(4);
+  background: var(--paper);
+  border: 1px solid var(--ink);
+}
+.mf-cursor-text {
+  position: absolute;
+  top: -40px;
+  left: -40px;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.3s, transform 0.3s;
+}
+.mf-cursor.-text .mf-cursor-text {
+  opacity: 1;
+  transform: scale(1);
+}
+@media (pointer: coarse) {
+  .mf-cursor {
+    display: none;
+  }
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+  }
+}
