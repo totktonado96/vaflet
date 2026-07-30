@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 // Words render one by one as you scroll — binary snaps, no fades.
 // The last two words carry a permanent marker highlight.
-const WORDS = "The whole spectrum. One team. Zero telephone game.".split(" ");
+const WORDS = "The whole spectrum. One team. One conversation.".split(" ");
 const HIGHLIGHT_FROM = WORDS.length - 2;
 
 export default function Manifesto() {
@@ -40,7 +40,7 @@ export default function Manifesto() {
   return (
     <section
       ref={ref}
-      aria-label="The whole spectrum. One team. Zero telephone game."
+      aria-label="The whole spectrum. One team. One conversation."
       className="shell pb-28 md:pb-40"
     >
       <p
