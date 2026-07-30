@@ -53,7 +53,6 @@ export default function attachInkCursor(cursor: MouseFollower): () => void {
   // ——— delegated hover states ———
   let textHolder: Element | null = null;
   let inkRow: Element | null = null;
-  let frameHolder: Element | null = null;
   let dwellTimer = 0;
 
   // hybrid devices report pen/touch through the same listeners — mouse only
@@ -96,17 +95,11 @@ export default function attachInkCursor(cursor: MouseFollower): () => void {
       const [w, h] =
         VIEWFINDER[frame.getAttribute("data-cursor-ratio") ?? ""] ??
         VIEWFINDER.square;
+      // vars swap discretely, the ::after transition glides between shapes
       el.style.setProperty("--vf-w", `${w}px`);
       el.style.setProperty("--vf-h", `${h}px`);
-      // card-to-card hops replay the snap-in, not just resize the brackets
-      if (frame !== frameHolder && frameHolder) {
-        el.classList.remove("-frame");
-        void el.offsetWidth;
-      }
-      frameHolder = frame;
       cursor.addState("-frame");
     } else {
-      frameHolder = null;
       cursor.removeState("-frame");
     }
 
@@ -155,7 +148,6 @@ export default function attachInkCursor(cursor: MouseFollower): () => void {
   const onNavigate = () => {
     textHolder = null;
     inkRow = null;
-    frameHolder = null;
     window.clearTimeout(dwellTimer);
     hideTag();
     cursor.removeState("-frame");

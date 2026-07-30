@@ -122,9 +122,32 @@ body {
   animation: cur-boil 0.45s step-end infinite;
   rotate: var(--cur-rot, 0deg);
   scale: var(--press);
+  opacity: 1;
   transition:
-    scale 0.16s steps(2),
+    scale 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.18s ease,
     rotate 0.1s linear;
+}
+/* the instrument layer: plus, orbit ring, viewfinder — dissolves in out of
+   the droplet's own scale, so shape changes read as one morph */
+.mf-cursor::after {
+  content: "";
+  position: absolute;
+  top: -18px;
+  left: -18px;
+  width: 36px;
+  height: 36px;
+  opacity: 0;
+  scale: 0.8;
+  rotate: var(--ink-rot, 0deg);
+  transition:
+    opacity 0.22s ease,
+    scale 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    left 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    rotate 0.22s ease;
 }
 /* the boiling edge: three hand-drawn frames of a teardrop, tail trailing
    the movement (rotate points it), no interpolation */
@@ -185,23 +208,22 @@ body {
   scale: calc(2 * var(--press));
 }
 
-/* service rows: a 40px plus — snaps into a cross while the row is open */
+/* service rows: a 40px plus — turns into a cross while the row is open */
 .mf-cursor.-ink::before {
+  opacity: 0;
+  scale: 1.15;
+}
+.mf-cursor.-ink::after {
   top: -20px;
   left: -20px;
   width: 40px;
   height: 40px;
-  clip-path: none;
-  animation: none;
-  rotate: var(--ink-rot, 0deg);
-  scale: var(--press);
   background:
     linear-gradient(var(--paper), var(--paper)) center / 40px 6px,
     linear-gradient(var(--paper), var(--paper)) center / 6px 40px;
   background-repeat: no-repeat;
-  transition:
-    scale 0.16s steps(2),
-    rotate 0.16s steps(2);
+  opacity: 1;
+  scale: var(--press);
 }
 
 /* project cards: a viewfinder sized to the card's frame, dot at centre */
@@ -210,8 +232,6 @@ body {
   scale: calc(0.3 * var(--press));
 }
 .mf-cursor.-frame::after {
-  content: "";
-  position: absolute;
   top: calc(var(--vf-h, 100px) / -2);
   left: calc(var(--vf-w, 100px) / -2);
   width: var(--vf-w, 100px);
@@ -226,43 +246,42 @@ body {
     linear-gradient(var(--paper), var(--paper)) bottom right / 18px 4px,
     linear-gradient(var(--paper), var(--paper)) bottom right / 4px 18px;
   background-repeat: no-repeat;
-  animation: cur-frame-in 0.18s step-end both;
-}
-@keyframes cur-frame-in {
-  0% {
-    scale: 0.55;
-  }
-  60% {
-    scale: 1.1;
-  }
-  100% {
-    scale: 1;
-  }
+  opacity: 1;
+  scale: var(--press);
 }
 
 /* the TELL US well: the droplet is caught in a 64px orbit… */
 .mf-cursor.-void::before {
-  rotate: 0deg;
-  scale: var(--press);
+  opacity: 0;
+  scale: 1.9;
+}
+.mf-cursor.-void::after {
   top: -32px;
   left: -32px;
   width: 64px;
   height: 64px;
-  clip-path: none;
-  animation: none;
   background: transparent;
   border: 3px solid var(--paper);
   border-radius: 50%;
   box-sizing: border-box;
+  opacity: 1;
+  scale: var(--press);
 }
-/* …and on click falls in, frame by frame, with the dust */
-.mf-cursor.-suck::before {
-  transition: scale 0.66s steps(7);
+/* …and on click falls into the well with the dust */
+.mf-cursor.-suck::before,
+.mf-cursor.-suck::after {
+  transition:
+    scale 0.6s cubic-bezier(0.55, 0, 0.8, 0.2),
+    opacity 0.5s ease;
   scale: 0;
+  opacity: 0;
 }
 
 .mf-cursor.-hidden::before {
   scale: 0;
+}
+.mf-cursor.-hidden::after {
+  opacity: 0;
 }
 
 /* three replies to rage clicks come with a shudder */
