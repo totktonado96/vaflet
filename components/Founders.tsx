@@ -28,8 +28,7 @@ const FOUNDERS = [
     photo: "/photos/baha.jpg",
     photoPosition: "object-[50%_35%]",
     email: "baha@vaflet.com",
-    linkedin: "https://www.linkedin.com/in/baha-vaflet",
-    telegram: "https://t.me/baha_vaflet",
+    telegram: "https://t.me/baha_kabulov",
   },
 ];
 
@@ -109,15 +108,17 @@ export default function Founders() {
                 >
                   <MailIcon />
                 </a>
-                <a
-                  href={f.linkedin}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`${f.name} on LinkedIn`}
-                  className="transition-transform duration-300 ease-out hover:-translate-y-1"
-                >
-                  <LinkedInIcon />
-                </a>
+                {f.linkedin && (
+                  <a
+                    href={f.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${f.name} on LinkedIn`}
+                    className="transition-transform duration-300 ease-out hover:-translate-y-1"
+                  >
+                    <LinkedInIcon />
+                  </a>
+                )}
                 <a
                   href={f.telegram}
                   target="_blank"

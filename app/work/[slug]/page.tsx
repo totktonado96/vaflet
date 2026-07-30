@@ -49,7 +49,7 @@ export default async function WorkPage({
     <main>
       <section className="shell pb-10 pt-32 md:pb-14 md:pt-44">
         <Link
-          href="/#work"
+          href="/work"
           className="text-xs font-bold uppercase tracking-[0.2em] underline underline-offset-4 hover:bg-black hover:text-white hover:no-underline"
         >
           ← All work

@@ -13,6 +13,7 @@ export const SEO_GROUPS: SeoGroup[] = [
       { href: "/", label: "Home" },
       { href: "/#services", label: "Services" },
       { href: "/#work", label: "Selected work" },
+      { href: "/work", label: "All work" },
       { href: "/#founders", label: "Founders" },
       { href: "/contact", label: "Contact" },
     ],

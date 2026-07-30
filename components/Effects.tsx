@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -20,7 +20,6 @@ declare global {
 export default function Effects() {
   const lenisRef = useRef<Lenis | null>(null);
   const pathname = usePathname();
-  const popped = useRef(false);
   const firstRun = useRef(true);
 
   useEffect(() => {
@@ -61,40 +60,64 @@ export default function Effects() {
     };
   }, []);
 
-  useEffect(() => {
-    const onPop = () => {
-      popped.current = true;
-    };
-    window.addEventListener("popstate", onPop);
-    return () => window.removeEventListener("popstate", onPop);
+  /**
+   * Every arrival is composed, never restored: the ink cover hides the swap, so
+   * landing mid-page reads as a glitch rather than as "where you left off".
+   *
+   * Two things restore scroll behind our back on a Back/Forward, and both have
+   * to be told to let go — the browser's own restoration, and ScrollTrigger's
+   * scroll memory, which re-applies the position it recorded (and resets
+   * history.scrollRestoration to whatever it captured on init, so setting that
+   * alone is not enough).
+   *
+   * `scrollRestoration` belongs to the current history entry, not to the page,
+   * so every entry has to opt out as it is created — including the one a fresh
+   * document lands on. Miss that one and a Back into it is restored natively,
+   * a frame or two after we have already settled at the top.
+   */
+  const settle = useCallback(() => {
+    ScrollTrigger.clearScrollMemory("manual");
+    const lenis = lenisRef.current;
+    const hash = window.location.hash;
+    let target: HTMLElement | null = null;
+    if (hash) {
+      let id = hash.slice(1);
+      try {
+        id = decodeURIComponent(id);
+      } catch {}
+      target = document.getElementById(id);
+    }
+    if (!lenis) {
+      if (target) target.scrollIntoView();
+      else window.scrollTo(0, 0);
+      return;
+    }
+    lenis.resize();
+    lenis.scrollTo(target ?? 0, { immediate: true, force: true });
+    ScrollTrigger.refresh();
   }, []);
+
+  // Back/Forward across anchors on one page never changes `pathname`, so the
+  // route effect below would miss it entirely.
+  useEffect(() => {
+    window.addEventListener("popstate", settle);
+    return () => window.removeEventListener("popstate", settle);
+  }, [settle]);
 
   // Lenis keeps its own scroll position across client-side navigations, which
   // lands a shorter new page at its bottom. Reposition whenever the route changes.
   useEffect(() => {
-    const lenis = lenisRef.current;
-
-    // Fresh document load and Back/Forward: the browser (and Next) restore
-    // the scroll position themselves — don't stomp it.
-    if (firstRun.current || popped.current) {
+    // A fresh document is already where it should be — the browser has honoured
+    // the hash, and there is nothing of ours to undo.
+    if (firstRun.current) {
       firstRun.current = false;
-      popped.current = false;
-      lenis?.resize();
+      ScrollTrigger.clearScrollMemory("manual");
+      lenisRef.current?.resize();
       ScrollTrigger.refresh();
       return;
     }
-
-    const hash = window.location.hash;
-    if (!lenis) {
-      if (!hash) window.scrollTo(0, 0);
-      return;
-    }
-
-    lenis.resize();
-    const target = hash ? document.querySelector<HTMLElement>(hash) : null;
-    lenis.scrollTo(target ?? 0, { immediate: true, force: true });
-    ScrollTrigger.refresh();
-  }, [pathname]);
+    settle();
+  }, [pathname, settle]);
 
   // The cursor's hover states are pointer-event driven; a route swap replaces
   // the DOM under a stationary pointer, so it must be told to let go.

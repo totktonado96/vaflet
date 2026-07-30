@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import Magnetic from "@/components/Magnetic";
+import CtaButton from "@/components/CtaButton";
 import SplitReveal from "@/components/SplitReveal";
 import { PROJECTS, type Project } from "@/lib/projects";
 
@@ -85,42 +85,11 @@ export default function Projects() {
           Six of them. The rest are under NDA, half-built, or still an argument
           in a group chat.
         </p>
-        <Magnetic strength={0.4} className="mt-16 md:mt-24">
-          <a
-            href="/contact"
-            className="group/cta relative inline-flex items-center gap-4 overflow-hidden rounded-full border-2 border-white px-10 py-6 md:px-14 md:py-7"
-          >
-            {/* ink blot flooding out from the centre */}
-            <span
-              aria-hidden
-              className="absolute left-1/2 top-1/2 aspect-square w-[150%] -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full bg-white transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:scale-100"
-            />
-            {/* label rolls up, its twin rolls in from below */}
-            <span className="relative block overflow-hidden text-lg font-extrabold uppercase leading-none tracking-[0.15em] text-white mix-blend-difference md:text-xl">
-              <span className="block transition-transform duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:-translate-y-[120%]">
-                Your project goes here
-              </span>
-              <span
-                aria-hidden
-                className="absolute inset-0 block translate-y-[120%] transition-transform duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:translate-y-0"
-              >
-                Your project goes here
-              </span>
-            </span>
-            {/* arrow flies out top-right and re-enters from bottom-left */}
-            <span
-              aria-hidden
-              className="relative block size-6 overflow-hidden text-xl font-bold leading-none text-white mix-blend-difference"
-            >
-              <span className="block transition-transform duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:translate-x-full group-hover/cta:-translate-y-full">
-                ↗
-              </span>
-              <span className="absolute inset-0 block -translate-x-full translate-y-full transition-transform duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:translate-x-0 group-hover/cta:translate-y-0">
-                ↗
-              </span>
-            </span>
-          </a>
-        </Magnetic>
+        <CtaButton
+          href="/work"
+          label="Your project goes here"
+          className="mt-16 md:mt-24"
+        />
       </div>
     </section>
   );
