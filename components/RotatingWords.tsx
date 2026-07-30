@@ -16,6 +16,7 @@ export default function RotatingWords({
   words,
   delay = 0,
   hold = 2.2,
+  announceEvent,
   className,
 }: {
   words: string[];
@@ -23,6 +24,8 @@ export default function RotatingWords({
   delay?: number;
   /** Seconds a finished word sits (caret blinking) before the backspace */
   hold?: number;
+  /** window event dispatched as each new word starts typing (detail: index) */
+  announceEvent?: string;
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -93,6 +96,11 @@ export default function RotatingWords({
             gsap.set(current, { autoAlpha: 0 });
             gsap.set(charsOf(next), { display: "none" });
             gsap.set(next, { autoAlpha: 1 });
+            if (announceEvent) {
+              window.dispatchEvent(
+                new CustomEvent(announceEvent, { detail: index }),
+              );
+            }
           }, "+=0.22")
           .add(typeIn(charsOf(next)));
       };
