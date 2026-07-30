@@ -49,8 +49,13 @@ export default function Footer({ compact = false }: { compact?: boolean }) {
       tabIndex={-1}
       className="inv relative overflow-hidden rounded-t-[2.5rem] bg-black text-white md:rounded-t-[4rem]"
     >
-      {/* dust rising off the very bottom of the page, through the whole footer */}
-      <Starfield className="absolute inset-0 z-0 h-full w-full" />
+      {/* dust rising off the very bottom of the page, through the whole footer;
+          on the home page it spirals into the TELL US circle */}
+      <Starfield
+        className="absolute inset-0 z-0 h-full w-full"
+        attractor={compact ? undefined : "[data-gravity-well]"}
+        comets
+      />
 
       {/* ——— full-height call to action (skipped on the contact page) ——— */}
       {!compact && (
@@ -65,6 +70,8 @@ export default function Footer({ compact = false }: { compact?: boolean }) {
         <Magnetic strength={0.45} className="relative z-10 mt-12 md:mt-16">
           <a
             href="/contact"
+            data-gravity-well
+            data-transition="expand"
             className="group/tell flex size-44 items-center justify-center rounded-full border-2 border-white bg-black transition-colors duration-500 hover:bg-white md:size-60"
           >
             <span className="relative block overflow-hidden text-xl font-extrabold uppercase leading-none tracking-[0.15em] text-white transition-colors duration-500 group-hover/tell:text-black md:text-2xl">
