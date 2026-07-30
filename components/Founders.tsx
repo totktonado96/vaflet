@@ -10,6 +10,7 @@ const FOUNDERS = [
     name: "Tim Hunt",
     role: "Co-founder — Engineer & AI Alchemist",
     line: "Builds the whole thing himself, then argues with his AI about who did it better.",
+    whisper: "Talks to computers.",
     type: 1 as const,
     photo: "/photos/tim.jpg",
     photoPosition: "object-[50%_60%]",
@@ -22,6 +23,7 @@ const FOUNDERS = [
     name: "Baha Kabulov",
     role: "Co-founder — Design & Product",
     line: "Physically hurts when an interface is ugly. Deletes one more thing after you say it's perfect.",
+    whisper: "Talks to humans.",
     type: 2 as const,
     photo: "/photos/baha.jpg",
     photoPosition: "object-[50%_35%]",
@@ -67,7 +69,10 @@ export default function Founders() {
             key={f.name}
             className="group rounded-[1.5rem] border-2 border-black p-6 md:rounded-[2rem] md:p-8"
           >
-            <div className="relative aspect-[3/2] overflow-hidden rounded-[1rem] md:rounded-[1.25rem]">
+            <div
+              className="relative aspect-[3/2] overflow-hidden rounded-[1rem] md:rounded-[1.25rem]"
+              data-cursor-text={f.whisper}
+            >
               {f.photo ? (
                 <Image
                   src={f.photo}

@@ -31,6 +31,12 @@ export default function Manifesto() {
       // (i + 1): no set at exactly time 0, so scrolling back restores word 1 too
       words.forEach((word, i) => {
         tl.set(word, { autoAlpha: 1 }, (i + 1) * 0.1);
+        // the cursor taps along — see lib/cursor.ts
+        tl.call(
+          () => window.dispatchEvent(new Event("vaflet:manifesto-word")),
+          undefined,
+          (i + 1) * 0.1,
+        );
       });
       tl.set({}, {}, "+=0.2");
     },

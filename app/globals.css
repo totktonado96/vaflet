@@ -93,70 +93,263 @@ body {
   display: block;
 }
 
-/* Cuberto mouse-follower cursor */
+/* ——— ink cursor: a live 1-bit droplet ———
+   Layer one (.mf-cursor) is the shape — always mix-blend-difference, and
+   since pure b/w survives inversion, it reads on any background. Layer two
+   (.cur-tag) is the word — a solid tag chasing the pointer on its own lag.
+   All state changes are quantized (steps/step-end), never eased: the cursor
+   obeys the same binary-snap rules as the rest of the page. */
 .mf-cursor {
   position: fixed;
   top: 0;
   left: 0;
   z-index: 300;
-  contain: layout style size;
+  contain: layout style;
   pointer-events: none;
   will-change: transform;
   mix-blend-mode: difference;
+  --press: 1;
 }
 .mf-cursor::before {
   content: "";
   position: absolute;
-  top: -10px;
-  left: -10px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  top: -18px;
+  left: -18px;
+  width: 36px;
+  height: 36px;
   background: var(--paper);
-  transform: scale(1);
-  transition: transform 0.25s ease-in-out, opacity 0.1s;
+  clip-path: path("M 18 7.13 C 20.88 7.13 23.88 7.88 26 10 C 28.12 12.12 29.85 14.86 29.85 18 C 29.85 21.14 27.55 23.55 25.55 25.55 C 23.55 27.55 20.78 28.47 18 28.47 C 15.22 28.47 11.55 29.1 9.23 26.77 C 6.9 24.45 0.56 20.54 0.56 18 C 0.56 15.46 6.47 11.31 8.89 8.89 C 11.31 6.47 15.12 7.13 18 7.13 Z");
+  animation: cur-boil 0.45s step-end infinite;
+  rotate: var(--cur-rot, 0deg);
+  scale: var(--press);
+  transition:
+    scale 0.16s steps(2),
+    rotate 0.1s linear;
 }
+/* the boiling edge: three hand-drawn frames of a teardrop, tail trailing
+   the movement (rotate points it), no interpolation */
+@keyframes cur-boil {
+  0%, 32% {
+    clip-path: path("M 18 7.13 C 20.88 7.13 23.88 7.88 26 10 C 28.12 12.12 29.85 14.86 29.85 18 C 29.85 21.14 27.55 23.55 25.55 25.55 C 23.55 27.55 20.78 28.47 18 28.47 C 15.22 28.47 11.55 29.1 9.23 26.77 C 6.9 24.45 0.56 20.54 0.56 18 C 0.56 15.46 6.47 11.31 8.89 8.89 C 11.31 6.47 15.12 7.13 18 7.13 Z");
+  }
+  33%, 65% {
+    clip-path: path("M 18 7.38 C 20.82 7.38 23.74 8.12 25.81 10.19 C 27.88 12.26 29.8 14.87 29.8 18 C 29.8 21.13 28.46 24.07 26.26 26.26 C 24.07 28.46 20.92 29.02 18 29.02 C 15.08 29.02 11.65 28.93 9.36 26.64 C 7.07 24.35 0.56 20.54 0.56 18 C 0.56 15.46 6.43 11.28 8.85 8.85 C 11.28 6.43 15.18 7.38 18 7.38 Z");
+  }
+  66%, 100% {
+    clip-path: path("M 18 6.19 C 21.13 6.19 23.93 7.78 26.07 9.93 C 28.22 12.07 28.92 15.1 28.92 18 C 28.92 20.9 27.6 23.57 25.59 25.59 C 23.57 27.6 21.03 29.42 18 29.42 C 14.97 29.42 10.94 30.16 8.39 27.61 C 5.84 25.06 0.56 20.54 0.56 18 C 0.56 15.46 7.24 11.75 9.49 9.49 C 11.75 7.24 14.87 6.19 18 6.19 Z");
+  }
+}
+
+/* press: a multiplier, so it composes with whatever shape is active */
+.mf-cursor.-active {
+  --press: 0.72;
+}
+
+/* speed stretch: four discrete gears along the movement axis */
+.mf-cursor[data-v="1"]::before {
+  scale: calc(1.22 * var(--press)) calc(0.9 * var(--press));
+}
+.mf-cursor[data-v="2"]::before {
+  scale: calc(1.5 * var(--press)) calc(0.78 * var(--press));
+}
+.mf-cursor[data-v="3"]::before {
+  scale: calc(1.85 * var(--press)) calc(0.66 * var(--press));
+}
+
+/* the drop lands: a two-frame splat */
+.mf-cursor.-settle::before {
+  animation:
+    cur-boil 0.45s step-end infinite,
+    cur-settle 0.22s step-end both;
+}
+@keyframes cur-settle {
+  0% {
+    scale: 1.4 0.72;
+  }
+  50% {
+    scale: 0.84 1.18;
+  }
+  100% {
+    scale: 1 1;
+  }
+}
+
+/* links: the droplet sharpens to a point */
 .mf-cursor.-pointer::before {
-  transform: scale(0.4);
+  scale: calc(0.3 * var(--press));
 }
+
+/* over the hero pill the droplet swells to 72px: difference inverts the
+   pattern inside its boiling silhouette — anti-ink eating the ink */
 .mf-cursor.-lg::before {
-  transform: scale(2.6);
+  scale: calc(2 * var(--press));
 }
-.mf-cursor.-hidden::before {
-  transform: scale(0);
+
+/* service rows: a 40px plus — snaps into a cross while the row is open */
+.mf-cursor.-ink::before {
+  top: -20px;
+  left: -20px;
+  width: 40px;
+  height: 40px;
+  clip-path: none;
+  animation: none;
+  rotate: var(--ink-rot, 0deg);
+  scale: var(--press);
+  background:
+    linear-gradient(var(--paper), var(--paper)) center / 40px 6px,
+    linear-gradient(var(--paper), var(--paper)) center / 6px 40px;
+  background-repeat: no-repeat;
+  transition:
+    scale 0.16s steps(2),
+    rotate 0.16s steps(2);
 }
-.mf-cursor.-text {
-  mix-blend-mode: normal;
+
+/* project cards: a viewfinder sized to the card's frame, dot at centre */
+.mf-cursor.-frame::before {
+  rotate: 0deg;
+  scale: calc(0.3 * var(--press));
 }
-.mf-cursor.-text::before {
-  transform: scale(4);
-  background: var(--paper);
-  border: 1px solid var(--ink);
-}
-.mf-cursor-text {
+.mf-cursor.-frame::after {
+  content: "";
   position: absolute;
-  top: -40px;
-  left: -40px;
-  width: 80px;
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: calc(var(--vf-h, 100px) / -2);
+  left: calc(var(--vf-w, 100px) / -2);
+  width: var(--vf-w, 100px);
+  height: var(--vf-h, 100px);
+  background:
+    linear-gradient(var(--paper), var(--paper)) top left / 18px 4px,
+    linear-gradient(var(--paper), var(--paper)) top left / 4px 18px,
+    linear-gradient(var(--paper), var(--paper)) top right / 18px 4px,
+    linear-gradient(var(--paper), var(--paper)) top right / 4px 18px,
+    linear-gradient(var(--paper), var(--paper)) bottom left / 18px 4px,
+    linear-gradient(var(--paper), var(--paper)) bottom left / 4px 18px,
+    linear-gradient(var(--paper), var(--paper)) bottom right / 18px 4px,
+    linear-gradient(var(--paper), var(--paper)) bottom right / 4px 18px;
+  background-repeat: no-repeat;
+  animation: cur-frame-in 0.18s step-end both;
+}
+@keyframes cur-frame-in {
+  0% {
+    scale: 0.55;
+  }
+  60% {
+    scale: 1.1;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+/* the TELL US well: the droplet is caught in a 64px orbit… */
+.mf-cursor.-void::before {
+  rotate: 0deg;
+  scale: var(--press);
+  top: -32px;
+  left: -32px;
+  width: 64px;
+  height: 64px;
+  clip-path: none;
+  animation: none;
+  background: transparent;
+  border: 3px solid var(--paper);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+/* …and on click falls in, frame by frame, with the dust */
+.mf-cursor.-suck::before {
+  transition: scale 0.66s steps(7);
+  scale: 0;
+}
+
+.mf-cursor.-hidden::before {
+  scale: 0;
+}
+
+/* three replies to rage clicks come with a shudder */
+.mf-cursor.-rage::before {
+  animation:
+    cur-boil 0.45s step-end infinite,
+    cur-rage 0.22s step-end infinite;
+}
+@keyframes cur-rage {
+  0% {
+    translate: 2px -1px;
+  }
+  33% {
+    translate: -2px 2px;
+  }
+  66% {
+    translate: 1px 1px;
+  }
+  100% {
+    translate: -1px -2px;
+  }
+}
+
+/* one dry tap as each manifesto word lands */
+.mf-cursor.-stamp::before {
+  animation:
+    cur-boil 0.45s step-end infinite,
+    cur-stamp 0.18s step-end both;
+}
+/* overlapping states would silently drop each other's shorthand */
+.mf-cursor.-rage.-stamp::before {
+  animation:
+    cur-boil 0.45s step-end infinite,
+    cur-rage 0.22s step-end infinite,
+    cur-stamp 0.18s step-end both;
+}
+.mf-cursor.-settle.-rage::before {
+  animation:
+    cur-boil 0.45s step-end infinite,
+    cur-settle 0.22s step-end both,
+    cur-rage 0.22s step-end infinite;
+}
+@keyframes cur-stamp {
+  0% {
+    scale: 0.68;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+/* ——— the word layer: a tag that chases the pointer ——— */
+.cur-tag {
+  position: fixed;
+  top: 16px;
+  left: 22px;
+  z-index: 301;
+  pointer-events: none;
+  will-change: transform;
+  padding: 6px 12px 5px;
+  border: 2px solid var(--ink);
+  border-radius: 9999px;
+  background: var(--paper);
   color: var(--ink);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  opacity: 0;
-  transform: scale(0);
-  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+  visibility: hidden;
 }
-.mf-cursor.-text .mf-cursor-text {
-  opacity: 1;
-  transform: scale(1);
+.cur-tag.-on {
+  visibility: visible;
+  animation: cur-type 0.36s steps(14) both;
 }
+@keyframes cur-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
 @media (pointer: coarse) {
-  .mf-cursor {
+  .mf-cursor,
+  .cur-tag {
     display: none;
   }
 }

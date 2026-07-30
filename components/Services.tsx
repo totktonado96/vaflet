@@ -133,6 +133,7 @@ export default function Services() {
                     onClick={() => setOpenIndex(open ? null : i)}
                     aria-expanded={open}
                     aria-controls={`service-panel-${i}`}
+                    data-cursor-ink={s.type}
                     className="grid w-full grid-cols-[1fr_auto] items-center gap-x-6 py-6 text-left md:py-8"
                   >
                     <span

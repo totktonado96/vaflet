@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import MouseFollower from "mouse-follower";
+import attachInkCursor from "@/lib/cursor";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -34,15 +35,20 @@ export default function Effects() {
     gsap.ticker.lagSmoothing(0);
 
     let cursor: MouseFollower | null = null;
+    let detachCursor: (() => void) | null = null;
     if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
       MouseFollower.registerGSAP(gsap);
       cursor = new MouseFollower({
         speed: 0.55,
+        // labels and media are handled by lib/cursor.ts, not data attributes
+        dataAttr: null,
         stateDetection: {
           "-pointer": "a, button",
           "-lg": "[data-cursor-big]",
+          "-void": "[data-gravity-well]",
         },
       });
+      detachCursor = attachInkCursor(cursor);
     }
 
     return () => {
@@ -50,6 +56,7 @@ export default function Effects() {
       lenis.destroy();
       lenisRef.current = null;
       delete window.__lenis;
+      detachCursor?.();
       cursor?.destroy();
     };
   }, []);
@@ -87,6 +94,12 @@ export default function Effects() {
     const target = hash ? document.querySelector<HTMLElement>(hash) : null;
     lenis.scrollTo(target ?? 0, { immediate: true, force: true });
     ScrollTrigger.refresh();
+  }, [pathname]);
+
+  // The cursor's hover states are pointer-event driven; a route swap replaces
+  // the DOM under a stationary pointer, so it must be told to let go.
+  useEffect(() => {
+    window.dispatchEvent(new Event("vaflet:navigate"));
   }, [pathname]);
 
   return null;
