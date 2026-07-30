@@ -1,6 +1,7 @@
 import InkField from "@/components/InkField";
 import LineReveal from "@/components/LineReveal";
 import Magnetic from "@/components/Magnetic";
+import RotatingWords from "@/components/RotatingWords";
 import SplitReveal from "@/components/SplitReveal";
 
 export default function Hero() {
@@ -30,9 +31,16 @@ export default function Hero() {
             />
           </span>
         </LineReveal>
-        <SplitReveal as="div" onLoad delay={0.1}>
-          digital products
-        </SplitReveal>
+        <RotatingWords
+          delay={0.1}
+          words={[
+            "digital products",
+            "websites",
+            "mobile apps",
+            "AI agents",
+            "automation",
+          ]}
+        />
         <SplitReveal as="div" onLoad delay={0.2}>
           end-to-end
         </SplitReveal>

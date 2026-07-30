@@ -3,6 +3,7 @@ import { Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
 import Effects from "@/components/Effects";
 import Header from "@/components/Header";
+import PageTransition from "@/components/PageTransition";
 import { SITE_URL } from "@/lib/site";
 
 const schibsted = Schibsted_Grotesk({
@@ -42,6 +43,7 @@ export default function RootLayout({
         </noscript>
         <Effects />
         <Header />
+        <PageTransition />
         {children}
       </body>
     </html>

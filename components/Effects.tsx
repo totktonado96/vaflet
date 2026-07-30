@@ -9,15 +9,25 @@ import MouseFollower from "mouse-follower";
 
 gsap.registerPlugin(ScrollTrigger);
 
+declare global {
+  interface Window {
+    /** Live Lenis instance, absent when reduced motion is on. */
+    __lenis?: Lenis;
+  }
+}
+
 export default function Effects() {
   const lenisRef = useRef<Lenis | null>(null);
   const pathname = usePathname();
+  const popped = useRef(false);
+  const firstRun = useRef(true);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const lenis = new Lenis({ lerp: 0.1, anchors: true });
     lenisRef.current = lenis;
+    window.__lenis = lenis;
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
@@ -39,16 +49,35 @@ export default function Effects() {
       gsap.ticker.remove(tick);
       lenis.destroy();
       lenisRef.current = null;
+      delete window.__lenis;
       cursor?.destroy();
     };
+  }, []);
+
+  useEffect(() => {
+    const onPop = () => {
+      popped.current = true;
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
 
   // Lenis keeps its own scroll position across client-side navigations, which
   // lands a shorter new page at its bottom. Reposition whenever the route changes.
   useEffect(() => {
     const lenis = lenisRef.current;
-    const hash = window.location.hash;
 
+    // Fresh document load and Back/Forward: the browser (and Next) restore
+    // the scroll position themselves — don't stomp it.
+    if (firstRun.current || popped.current) {
+      firstRun.current = false;
+      popped.current = false;
+      lenis?.resize();
+      ScrollTrigger.refresh();
+      return;
+    }
+
+    const hash = window.location.hash;
     if (!lenis) {
       if (!hash) window.scrollTo(0, 0);
       return;
