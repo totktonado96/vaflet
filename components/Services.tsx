@@ -3,76 +3,90 @@
 import { useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import InkField from "@/components/InkField";
 import SplitReveal from "@/components/SplitReveal";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Enterprise-weight scope, deliberately small timelines — that's the pitch.
 const SERVICES = [
   {
     title: "Websites & platforms",
     blurb:
-      "Marketing sites, web apps, e-commerce. Fast, scalable, and impossible to confuse with a template.",
+      "From marketing sites to multi-tenant SaaS. Built for real traffic, real payments and real audits — not for a template gallery.",
     points: [
-      "Launch sites you can edit yourself",
-      "Web apps and SaaS products",
-      "E-commerce that sells",
-      "Performance in the green",
+      "Multi-tenant SaaS: roles, billing, SSO/SAML",
+      "Payment orchestration and subscriptions",
+      "Sub-second Core Web Vitals under load",
+      "Localization, A/B and analytics baked in",
     ],
+    type: 0 as const,
+    timeline: "from 10 days",
   },
   {
     title: "Mobile apps",
     blurb:
-      "iOS and Android from first sketch to the App Store. Research first, cookie-cutters never.",
+      "iOS and Android from first sketch to the App Store — including the hard parts: offline sync, push, payments, release trains.",
     points: [
-      "Native or cross-platform",
-      "Tappable prototype in weeks",
-      "Store launch handled",
-      "Analytics wired from day one",
+      "Native or cross-platform, chosen on evidence",
+      "Offline-first sync and background jobs",
+      "Subscriptions and in-app purchases done right",
+      "CI/CD release trains, crash-free above 99.9%",
     ],
+    type: 1 as const,
+    timeline: "from 3 weeks",
   },
   {
     title: "AI agents",
     blurb:
-      "Not a chatbot on a landing page — agents inside your data and tools, doing actual work.",
+      "Not a chatbot on a landing page — agents wired into your data, tools and permissions, with evals to prove they behave.",
     points: [
-      "Support and sales agents",
-      "Internal copilots",
-      "Retrieval over your docs",
-      "Evals and guardrails included",
+      "RAG over your docs, databases and APIs",
+      "Multi-agent workflows, human-in-the-loop",
+      "VPC or on-prem deployment, PII redaction",
+      "Eval suites, guardrails and cost ceilings",
     ],
+    type: 2 as const,
+    timeline: "from 2 weeks",
   },
   {
     title: "Automation",
     blurb:
-      "We wire your tools together so the busywork happens without humans. The robots don't complain.",
+      "CRMs, ERPs and inboxes wired into pipelines that run themselves. The robots don't complain — they escalate.",
     points: [
-      "CRM and ops wiring",
-      "n8n, Zapier or custom flows",
-      "Bots for Slack and Telegram",
-      "Alerts before customers notice",
+      "Event-driven pipelines across 100+ tools",
+      "CRM/ERP sync without duplicate hell",
+      "Slack and Telegram bots with approval flows",
+      "Observability: alerts before customers notice",
     ],
+    type: 4 as const,
+    timeline: "from 5 days",
   },
   {
     title: "Rapid MVP",
     blurb:
-      "Idea to product in front of real users in weeks. Vibecode fast, then engineer what survives.",
+      "Idea to product in front of real users in days — with production auth, payments and analytics, so the demo survives the demo.",
     points: [
-      "One-week scoping sprint",
-      "Working MVP, not a demo",
-      "Feedback loops built in",
-      "Hardened when it earns it",
+      "Scoping sprint measured in days, not months",
+      "Production auth, billing, analytics on day one",
+      "Feature flags and feedback loops built in",
+      "Hardened into a platform when it earns it",
     ],
+    type: 5 as const,
+    timeline: "from 7 days",
   },
   {
     title: "Brand & motion",
     blurb:
-      "Identity with a pulse: positioning, visuals, motion and voice that agree with each other.",
+      "Identity with a pulse: positioning, visual system, motion language and voice that survive contact with production.",
     points: [
-      "Positioning and naming",
-      "Visual identity systems",
-      "Motion language",
-      "Launch assets ready to ship",
+      "Positioning, naming, verbal identity",
+      "Design systems, not just logo files",
+      "Motion language for product and marketing",
+      "Launch kits: decks, ads, socials, docs",
     ],
+    type: 3 as const,
+    timeline: "from 1 week",
   },
 ];
 
@@ -119,6 +133,7 @@ export default function Services() {
                     onClick={() => setOpenIndex(open ? null : i)}
                     aria-expanded={open}
                     aria-controls={`service-panel-${i}`}
+                    data-cursor-ink={s.type}
                     className="grid w-full grid-cols-[1fr_auto] items-center gap-x-6 py-6 text-left md:py-8"
                   >
                     <span
@@ -153,10 +168,37 @@ export default function Services() {
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <div className="grid gap-8 pb-8 md:grid-cols-2 md:pb-10 md:pl-5">
-                      <p className="max-w-md font-medium leading-relaxed">
-                        {s.blurb}
-                      </p>
+                    <div className="grid gap-8 pb-8 md:grid-cols-[1.1fr_0.7fr_1.1fr] md:gap-10 md:pb-10 md:pl-5">
+                      <div>
+                        <p className="max-w-md font-medium leading-relaxed">
+                          {s.blurb}
+                        </p>
+                        <dl className="mt-6 space-y-1.5 text-xs font-bold uppercase tracking-[0.2em]">
+                          <div className="flex gap-3">
+                            <dt className="opacity-50">Timeline</dt>
+                            <dd>{s.timeline}</dd>
+                          </div>
+                        </dl>
+                        <a
+                          href="/contact"
+                          tabIndex={open ? 0 : -1}
+                          className="mt-7 inline-block text-sm font-bold uppercase tracking-[0.15em] underline underline-offset-4 transition-transform duration-300 ease-out hover:translate-x-1 hover:no-underline"
+                        >
+                          Start this →
+                        </a>
+                      </div>
+                      {/* live 1-bit ink — a different pattern per service; only
+                          mounted while open to keep WebGL contexts scarce */}
+                      <div aria-hidden className="hidden md:block">
+                        {open && (
+                          <InkField
+                            type={s.type}
+                            scale={2.6}
+                            speed={0.5}
+                            className="h-full min-h-40 w-full rounded-[1rem]"
+                          />
+                        )}
+                      </div>
                       <ul className="flex flex-col gap-2">
                         {s.points.map((point) => (
                           <li

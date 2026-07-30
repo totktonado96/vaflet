@@ -19,6 +19,8 @@ function Card({ p }: { p: Project }) {
           href={`/work/${p.slug}`}
           className="group block"
           data-cursor-text="View"
+          data-cursor-ratio={p.ratio}
+          data-cursor-dwell="Yes, we can build that too."
         >
       {/* The frame itself gives a little on hover; the photo inside stays put */}
       <span

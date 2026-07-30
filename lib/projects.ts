@@ -127,7 +127,7 @@ export const PROJECTS: Project[] = [
     services: "Open source · Developer tooling",
     stack: "Next.js · Tailwind · Supabase",
     brief:
-      "Our own MVP checklist, turned into code: auth, payments, analytics and deploys pre-wired, so a weekend of vibecoding ends with something on a real URL.",
+      "Our own MVP checklist, turned into code: auth, payments, analytics and deploys pre-wired, so an AI-native weekend build ends with something on a real URL.",
     did: [
       "Distilled our fastest client builds into a starter",
       "Pre-wired the boring 80% every product needs",

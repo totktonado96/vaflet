@@ -1,6 +1,7 @@
 import InkField from "@/components/InkField";
 import LineReveal from "@/components/LineReveal";
 import Magnetic from "@/components/Magnetic";
+import RotatingWords from "@/components/RotatingWords";
 import SplitReveal from "@/components/SplitReveal";
 
 export default function Hero() {
@@ -26,13 +27,32 @@ export default function Hero() {
               type={0}
               scale={2.2}
               speed={0.8}
+              morphEvent="vaflet:hero-word"
+              interactive
               className="inline-block h-[0.66em] w-[1.6em] shrink-0 rounded-full"
             />
           </span>
         </LineReveal>
-        <SplitReveal as="div" onLoad delay={0.1}>
-          digital products
-        </SplitReveal>
+        <RotatingWords
+          delay={0.1}
+          announceEvent="vaflet:hero-word"
+          words={[
+            "digital products",
+            "websites",
+            "mobile apps",
+            "SaaS platforms",
+            "AI agents",
+            "automation",
+            "e-commerce",
+            "internal tools",
+            "social media bots",
+            "dashboards",
+            "rapid MVPs",
+            "design systems",
+            "data pipelines",
+            "APIs & backends",
+          ]}
+        />
         <SplitReveal as="div" onLoad delay={0.2}>
           end-to-end
         </SplitReveal>

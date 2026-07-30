@@ -8,7 +8,7 @@ export default function NotFound() {
         Nothing here
       </h1>
       <p className="mt-6 max-w-md font-medium leading-relaxed">
-        The page moved, never existed, or is still being vibecoded.
+        The page moved, never existed, or the agents are still building it.
       </p>
       <Link
         href="/"

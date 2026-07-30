@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 // Words render one by one as you scroll — binary snaps, no fades.
 // The last two words carry a permanent marker highlight.
-const WORDS = "The whole spectrum. One team. Zero telephone game.".split(" ");
+const WORDS = "The whole spectrum. One team. One conversation.".split(" ");
 const HIGHLIGHT_FROM = WORDS.length - 2;
 
 export default function Manifesto() {
@@ -31,6 +31,12 @@ export default function Manifesto() {
       // (i + 1): no set at exactly time 0, so scrolling back restores word 1 too
       words.forEach((word, i) => {
         tl.set(word, { autoAlpha: 1 }, (i + 1) * 0.1);
+        // the cursor taps along — see lib/cursor.ts
+        tl.call(
+          () => window.dispatchEvent(new Event("vaflet:manifesto-word")),
+          undefined,
+          (i + 1) * 0.1,
+        );
       });
       tl.set({}, {}, "+=0.2");
     },
@@ -40,7 +46,7 @@ export default function Manifesto() {
   return (
     <section
       ref={ref}
-      aria-label="The whole spectrum. One team. Zero telephone game."
+      aria-label="The whole spectrum. One team. One conversation."
       className="shell pb-28 md:pb-40"
     >
       <p

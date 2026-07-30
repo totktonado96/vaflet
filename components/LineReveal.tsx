@@ -32,12 +32,15 @@ export default function LineReveal({
       document.fonts.ready.then(() => {
         if (cancelled || !el.isConnected) return;
         gsap.set(wrap, { autoAlpha: 1 });
-        gsap.from(el, {
-          yPercent: 115,
-          duration: 1,
-          ease: "power4.out",
-          delay,
-        });
+        // fromTo + overwrite: strict-mode remounts fire this twice before the
+        // first cleanup lands (fonts.ready is already resolved, so the .then
+        // sneaks in between effect passes) — a plain .from() would record the
+        // half-animated position as its end value and freeze the line there.
+        gsap.fromTo(
+          el,
+          { yPercent: 115 },
+          { yPercent: 0, duration: 1, ease: "power4.out", delay, overwrite: true },
+        );
       });
       return () => {
         cancelled = true;
