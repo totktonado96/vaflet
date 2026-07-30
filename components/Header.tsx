@@ -55,7 +55,7 @@ export default function Header() {
       <header className="fixed inset-x-0 top-0 z-50 mix-blend-difference">
         <div className="shell flex items-center justify-between py-5 text-white">
           <a
-            href={href("#top")}
+            href="/"
             className="text-xl font-extrabold uppercase tracking-[-0.02em]"
             aria-label="Vaflet LLC — home"
           >
