@@ -1,4 +1,20 @@
 // MOCK DATA — swap titles, copy and metrics for real case studies when ready
+
+/**
+ * Filter taxonomy for the archive. Deliberately coarse and fixed: `tags` is
+ * free prose for the eye, this is what the filter bar counts on. Order here is
+ * the order they are shown in.
+ */
+export const DISCIPLINES = [
+  "Web",
+  "Mobile",
+  "AI",
+  "Design",
+  "Automation",
+  "Open source",
+] as const;
+export type Discipline = (typeof DISCIPLINES)[number];
+
 export type Project = {
   slug: string;
   title: string;
@@ -10,6 +26,7 @@ export type Project = {
   did: string[];
   outcome: string[];
   tags: string[];
+  disciplines: Discipline[];
   /** frame shape in the grid */
   ratio: "square" | "portrait" | "landscape";
   photo: string;
@@ -39,6 +56,7 @@ export const PROJECTS: Project[] = [
       "New hires onboard in a day, not a month",
     ],
     tags: ["Web app", "Product design", "Automation"],
+    disciplines: ["Web", "Design", "Automation"],
     ratio: "landscape",
     photo: "/photos/loopwire.jpg",
     photoDetail: "/photos/loopwire-2.jpg",
@@ -64,6 +82,7 @@ export const PROJECTS: Project[] = [
       "The retention curve stopped looking like a cliff",
     ],
     tags: ["Mobile app", "AI"],
+    disciplines: ["Mobile", "AI"],
     ratio: "portrait",
     photo: "/photos/fintary.jpg",
     photoDetail: "/photos/fintary-2.jpg",
@@ -89,6 +108,7 @@ export const PROJECTS: Project[] = [
       "Public repo coming — ping us for early access",
     ],
     tags: ["Open source", "AI tooling"],
+    disciplines: ["AI", "Open source"],
     ratio: "square",
     photo: "/photos/agent-loom.jpg",
     photoDetail: "/photos/agent-loom-2.jpg",
@@ -115,6 +135,7 @@ export const PROJECTS: Project[] = [
       "The associates got their evenings back",
     ],
     tags: ["AI agent", "Web app"],
+    disciplines: ["AI", "Web"],
     ratio: "portrait",
     photo: "/photos/casehawk.jpg",
     photoDetail: "/photos/casehawk-2.jpg",
@@ -140,6 +161,7 @@ export const PROJECTS: Project[] = [
       "Public repo coming — ping us for early access",
     ],
     tags: ["Open source", "Dev tooling"],
+    disciplines: ["Web", "Open source"],
     ratio: "landscape",
     photo: "/photos/vibekit.jpg",
     photoDetail: "/photos/vibekit-2.jpg",
@@ -166,6 +188,7 @@ export const PROJECTS: Project[] = [
       "The brand looks fast even standing still",
     ],
     tags: ["Mobile app", "AI agent", "Brand"],
+    disciplines: ["Mobile", "AI", "Design"],
     ratio: "square",
     photo: "/photos/peakform.jpg",
     photoDetail: "/photos/peakform-2.jpg",
