@@ -28,13 +28,83 @@ export type Project = {
   tags: string[];
   disciplines: Discipline[];
   /** frame shape in the grid */
-  ratio: "square" | "portrait" | "landscape";
-  photo: string;
-  photoDetail: string;
+  ratio: "square" | "portrait" | "landscape" | "wide";
+  /** Real product shots only. Without them the frames fall back to the ink
+      field — an honest pattern beats a stock photo standing in for a screen. */
+  photo?: string;
+  photoDetail?: string;
+  /** Frame image for the archive row and the home grid. A composed scene reads
+      as mud at card size, so the flat shot stands in there. Falls back to photo. */
+  cover?: string;
+  /** ink-field pattern for a project with no shots yet (see InkField) */
+  pattern?: number;
+  /** Countable, checkable figures. Never a claim we cannot back. */
+  facts?: { value: string; label: string }[];
+  /** Has a hand-built page under app/work/<slug> instead of the shared template */
+  custom?: boolean;
+  /** Product shots that carry the case, each captioned for what it proves */
+  gallery?: { src: string; caption: string }[];
   oss?: boolean;
 };
 
 export const PROJECTS: Project[] = [
+  {
+    slug: "gotrack",
+    title: "GoTrack",
+    desc: "Redesign of a realtime GPS monitoring platform for vehicle fleets",
+    year: "2025—",
+    services: "Product design · Web app · Realtime",
+    stack: "React 19 · TypeScript · Vite · Leaflet · SignalR",
+    brief:
+      "The tracking worked. Looking at it did not. GoTrack watches fleets of Teltonika trackers in realtime, and it wore the default desktop look of thirty years ago — grey chrome, boxed panels, and modals that opened over almost the entire screen, so every edit meant losing sight of the map you were working on.",
+    did: [
+      "Made the map the workspace — full bleed, edge to edge, every panel floating above it",
+      "Moved the fleet into one left sidebar that collapses out of the way when the map matters more",
+      "Replaced the full-screen modals with a right panel: create a marker, draw a zone, edit a vehicle, all beside the map instead of on top of it",
+      "Rebuilt monitoring around live state — positions pushed over SignalR, status, speed, fuel and battery on the card",
+      "Carried the new surface through geofences, map markers and notifications, on a dark and a light theme",
+    ],
+    outcome: [
+      "The fleet answers for itself at a glance: counts, statuses, alerts, details one click deep",
+      "Nothing covers the map any more — editing and watching happen side by side",
+      "Installable PWA, still shipping continuously since February 2025",
+    ],
+    gallery: [
+      {
+        src: "/photos/gotrack/edit-panel.jpg",
+        caption:
+          "Editing a vehicle in the right panel — the map never leaves the screen",
+      },
+      {
+        src: "/photos/gotrack/create-marker.jpg",
+        caption:
+          "Creating a marker: colour, icon, coordinates, all beside the map instead of over it",
+      },
+      {
+        src: "/photos/gotrack/geofences.jpg",
+        caption:
+          "Geofences — zones drawn on the workspace, filtered by type and colour",
+      },
+      {
+        src: "/photos/gotrack/markers.jpg",
+        caption:
+          "Map markers — depots, fuel, clients and checkpoints as one legend",
+      },
+    ],
+    facts: [
+      { value: "610", label: "commits shipped" },
+      { value: "13", label: "feature areas, each documented" },
+      { value: "24k", label: "lines of strict TypeScript" },
+    ],
+    custom: true,
+    tags: ["Redesign", "Web app", "Realtime"],
+    disciplines: ["Web", "Design"],
+    ratio: "wide",
+    photo: "/photos/gotrack/monitoring.jpg",
+    cover: "/photos/gotrack/cover.jpg",
+    // concentric rings — a radar ping, which is what this product is
+    pattern: 7,
+  },
   {
     slug: "loopwire",
     title: "Loopwire",

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import InkField from "@/components/InkField";
 import { DISCIPLINES, type Discipline, type Project } from "@/lib/projects";
 
 /* The frame keeps each project's own shape. Stacked on phones, floating out of
@@ -12,6 +13,7 @@ const FRAME = {
   square: "md:aspect-square md:w-[13rem] lg:w-[16rem]",
   portrait: "md:aspect-[3/4] md:w-[11rem] lg:w-[13rem]",
   landscape: "md:aspect-[4/3] md:w-[15rem] lg:w-[19rem]",
+  wide: "md:aspect-[16/10] md:w-[17rem] lg:w-[21rem]",
 } as const;
 
 function Chip({
@@ -87,13 +89,22 @@ function Row({ p, index }: { p: Project; index: number }) {
         aria-hidden
         className={`relative mt-5 block aspect-[16/10] w-full overflow-hidden rounded-[1rem] md:pointer-events-none md:absolute md:left-[54%] md:top-1/2 md:z-10 md:mt-0 md:-translate-y-1/2 md:scale-95 md:rounded-[1.25rem] md:opacity-0 md:transition-[opacity,scale] md:duration-[600ms] md:ease-[cubic-bezier(0.16,1,0.3,1)] md:group-hover:scale-100 md:group-hover:opacity-100 ${FRAME[p.ratio]}`}
       >
-        <Image
-          src={p.photo}
-          alt=""
-          fill
-          sizes="(min-width: 768px) 304px, 100vw"
-          className="object-cover"
-        />
+        {(p.cover ?? p.photo) ? (
+          <Image
+            src={(p.cover ?? p.photo)!}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 304px, 100vw"
+            className="object-cover"
+          />
+        ) : (
+          <InkField
+            type={p.pattern ?? 0}
+            scale={2.2}
+            speed={0.35}
+            className="h-full w-full"
+          />
+        )}
       </span>
     </Link>
   );

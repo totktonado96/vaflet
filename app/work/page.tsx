@@ -62,9 +62,8 @@ export default function WorkIndexPage() {
           All work
         </SplitReveal>
         <p className="mt-8 max-w-lg text-[17px] font-light leading-relaxed md:text-[19px]">
-          That&rsquo;s {spell(PROJECTS.length)} we can show, {spell(oss)} of them
-          open source. The rest are under NDA, half-built, or still an argument
-          in a group chat.
+          {spell(PROJECTS.length)[0].toUpperCase() + spell(PROJECTS.length).slice(1)}{" "}
+          we can show, {spell(oss)} of them open source. Newest first.
         </p>
       </section>
 
@@ -75,8 +74,8 @@ export default function WorkIndexPage() {
       <section className="shell pb-28 md:pb-40">
         <div className="flex flex-col items-center border-t-2 border-black pt-16 text-center md:pt-24">
           <p className="max-w-lg text-[17px] font-light leading-relaxed md:text-[19px]">
-            Number {spell(PROJECTS.length + 1)} is still an empty row. Tell us
-            what goes in it.
+            The rest are under NDA, half-built, or still an argument in a group
+            chat.
           </p>
           <CtaButton
             href="/contact"

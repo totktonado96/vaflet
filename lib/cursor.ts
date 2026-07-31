@@ -16,6 +16,7 @@ const VIEWFINDER: Record<string, [number, number]> = {
   square: [100, 100],
   portrait: [84, 112],
   landscape: [120, 90],
+  wide: [132, 82],
 };
 
 // Escalates across separate bursts, then never speaks of it again.

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import CtaButton from "@/components/CtaButton";
+import InkField from "@/components/InkField";
 import SplitReveal from "@/components/SplitReveal";
 import { PROJECTS, type Project } from "@/lib/projects";
 
@@ -8,6 +9,8 @@ const RATIO = {
   square: "aspect-square",
   portrait: "aspect-[3/4]",
   landscape: "aspect-[4/3]",
+  // product shots keep their own frame instead of being cropped to fit
+  wide: "aspect-[16/10]",
 } as const;
 
 function Card({ p }: { p: Project }) {
@@ -26,13 +29,22 @@ function Card({ p }: { p: Project }) {
       <span
         className={`relative block ${ratio} overflow-hidden rounded-[1.15rem] transition-transform duration-[1100ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[0.97] md:rounded-[1.5rem]`}
       >
-        <Image
-          src={p.photo}
-          alt=""
-          fill
-          sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover"
-        />
+        {(p.cover ?? p.photo) ? (
+          <Image
+            src={(p.cover ?? p.photo)!}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover"
+          />
+        ) : (
+          <InkField
+            type={p.pattern ?? 0}
+            scale={2.6}
+            speed={0.4}
+            className="h-full w-full"
+          />
+        )}
         {/* Tags overlay the photo's top-left corner and fade out on hover.
             Solid fills, since a bordered pill would vanish over a light photo. */}
         <span className="absolute left-4 top-4 z-10 flex flex-wrap gap-2 pr-4 transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-0">
@@ -82,14 +94,9 @@ export default function Projects() {
 
       <div className="mt-24 flex flex-col items-center text-center md:mt-44">
         <p className="max-w-lg text-[17px] font-light leading-relaxed md:text-[19px]">
-          Six of them. The rest are under NDA, half-built, or still an argument
-          in a group chat.
+          A selection, not the archive. The rest are one click away.
         </p>
-        <CtaButton
-          href="/work"
-          label="Your project goes here"
-          className="mt-16 md:mt-24"
-        />
+        <CtaButton href="/work" label="See all work" className="mt-16 md:mt-24" />
       </div>
     </section>
   );
