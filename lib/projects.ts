@@ -19,7 +19,6 @@ export type Project = {
   slug: string;
   title: string;
   desc: string;
-  year: string;
   services: string;
   stack: string;
   brief: string;
@@ -49,15 +48,78 @@ export type Project = {
 
 export const PROJECTS: Project[] = [
   {
+    slug: "masynbazar",
+    title: "MashynBazar",
+    desc: "Turnkey e-commerce for a Dubai car dealer — a dark showroom landing and a daylight catalogue",
+    services: "Product design · Web · Turnkey build",
+    stack: "Landing · Catalogue · Search & filters · Multilingual",
+    brief:
+      "A Dubai dealer sells premium cars abroad, where the buyer never walks the lot. The site has to do both jobs at once: make the car wanted, and make the paperwork side of it feel safe.",
+    did: [
+      "Designed and built the whole thing turnkey — landing, catalogue, content, launch",
+      "Put the showroom in the dark: one car under red light, two ways in",
+      "Built the catalogue as a pale grid where the spec sheet leads — engine, drive, power, 0–100, price",
+      "Wired finding: search by name or tag, a brand picker and filters across the showroom",
+      "Embedded the dealer's YouTube reviews on the page instead of linking away",
+      "Shipped it multilingual, with the language toggle in the header",
+    ],
+    outcome: [
+      "One shop with two surfaces that never look like two different companies",
+      "Every car carries its own spec sheet, so the buyer compares without asking",
+      "Live at masynbazar.com",
+    ],
+    custom: true,
+    tags: ["E-commerce", "Web", "Turnkey"],
+    disciplines: ["Web", "Design"],
+    ratio: "wide",
+    photo: "/photos/masynbazar/hero-v2.jpg",
+    cover: "/photos/masynbazar/hero-v2.jpg",
+  },
+  {
+    slug: "mirai",
+    title: "Mirai",
+    desc: "Brand identity for a smart-home company — mark, system and the book that holds it together",
+    services: "Brand identity · Guidelines · Website · Interactive brandbook",
+    stack: "Logo system · Colour · Gradients · Type · Pattern",
+    brief:
+      "A smart-home company needed an identity that survives contact with reality: a product box, a delivery van, a phone screen, a letter to a partner. Mirai means future in Japanese, and the mark had to carry that without shouting it.",
+    did: [
+      "Built the mark from one geometric frame — four lockups, clear space measured by the symbol itself",
+      "Set a palette of eight, with only two combinations allowed to lead",
+      "Cut four official gradients, two light and two dark, with rules for cropping them",
+      "Derived the pattern from the symbol so the system repeats itself all the way down",
+      "Paired NexaText for screen with Merriweather for print on one shared hierarchy",
+      "Applied it: business cards, letterhead, tape, shipping and product boxes, uniform, social templates",
+      "Built the website on top of the system, and turned the book itself into an interactive brandbook on the web",
+    ],
+    outcome: [
+      "A 39-page brand book a designer, a marketer or a factory can act on without asking",
+      "Every asset delivered in vector and raster, colour and mono, light and dark",
+      "One identity that reads the same on a phone screen and on a cardboard box",
+      "The guidelines live at a URL — the team reads the rules where they work, not in a PDF attachment",
+    ],
+    facts: [
+      { value: "39", label: "pages of guidelines" },
+      { value: "8", label: "colours, two of them leading" },
+      { value: "250", label: "files handed over" },
+    ],
+    custom: true,
+    tags: ["Brand identity", "Website", "Guidelines"],
+    disciplines: ["Design", "Web"],
+    ratio: "portrait",
+    photo: "/photos/mirai/cover-v2.jpg",
+    cover: "/photos/mirai/cover-portrait.jpg",
+  },
+  {
     slug: "gotrack",
     title: "GoTrack",
     desc: "Redesign of a realtime GPS monitoring platform for vehicle fleets",
-    year: "2025—",
-    services: "Product design · Web app · Realtime",
+    services: "Brand mark · Product design · Web app",
     stack: "React 19 · TypeScript · Vite · Leaflet · SignalR",
     brief:
       "The tracking worked. Looking at it did not. GoTrack watches fleets of Teltonika trackers in realtime, and it wore the default desktop look of thirty years ago — grey chrome, boxed panels, and modals that opened over almost the entire screen, so every edit meant losing sight of the map you were working on.",
     did: [
+      "Drew the mark: a calm wordmark with one green arrival dot, plus a monogram, app icon and avatar",
       "Made the map the workspace — full bleed, edge to edge, every panel floating above it",
       "Moved the fleet into one left sidebar that collapses out of the way when the map matters more",
       "Replaced the full-screen modals with a right panel: create a marker, draw a zone, edit a vehicle, all beside the map instead of on top of it",
@@ -104,163 +166,5 @@ export const PROJECTS: Project[] = [
     cover: "/photos/gotrack/cover.jpg",
     // concentric rings — a radar ping, which is what this product is
     pattern: 7,
-  },
-  {
-    slug: "loopwire",
-    title: "Loopwire",
-    desc: "Ops automation platform for logistics teams",
-    year: "2026",
-    services: "Product design · Web app · Automation",
-    stack: "Next.js · Supabase · n8n",
-    brief:
-      "A logistics operator was running dispatch on spreadsheets, chat threads and vibes. Orders fell through the cracks daily, and nobody could say where a shipment actually was.",
-    did: [
-      "Mapped the real workflow — not the one in the org chart",
-      "Designed and built a dispatch web app around it",
-      "Wired carriers, CRM and billing into one pipeline",
-      "Automated status chasing so humans stopped doing it",
-    ],
-    outcome: [
-      "Dispatch went from three tools to one screen",
-      "Status calls stopped — the system reports itself",
-      "New hires onboard in a day, not a month",
-    ],
-    tags: ["Web app", "Product design", "Automation"],
-    disciplines: ["Web", "Design", "Automation"],
-    ratio: "landscape",
-    photo: "/photos/loopwire.jpg",
-    photoDetail: "/photos/loopwire-2.jpg",
-  },
-  {
-    slug: "fintary",
-    title: "Fintary",
-    desc: "Personal finance app that talks back",
-    year: "2026",
-    services: "Mobile app · AI integration",
-    stack: "React Native · Expo · Claude",
-    brief:
-      "A fintech founder wanted a budgeting app people would actually open twice. The idea: your money answers questions in plain language instead of charts you don't read.",
-    did: [
-      "Ran research sprints with real budgeters",
-      "Designed a chat-first interface over transactions",
-      "Built iOS and Android apps from one codebase",
-      "Shipped an LLM layer with guardrails on every answer",
-    ],
-    outcome: [
-      "A working App Store product, not a prototype",
-      "Users ask their money questions — and get answers",
-      "The retention curve stopped looking like a cliff",
-    ],
-    tags: ["Mobile app", "AI"],
-    disciplines: ["Mobile", "AI"],
-    ratio: "portrait",
-    photo: "/photos/fintary.jpg",
-    photoDetail: "/photos/fintary-2.jpg",
-  },
-  {
-    slug: "agent-loom",
-    title: "agent-loom",
-    desc: "Lightweight framework for wiring LLM agents into real workflows",
-    year: "2025—",
-    services: "Open source · AI tooling",
-    stack: "TypeScript · works with any model",
-    brief:
-      "Every agent project starts with the same plumbing: tools, retries, guardrails, logging. We got tired of rebuilding it, so we packaged ours.",
-    did: [
-      "Extracted the agent runtime we use on client work",
-      "Made tools and evals first-class citizens",
-      "Kept the API small enough to read in one sitting",
-      "Documented it like we mean it",
-    ],
-    outcome: [
-      "One dependency instead of a folder of copy-paste",
-      "Powers the agents we ship to clients",
-      "Public repo coming — ping us for early access",
-    ],
-    tags: ["Open source", "AI tooling"],
-    disciplines: ["AI", "Open source"],
-    ratio: "square",
-    photo: "/photos/agent-loom.jpg",
-    photoDetail: "/photos/agent-loom-2.jpg",
-    oss: true,
-  },
-  {
-    slug: "casehawk",
-    title: "Casehawk",
-    desc: "Research copilot for a boutique law firm",
-    year: "2025",
-    services: "AI agent · Web app",
-    stack: "Next.js · retrieval over case files",
-    brief:
-      "Associates were spending evenings digging through case archives. The partners wanted the digging done by software — with sources cited, because lawyers.",
-    did: [
-      "Built retrieval over decades of case files",
-      "Designed a research interface lawyers didn't hate",
-      "Every answer links to the exact source page",
-      "Added evals so wrong answers get caught, not shipped",
-    ],
-    outcome: [
-      "Research that took evenings now takes minutes",
-      "Zero uncited claims make it past the interface",
-      "The associates got their evenings back",
-    ],
-    tags: ["AI agent", "Web app"],
-    disciplines: ["AI", "Web"],
-    ratio: "portrait",
-    photo: "/photos/casehawk.jpg",
-    photoDetail: "/photos/casehawk-2.jpg",
-  },
-  {
-    slug: "vibekit",
-    title: "vibekit",
-    desc: "Opinionated Next.js starter for shipping an MVP in a weekend",
-    year: "2025—",
-    services: "Open source · Developer tooling",
-    stack: "Next.js · Tailwind · Supabase",
-    brief:
-      "Our own MVP checklist, turned into code: auth, payments, analytics and deploys pre-wired, so an AI-native weekend build ends with something on a real URL.",
-    did: [
-      "Distilled our fastest client builds into a starter",
-      "Pre-wired the boring 80% every product needs",
-      "Kept it deletable — rip out anything in minutes",
-      "Battle-tested it on our own rapid MVPs",
-    ],
-    outcome: [
-      "Idea to deployed product in a weekend, repeatedly",
-      "The starter behind our Rapid MVP service",
-      "Public repo coming — ping us for early access",
-    ],
-    tags: ["Open source", "Dev tooling"],
-    disciplines: ["Web", "Open source"],
-    ratio: "landscape",
-    photo: "/photos/vibekit.jpg",
-    photoDetail: "/photos/vibekit-2.jpg",
-    oss: true,
-  },
-  {
-    slug: "peakform",
-    title: "Peakform",
-    desc: "AI coaching app for amateur athletes",
-    year: "2026",
-    services: "Mobile app · AI agent · Brand",
-    stack: "React Native · wearables APIs",
-    brief:
-      "A coaching startup wanted training plans that adapt daily — to sleep, soreness and schedule — without paying a human coach to babysit every athlete.",
-    did: [
-      "Designed the brand and the app as one system",
-      "Built training plans that re-plan themselves",
-      "Synced wearables so the app knows before you do",
-      "Kept a human-coach handoff for the hard calls",
-    ],
-    outcome: [
-      "Plans adjust overnight, athletes just open the app",
-      "Coaches supervise ten times more athletes",
-      "The brand looks fast even standing still",
-    ],
-    tags: ["Mobile app", "AI agent", "Brand"],
-    disciplines: ["Mobile", "AI", "Design"],
-    ratio: "square",
-    photo: "/photos/peakform.jpg",
-    photoDetail: "/photos/peakform-2.jpg",
   },
 ];

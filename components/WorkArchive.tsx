@@ -68,7 +68,6 @@ function Row({ p, index }: { p: Project; index: number }) {
           </span>
         </span>
         <span className="flex shrink-0 items-baseline gap-5 text-xs font-bold uppercase tracking-[0.2em]">
-          {p.year}
           <span
             aria-hidden
             className="hidden text-base leading-none transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-2 md:block"

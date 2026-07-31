@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import SplitReveal from "@/components/SplitReveal";
 import { PROJECTS } from "@/lib/projects";
-import { Counters, DriftShot, Filmstrip, Moves, Reveal } from "./story";
+import { Counters, DriftShot, Filmstrip, Moves, Reveal } from "@/components/case/kit";
 
 /**
  * GoTrack gets its own page rather than the shared case template: the product
@@ -49,6 +50,19 @@ const MOVES = [
   },
 ];
 
+const MARKS = [
+  { src: "/photos/gotrack/brand/gotrack-monogram-white.svg", label: "Monogram · g." },
+  { src: "/photos/gotrack/brand/gotrack-appicon.svg", label: "App icon" },
+  { src: "/photos/gotrack/brand/gotrack-avatar.svg", label: "Avatar" },
+];
+
+const BRAND_COLOURS = [
+  { name: "Ink", hex: "#14171A" },
+  { name: "Paper", hex: "#F2F4F2" },
+  { name: "Surface", hex: "#101413" },
+  { name: "Signal green", hex: "#16C784" },
+];
+
 const STRIP = [
   { src: "/photos/gotrack/monitoring.jpg", caption: "Monitoring — the fleet, live" },
   { src: "/photos/gotrack/edit-panel.jpg", caption: "Right panel — editing a vehicle" },
@@ -84,7 +98,7 @@ export default function GotrackPage() {
               {p.desc}
             </p>
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] opacity-60">
-              {p.year} · {p.services}
+              {p.services}
             </p>
           </div>
         </div>
@@ -120,6 +134,72 @@ export default function GotrackPage() {
             </p>
           </div>
         </Reveal>
+      </section>
+
+      {/* ---- the mark the surface had to carry -------------------------- */}
+      <section className="shell pb-24 md:pb-36">
+        <p className="text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
+          Before the surface — the mark
+        </p>
+
+        <div className="mt-10 rounded-[1rem] border border-white/15 px-8 py-16 md:mt-14 md:rounded-[1.5rem] md:px-16 md:py-28">
+          <Image
+            src="/photos/gotrack/brand/gotrack-wordmark-white.svg"
+            alt="GoTrack wordmark"
+            width={752}
+            height={216}
+            className="mx-auto h-auto w-full max-w-[520px]"
+          />
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-4 md:mt-6 md:gap-6">
+          {MARKS.map((m) => (
+            <figure
+              key={m.src}
+              className="flex flex-col items-center gap-4 rounded-[1rem] border border-white/15 px-6 py-10 md:rounded-[1.5rem] md:py-14"
+            >
+              <Image
+                src={m.src}
+                alt={m.label}
+                width={140}
+                height={140}
+                className="h-[64px] w-auto md:h-[92px]"
+              />
+              <figcaption className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+                {m.label}
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+
+        <div className="mt-10 grid gap-10 md:mt-14 md:grid-cols-2">
+          <div className="flex flex-wrap gap-3">
+            {BRAND_COLOURS.map((c) => (
+              <div
+                key={c.hex}
+                className="flex items-center gap-3 rounded-full border border-white/15 py-2 pl-2 pr-4"
+              >
+                <span
+                  aria-hidden
+                  className="size-6 rounded-full"
+                  style={{ backgroundColor: c.hex, boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.18)" }}
+                />
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em]">
+                  {c.name}
+                </span>
+                <span className="text-[10px] font-bold tabular-nums opacity-50">
+                  {c.hex}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="max-w-[52ch] text-[15px] font-light leading-relaxed opacity-75">
+            A calm wordmark with one green dot — the arrival, which is the whole
+            point of a tracker. Clear space is the height of the{" "}
+            <span className="font-medium">o</span>; below 90&nbsp;px the monogram
+            takes over, down to 16. Green paints the dot and nothing else.
+          </p>
+        </div>
       </section>
 
       {/* ---- three moves, one screen at a time ------------------------- */}

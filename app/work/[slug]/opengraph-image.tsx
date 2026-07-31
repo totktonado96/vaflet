@@ -42,7 +42,7 @@ export default async function Image({
           }}
         >
           <span>Vaflet LLC</span>
-          <span>{p?.year ?? "Selected work"}</span>
+          <span>Selected work</span>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>

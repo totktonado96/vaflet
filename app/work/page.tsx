@@ -43,8 +43,6 @@ const SPELLED = [
 const spell = (n: number) => SPELLED[n] ?? String(n);
 
 export default function WorkIndexPage() {
-  const oss = PROJECTS.filter((p) => p.oss).length;
-
   return (
     <main>
       <section className="shell pb-14 pt-32 md:pb-20 md:pt-44">
@@ -63,7 +61,7 @@ export default function WorkIndexPage() {
         </SplitReveal>
         <p className="mt-8 max-w-lg text-[17px] font-light leading-relaxed md:text-[19px]">
           {spell(PROJECTS.length)[0].toUpperCase() + spell(PROJECTS.length).slice(1)}{" "}
-          we can show, {spell(oss)} of them open source. Newest first.
+          we can show. Newest first.
         </p>
       </section>
 

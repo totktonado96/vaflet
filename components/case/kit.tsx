@@ -8,9 +8,98 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
-const reduced = () =>
+/** Case pages are hand-built; these are the few moves worth sharing. */
+
+export const reducedMotion = () =>
   typeof window !== "undefined" &&
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Children rise into place, one after another, the first time they are seen. */
+export function Reveal({
+  children,
+  y = 24,
+  stagger = 0.08,
+}: {
+  children: ReactNode;
+  y?: number;
+  stagger?: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      gsap.from(ref.current!.children, {
+        y,
+        autoAlpha: 0,
+        duration: 0.9,
+        stagger,
+        ease: "power3.out",
+        scrollTrigger: { trigger: ref.current, start: "top 82%", once: true },
+      });
+    },
+    { scope: ref },
+  );
+
+  return <div ref={ref}>{children}</div>;
+}
+
+/** Figures that count themselves up the first time they are looked at. */
+export function Counters({
+  items,
+  className,
+  itemClassName,
+  labelClassName,
+}: {
+  items: { value: string; label: string }[];
+  className?: string;
+  itemClassName?: string;
+  labelClassName?: string;
+}) {
+  const root = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      gsap.utils.toArray<HTMLElement>("[data-count]").forEach((el) => {
+        const target = Number(el.dataset.count);
+        const suffix = el.dataset.suffix ?? "";
+        const box = { n: 0 };
+        gsap.to(box, {
+          n: target,
+          duration: 1.6,
+          ease: "power3.out",
+          scrollTrigger: { trigger: el, start: "top 85%", once: true },
+          onUpdate: () => {
+            el.textContent = Math.round(box.n).toLocaleString("en-US") + suffix;
+          },
+        });
+      });
+    },
+    { scope: root },
+  );
+
+  return (
+    <div ref={root} className={className}>
+      {items.map((f) => {
+        // "24k" counts to 24 and keeps its suffix; plain numbers count in full
+        const m = f.value.match(/^([\d.]+)(\D*)$/);
+        return (
+          <div key={f.label} className={itemClassName}>
+            <p
+              data-count={m?.[1] ?? undefined}
+              data-suffix={m?.[2] ?? ""}
+              className="display-2 font-extrabold leading-none tabular-nums"
+            >
+              {m ? "0" + (m[2] ?? "") : f.value}
+            </p>
+            <p className={labelClassName}>{f.label}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 /**
  * A shot that drifts against the scroll. The frame moves, not the picture
@@ -32,7 +121,7 @@ export function DriftShot({
 
   useGSAP(
     () => {
-      if (reduced()) return;
+      if (reducedMotion()) return;
       gsap.fromTo(
         frame.current,
         { y: 34 },
@@ -78,7 +167,7 @@ export function Moves({
 
   useGSAP(
     () => {
-      if (reduced()) return;
+      if (reducedMotion()) return;
       const shots = gsap.utils.toArray<HTMLElement>("[data-move-shot]");
       shots.forEach((shot, i) => {
         if (i === 0) return;
@@ -162,7 +251,7 @@ export function Filmstrip({
 
   useGSAP(
     () => {
-      if (reduced()) return;
+      if (reducedMotion()) return;
       const el = track.current!;
       const distance = () => el.scrollWidth - window.innerWidth + 80;
       gsap.to(el, {
@@ -203,79 +292,4 @@ export function Filmstrip({
       </div>
     </div>
   );
-}
-
-/** Figures that count themselves up the first time they are looked at. */
-export function Counters({
-  items,
-}: {
-  items: { value: string; label: string }[];
-}) {
-  const root = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      if (reduced()) return;
-      gsap.utils.toArray<HTMLElement>("[data-count]").forEach((el) => {
-        const target = Number(el.dataset.count);
-        const suffix = el.dataset.suffix ?? "";
-        const box = { n: 0 };
-        gsap.to(box, {
-          n: target,
-          duration: 1.6,
-          ease: "power3.out",
-          scrollTrigger: { trigger: el, start: "top 85%", once: true },
-          onUpdate: () => {
-            el.textContent = Math.round(box.n).toLocaleString("en-US") + suffix;
-          },
-        });
-      });
-    },
-    { scope: root },
-  );
-
-  return (
-    <div ref={root} className="grid gap-px border-y-2 border-white/20 md:grid-cols-3">
-      {items.map((f) => {
-        // "24k" counts to 24 and keeps its suffix; plain numbers count in full
-        const m = f.value.match(/^([\d.]+)(\D*)$/);
-        return (
-          <div key={f.label} className="py-10 md:py-16">
-            <p
-              data-count={m?.[1] ?? undefined}
-              data-suffix={m?.[2] ?? ""}
-              className="display-2 font-extrabold leading-none tabular-nums"
-            >
-              {m ? "0" + (m[2] ?? "") : f.value}
-            </p>
-            <p className="mt-4 max-w-[22ch] text-[11px] font-bold uppercase leading-snug tracking-[0.2em] opacity-60">
-              {f.label}
-            </p>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/** Plain wrapper so the page can hand server-rendered copy to a client scope. */
-export function Reveal({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      if (reduced()) return;
-      gsap.from(ref.current!.children, {
-        y: 24,
-        autoAlpha: 0,
-        duration: 0.9,
-        stagger: 0.08,
-        ease: "power3.out",
-        scrollTrigger: { trigger: ref.current, start: "top 80%", once: true },
-      });
-    },
-    { scope: ref },
-  );
-
-  return <div ref={ref}>{children}</div>;
 }
