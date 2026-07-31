@@ -71,6 +71,18 @@ body {
   animation: row-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Phone marquee: one copy scrolls a full width, the twin covers the seam */
+@keyframes phone-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+.phone-marquee {
+  animation: phone-marquee linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .phone-marquee { animation: none; }
+}
+
 /* Full-bleed section padding capped at 100rem */
 .shell {
   padding-inline: max(1.25rem, calc((100vw - 100rem) / 2));

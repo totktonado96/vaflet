@@ -16,7 +16,7 @@ const RATIO = {
 function Card({ p }: { p: Project }) {
   const ratio = RATIO[p.ratio];
   return (
-    <div className="mb-20 break-inside-avoid md:mb-28">
+    <div>
       <div>
         <Link
           href={`/work/${p.slug}`}
@@ -84,11 +84,22 @@ export default function Projects() {
         Selected work
       </SplitReveal>
 
-      {/* Column flow, not rows — mixed frame shapes stack without ragged gaps.
-          Column gap matches the vertical gap, so cards narrow to keep it even. */}
-      <div className="columns-1 gap-20 sm:columns-2 md:columns-3 md:gap-28">
-        {PROJECTS.map((p) => (
-          <Card key={p.slug} p={p} />
+      {/* Three columns that stack independently. A grid would align rows and
+          leave a void under every short card; CSS column-flow balances by
+          height and leaves a hole in the middle. Splitting by index does
+          neither, and each column starts at its own height on purpose. */}
+      <div className="grid gap-16 sm:grid-cols-2 md:grid-cols-3 md:gap-x-16 lg:gap-x-24">
+        {[0, 1, 2].map((col) => (
+          <div
+            key={col}
+            className={`flex flex-col gap-16 md:gap-24 ${
+              col === 1 ? "md:mt-28" : col === 2 ? "md:mt-14" : ""
+            }`}
+          >
+            {PROJECTS.filter((_, i) => i % 3 === col).map((p) => (
+              <Card key={p.slug} p={p} />
+            ))}
+          </div>
         ))}
       </div>
 

@@ -3,9 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import SplitReveal from "@/components/SplitReveal";
-import { Counters, Reveal } from "@/components/case/kit";
+import { AssetShelf, ColorWall, Counters, PatternDrift, Reveal, type Swatch } from "@/components/case/kit";
 import { PROJECTS } from "@/lib/projects";
-import { AssetShelf, ColorWall, GradientRail, PatternDrift, type Swatch } from "./story";
+import { GradientRail } from "./story";
 
 /**
  * Mirai is an identity, so the case wears it: the brand's own black, its lime

@@ -48,6 +48,71 @@ export type Project = {
 
 export const PROJECTS: Project[] = [
   {
+    slug: "tmcars",
+    title: "TMCARS",
+    desc: "Redesign of the largest classifieds app in Turkmenistan — stage one, built as a clickable prototype",
+    services: "Product design · Prototype · Mobile",
+    stack: "36 screens · Next.js prototype · Motion",
+    brief:
+      "TMCARS is the country's biggest classifieds board and one of its most used apps. Every screen is already somebody's daily habit, so the redesign goes in stages and each one is proven in a working prototype before anything ships.",
+    did: [
+      "Rebuilt the app as a clickable prototype — 36 screens, real navigation, real transitions",
+      "Put the whole market on one feed: stories, categories, cars, parts and everything else without a mode switch",
+      "Reworked finding: search suggestions, saved words, filters and results on one screen",
+      "Gave selling its own place — publication quota, per-listing state, and a paid tier that explains itself",
+      "Carried the system through business accounts, saved items, news and settings",
+    ],
+    outcome: [
+      "A prototype the team could tap through instead of a deck they had to imagine",
+      "Stage one agreed screen by screen before a line of production code",
+      "The rest of the redesign is under NDA",
+    ],
+    facts: [
+      { value: "36", label: "screens in the prototype" },
+      { value: "1", label: "stage public, of several" },
+      { value: "24", label: "screens shown in this case" },
+    ],
+    custom: true,
+    tags: ["App redesign", "Prototype", "Classifieds"],
+    disciplines: ["Design", "Mobile"],
+    ratio: "wide",
+    photo: "/photos/tmcars/main.jpg",
+    cover: "/photos/tmcars/cover-white.jpg",
+  },
+  {
+    slug: "aydym",
+    title: "Aydym",
+    desc: "Rebrand of the largest music streaming platform in Turkmenistan — mark, colour, type and the book that holds it",
+    services: "Brand identity · Guidelines · Applications",
+    stack: "Logo system · Colour · Typography · Iconography · Pattern",
+    brief:
+      "Aydym streams music to a whole country, and it needed an identity that works at 32 pixels on a phone and on a tote bag in the street. The mark had to say music without a note in sight, and the system had to survive a dark interface, a printed flyer and a gift card.",
+    did: [
+      "Built the mark from a circle that doubles as a play button, with sound bars inside it",
+      "Set Cosmic Violet against near-black as the brand, not as a dark mode",
+      "Added three states — positive, friendly, smart — instead of decorative extras",
+      "Paired SF Pro Display with Inter on one hierarchy, display down to caption",
+      "Cut the icon set to the brand's weight and derived a pattern from the mark's own bars",
+      "Applied it end to end: app screens, social, gift cards, roll-up, flyer, cards, stationery, merch",
+    ],
+    outcome: [
+      "One identity that holds from a 32 px favicon to a printed poster",
+      "A dark-first system, so the product and the brand stopped disagreeing",
+      "A 59-page book covering logo, colour, type, icons, photography, pattern and applications",
+    ],
+    facts: [
+      { value: "59", label: "pages of guidelines" },
+      { value: "6", label: "colours, one of them leading" },
+      { value: "32", label: "px — where the mark still reads" },
+    ],
+    custom: true,
+    tags: ["Brand identity", "Streaming", "Guidelines"],
+    disciplines: ["Design"],
+    ratio: "square",
+    photo: "/photos/aydym/hero-photo.jpg",
+    cover: "/photos/aydym/cover-square.jpg",
+  },
+  {
     slug: "masynbazar",
     title: "MashynBazar",
     desc: "Turnkey e-commerce for a Dubai car dealer — a dark showroom landing and a daylight catalogue",
