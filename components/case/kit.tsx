@@ -102,6 +102,22 @@ export function Counters({
 }
 
 /**
+ * A hairline over a shot, for pages whose paper is as pale as the interface
+ * inside the frame. Sits above the image, since an inset shadow on the frame
+ * would be painted under it.
+ */
+function Edge({ colour }: { colour?: string }) {
+  if (!colour) return null;
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-0 rounded-[inherit]"
+      style={{ boxShadow: `inset 0 0 0 1px ${colour}` }}
+    />
+  );
+}
+
+/**
  * A shot that drifts against the scroll. The frame moves, not the picture
  * inside it — oversizing the image to pan it would crop a screenshot, and a
  * screenshot cropped is a screenshot ruined.
@@ -160,8 +176,11 @@ export function DriftShot({
 /** Three panels held in place while the copy for each one takes its turn. */
 export function Moves({
   moves,
+  edge,
 }: {
   moves: { kicker: string; line: string; src: string; alt: string }[];
+  /** hairline over each shot, for pale pages where the frame would vanish */
+  edge?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
 
@@ -209,6 +228,7 @@ export function Moves({
             {/* on phones the shot belongs with its own paragraph */}
             <div className="relative mt-8 aspect-[16/10] w-full overflow-hidden rounded-[1rem] md:hidden">
               <Image src={m.src} alt={m.alt} fill sizes="100vw" className="object-cover" />
+              <Edge colour={edge} />
             </div>
           </div>
         ))}
@@ -233,6 +253,15 @@ export function Moves({
                 />
               </div>
             ))}
+            {/* one hairline over the whole stack, above every layer */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 rounded-[inherit]"
+              style={{
+                zIndex: moves.length + 1,
+                boxShadow: edge ? `inset 0 0 0 1px ${edge}` : undefined,
+              }}
+            />
           </div>
         </div>
       </div>
@@ -244,10 +273,13 @@ export function Moves({
 export function Filmstrip({
   shots,
   ratio = "aspect-[16/10]",
+  edge,
 }: {
   shots: { src: string; caption: string }[];
   /** frame shape — must match the shots, or object-cover will crop them */
   ratio?: string;
+  /** hairline over each shot, for pale pages where the frame would vanish */
+  edge?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
@@ -286,6 +318,7 @@ export function Filmstrip({
                 sizes="(min-width: 768px) 56vw, 78vw"
                 className="object-cover"
               />
+              <Edge colour={edge} />
             </div>
             <figcaption className="mt-4 text-[11px] font-bold uppercase leading-snug tracking-[0.2em] opacity-70">
               {s.caption}
@@ -402,12 +435,15 @@ export function AssetShelf({
   items,
   plain = false,
   ratio,
+  edge,
 }: {
   items: { src: string; title: string; note: string; wide?: boolean }[];
   /** photographs stand on their own; only flat artwork needs a plate under it */
   plain?: boolean;
   /** frame shape — set it to the shots' own ratio and nothing gets cropped */
   ratio?: string;
+  /** hairline over each shot, for pale pages where the frame would vanish */
+  edge?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
 
@@ -447,6 +483,7 @@ export function AssetShelf({
               sizes="(min-width: 768px) 50vw, 100vw"
               className={plain ? "object-cover" : "object-contain p-6 md:p-10"}
             />
+            <Edge colour={edge} />
           </div>
           <figcaption className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <span className="text-[11px] font-bold uppercase tracking-[0.25em]">
@@ -460,11 +497,106 @@ export function AssetShelf({
   );
 }
 
+/**
+ * The wholesale ladder, drawn. Each rung is the same product at a bigger
+ * quantity, so the bar gets shorter as the box gets heavier — the one thing
+ * this shop does that a retail store and a B2B portal need two sites for.
+ */
+export function PriceLadder({
+  rows,
+  accent,
+  currency = "AED",
+}: {
+  rows: { range: string; price: number; note: string }[];
+  accent: string;
+  currency?: string;
+}) {
+  const root = useRef<HTMLDivElement>(null);
+  const max = Math.max(...rows.map((r) => r.price));
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      gsap.utils.toArray<HTMLElement>("[data-rung]").forEach((el, i) => {
+        const bar = el.querySelector("[data-bar]") as HTMLElement;
+        gsap.fromTo(
+          bar,
+          { scaleX: 0 },
+          {
+            scaleX: Number(bar.dataset.scale),
+            duration: 1.1,
+            ease: "power3.out",
+            delay: i * 0.12,
+            scrollTrigger: { trigger: el, start: "top 85%", once: true },
+          },
+        );
+        gsap.from(el.querySelectorAll("[data-rung-text]"), {
+          y: 14,
+          autoAlpha: 0,
+          duration: 0.7,
+          stagger: 0.06,
+          ease: "power3.out",
+          delay: i * 0.12,
+          scrollTrigger: { trigger: el, start: "top 85%", once: true },
+        });
+      });
+    },
+    { scope: root },
+  );
+
+  return (
+    <div ref={root}>
+      {rows.map((r, i) => (
+        <div
+          key={r.range}
+          data-rung
+          className="grid items-center gap-x-6 gap-y-3 border-t border-current/15 py-6 md:grid-cols-[8rem_1fr_11rem] md:py-8"
+        >
+          <p data-rung-text className="text-[11px] font-bold uppercase tracking-[0.25em]">
+            {r.range}
+          </p>
+
+          {/* the bar is the price: shorter every rung down */}
+          <div className="order-3 h-[10px] w-full md:order-none md:h-3">
+            <div
+              data-bar
+              data-scale={r.price / max}
+              className="h-full origin-left rounded-full"
+              style={{
+                transform: `scaleX(${r.price / max})`,
+                backgroundColor: i === 0 ? "currentColor" : accent,
+                opacity: i === 0 ? 0.25 : 1 - i * 0.18,
+              }}
+            />
+          </div>
+
+          {/* proportional figures on purpose — tabular ones give the thousands
+              comma a full digit of air and the price falls apart */}
+          <div className="md:text-right">
+            <p data-rung-text className="text-[19px] font-extrabold md:text-[24px]">
+              {currency} {r.price.toLocaleString("en-US")}
+            </p>
+            <p
+              data-rung-text
+              className="mt-1 text-[11px] font-bold uppercase tracking-[0.2em] opacity-60"
+            >
+              {r.note}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Phone screens, dragged sideways — portrait frames need their own rail. */
 export function PhoneRail({
   shots,
+  edge,
 }: {
   shots: { src: string; caption: string }[];
+  /** hairline over each screen, so a white UI still has a frame */
+  edge?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
@@ -503,6 +635,7 @@ export function PhoneRail({
                 sizes="(min-width: 768px) 19vw, 54vw"
                 className="object-cover"
               />
+              <Edge colour={edge} />
             </div>
             <figcaption className="mt-4 text-[10px] font-bold uppercase leading-snug tracking-[0.2em] opacity-70">
               {s.caption}

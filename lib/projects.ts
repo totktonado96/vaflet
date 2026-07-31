@@ -48,6 +48,39 @@ export type Project = {
 
 export const PROJECTS: Project[] = [
   {
+    slug: "asartech",
+    title: "ASAR TECH",
+    desc: "A Dubai tech shop where retail and wholesale share one cart — storefront, checkout and an admin the owner can actually use",
+    services: "Product design · Full-stack build · E-commerce",
+    stack: "Medusa 2 · Next.js 15 · PostgreSQL · Redis · Playwright",
+    brief:
+      "A Dubai reseller sells the same laptop to a tourist buying one and to a shop buying fifty. The usual answer is two websites — a retail store, and a B2B portal behind a login where you ask for a price. We built one shop, with the price ladder printed on the page.",
+    did: [
+      "Built the whole thing: Medusa 2 backend, Next.js 15 storefront, operator admin, deploy",
+      "Put wholesale on the shelf — tiered price lists 1–9 / 10–49 / 50+, shown on the product and applied in the cart",
+      "Shipped it worldwide: 249 countries at checkout, DDP delivery, AED and USD, EN and RU at key-for-key parity",
+      "Wrote the recommendation engine — six algorithms ranked on the backend: similar, bought-together, frequently-bought, bestsellers, new arrivals, recently viewed",
+      "Gave the owner a Russian admin inside the storefront, so nobody has to open Medusa's own back office",
+      "Held the design to one blue accent, hairlines instead of shadows, real photos, and 390 px first",
+    ],
+    outcome: [
+      "One cart serves the tourist buying one and the shop buying fifty — no login, no quote request",
+      "The owner runs the whole shop from one Russian console: catalogue, orders, leads, payment keys and the home page, no redeploy",
+      "7,474 pages in the production build, EN/RU parity 541 = 541, unit and end-to-end suites green",
+    ],
+    facts: [
+      { value: "3", label: "prices on every product, one cart" },
+      { value: "249", label: "countries the checkout accepts" },
+      { value: "6", label: "recommendation engines behind the shop" },
+    ],
+    custom: true,
+    tags: ["E-commerce", "Web", "Full-stack"],
+    disciplines: ["Web", "Design"],
+    ratio: "wide",
+    photo: "/photos/asartech/home.jpg",
+    cover: "/photos/asartech/home.jpg",
+  },
+  {
     slug: "tmcars",
     title: "TMCARS",
     desc: "Redesign of the largest classifieds app in Turkmenistan — stage one, built as a clickable prototype",
