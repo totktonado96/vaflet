@@ -4,7 +4,6 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import SplitReveal from "@/components/SplitReveal";
 import {
-  Counters,
   DriftShot,
   Filmstrip,
   Moves,
@@ -502,37 +501,6 @@ export default function MinipacsPage() {
             </figcaption>
           </figure>
         </div>
-      </section>
-
-      {/* ---- what came out --------------------------------------------------- */}
-      <section className="shell pb-24 pt-8 md:pb-32 md:pt-16">
-        <Counters
-          items={p.facts ?? []}
-          className="grid gap-px md:grid-cols-3"
-          itemClassName="py-10 md:py-16"
-          labelClassName="mt-4 max-w-[24ch] font-mono text-[11px] font-bold uppercase leading-snug tracking-[0.2em] opacity-60"
-        />
-        <Reveal>
-          <div className="mt-14 grid gap-10 md:grid-cols-3">
-            <p className="display-3 max-w-[14ch] font-extrabold uppercase leading-[1.05]">
-              In production
-            </p>
-            <div className="flex flex-col gap-4 md:col-span-2">
-              {p.outcome.map((line) => (
-                <p
-                  key={line}
-                  className="pb-4 text-[17px] font-light leading-relaxed md:text-[19px]"
-                  style={{ borderBottom: `1px solid ${LINE}` }}
-                >
-                  {line}
-                </p>
-              ))}
-              <p className="mt-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] opacity-60">
-                {p.stack}
-              </p>
-            </div>
-          </div>
-        </Reveal>
       </section>
 
       {/* ---- out -------------------------------------------------------------- */}
