@@ -79,7 +79,9 @@ export const PROJECTS: Project[] = [
     disciplines: ["Web", "Design"],
     ratio: "wide",
     photo: "/photos/minipacs/viewer.jpg",
-    cover: "/photos/minipacs/login.jpg",
+    // the mark on the product's own limestone — the grid card reads as brand,
+    // like Aydym's; the marble stays on the case page hero
+    cover: "/photos/minipacs/cover.jpg",
   },
   {
     slug: "asartech",
