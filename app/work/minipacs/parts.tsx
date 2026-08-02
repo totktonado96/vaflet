@@ -952,6 +952,7 @@ export function HalftoneField({
   speed = 1,
   fade = "none",
   intensity = 0.9,
+  dot = "#ffffff",
 }: {
   className?: string;
   gap?: number;
@@ -959,6 +960,8 @@ export function HalftoneField({
   /** Dissolve the dots toward this edge so text placed there stays readable. */
   fade?: "none" | "left" | "right" | "top" | "bottom";
   intensity?: number;
+  /** Dot ink — white in the dark room, obsidian on stone cards. */
+  dot?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -1038,7 +1041,7 @@ export function HalftoneField({
     const draw = (tMs: number) => {
       const t = (tMs / 1000) * speed;
       ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = dot;
 
       // dense dots stay just short of merging, so the darkest zone still
       // reads as halftone rather than a flat fill
@@ -1141,7 +1144,7 @@ export function HalftoneField({
       host.removeEventListener("pointermove", onPointer);
       host.removeEventListener("pointerleave", onLeave);
     };
-  }, [gap, speed, fade, intensity]);
+  }, [gap, speed, fade, intensity, dot]);
 
   return <canvas ref={canvasRef} aria-hidden="true" className={className} />;
 }
