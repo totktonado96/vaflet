@@ -171,7 +171,26 @@ export default function MinipacsPage() {
             alt="The MiniPACS mark — a stack of DICOM slices — with the wordmark, white on obsidian"
             className="aspect-[16/10] w-full md:aspect-[21/9]"
             priority
-          />
+          >
+            <span className="absolute inset-x-0 bottom-6 z-10 flex flex-wrap justify-center gap-3 px-4 md:bottom-10">
+              <a
+                href="https://demo.minipacs.net/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full border-2 border-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-white hover:text-black"
+              >
+                Live demo ↗
+              </a>
+              <a
+                href="https://minipacs.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full border-2 border-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-white hover:text-black"
+              >
+                minipacs.net ↗
+              </a>
+            </span>
+          </DriftShot>
         </div>
       </section>
 

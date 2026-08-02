@@ -127,11 +127,14 @@ export function DriftShot({
   alt,
   className,
   priority = false,
+  children,
 }: {
   src: string;
   alt: string;
   className?: string;
   priority?: boolean;
+  /** overlays that should ride the drifting frame (badges, buttons) */
+  children?: ReactNode;
 }) {
   const frame = useRef<HTMLDivElement>(null);
 
@@ -169,6 +172,7 @@ export function DriftShot({
         sizes="100vw"
         className="object-cover"
       />
+      {children}
     </div>
   );
 }
