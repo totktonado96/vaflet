@@ -515,7 +515,7 @@ export function HalftoneField({
   className = "",
   gap = 15,
   speed = 1,
-  fade = "left",
+  fade = "none",
   intensity = 0.9,
 }: {
   className?: string;
@@ -540,6 +540,38 @@ export function HalftoneField({
     let height = 0;
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
     const pointer = { x: -9999, y: -9999, active: false };
+    // rectangles the dots must clear out of — the copy, wherever it lands
+    let avoid: { x0: number; y0: number; x1: number; y1: number }[] = [];
+
+    const measureAvoid = () => {
+      const host = canvas.parentElement;
+      if (!host) return;
+      const base = canvas.getBoundingClientRect();
+      const PAD = 18;
+      avoid = Array.from(host.querySelectorAll<HTMLElement>("[data-halftone-avoid]")).map(
+        (el) => {
+          const r = el.getBoundingClientRect();
+          return {
+            x0: r.left - base.left - PAD,
+            y0: r.top - base.top - PAD,
+            x1: r.right - base.left + PAD,
+            y1: r.bottom - base.top + PAD,
+          };
+        },
+      );
+    };
+
+    /** 0 inside a copy block, ramping to 1 within ~90 px of its edge. */
+    const avoidWeight = (x: number, y: number) => {
+      let w = 1;
+      for (const r of avoid) {
+        const dx = Math.max(r.x0 - x, 0, x - r.x1);
+        const dy = Math.max(r.y0 - y, 0, y - r.y1);
+        w = Math.min(w, Math.min(1, Math.max(dx, dy) / 90));
+        if (w === 0) return 0;
+      }
+      return w;
+    };
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -549,6 +581,7 @@ export function HalftoneField({
       canvas.width = Math.max(1, Math.floor(width * dpr));
       canvas.height = Math.max(1, Math.floor(height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      measureAvoid();
     };
 
     const edgeWeight = (x: number, y: number) => {
@@ -604,7 +637,7 @@ export function HalftoneField({
             }
           }
 
-          n = Math.max(0, Math.min(1, n * intensity * edgeWeight(x, y)));
+          n = Math.max(0, Math.min(1, n * intensity * edgeWeight(x, y) * avoidWeight(x, y)));
           n = n * n * (3 - 2 * n);
 
           const r = n * maxR;
@@ -624,6 +657,11 @@ export function HalftoneField({
 
     resize();
     if (reduce) draw(0);
+    // the copy reflows once the webfont lands — measure again when it does
+    document.fonts?.ready.then(() => {
+      measureAvoid();
+      if (reduce) draw(0);
+    });
 
     // the field breathes only while it is actually on screen
     const io = new IntersectionObserver(([entry]) => {

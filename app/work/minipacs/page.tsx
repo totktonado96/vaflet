@@ -292,6 +292,7 @@ export default function MinipacsPage() {
         />
         <div className="shell relative pt-24 md:pt-36">
           <p
+            data-halftone-avoid
             className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
             style={{ color: OVERLAY }}
           >
@@ -301,7 +302,7 @@ export default function MinipacsPage() {
             Reading happens in the dark
           </SplitReveal>
           <Reveal>
-            <div className="mt-12 grid gap-10 md:mt-16 md:grid-cols-3">
+            <div data-halftone-avoid className="mt-12 grid gap-10 md:mt-16 md:grid-cols-3">
               <p className="text-[17px] font-light leading-relaxed opacity-80 md:text-[19px]">
                 No workstation, no install, no dongle: a study opens in any
                 browser in under a second, on whatever machine the radiologist
@@ -321,7 +322,7 @@ export default function MinipacsPage() {
           </Reveal>
         </div>
         {/* everything the archive accepts, dragged past by the scroll */}
-        <div className="relative mt-14 md:mt-20">
+        <div data-halftone-avoid className="relative mt-14 md:mt-20">
           <Tape />
         </div>
         <div className="relative px-5 pb-24 pt-10 md:px-10 md:pb-36 md:pt-14">
