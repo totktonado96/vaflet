@@ -58,8 +58,9 @@ export function CaseFx() {
 
 /**
  * The cine scrubber off the viewer's own edge: page progress as an instance
- * counter, 01 / 22, with a thin fill running the right edge. White under
- * mix-blend-difference, so it reads on stone and in the dark room alike.
+ * counter, 01 / 22, sitting in the bottom corner. Just the number — the
+ * browser already owns the scrollbar. White under mix-blend-difference, so
+ * it reads on stone and in the dark room alike.
  */
 export function CineBar({ total = 22 }: { total?: number }) {
   const root = useRef<HTMLDivElement>(null);
@@ -70,27 +71,18 @@ export function CineBar({ total = 22 }: { total?: number }) {
         gsap.set(root.current, { display: "none" });
         return;
       }
-      const fill = root.current!.querySelector<HTMLElement>("[data-cine-fill]");
       const num = root.current!.querySelector<HTMLElement>("[data-cine-n]");
-      gsap.fromTo(
-        fill,
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          ease: "none",
-          scrollTrigger: {
-            trigger: "[data-case]",
-            start: "top top",
-            end: "bottom bottom",
-            scrub: true,
-            onUpdate: (self) => {
-              num!.textContent = String(
-                1 + Math.round(self.progress * (total - 1)),
-              ).padStart(2, "0");
-            },
-          },
+      ScrollTrigger.create({
+        trigger: "[data-case]",
+        start: "top top",
+        end: "bottom bottom",
+        onUpdate: (self) => {
+          num!.textContent = String(1 + Math.round(self.progress * (total - 1))).padStart(
+            2,
+            "0",
+          );
         },
-      );
+      });
     },
     { scope: root },
   );
@@ -99,17 +91,10 @@ export function CineBar({ total = 22 }: { total?: number }) {
     <div
       ref={root}
       aria-hidden
-      className="pointer-events-none fixed inset-y-0 right-0 z-40 hidden md:block"
+      className="pointer-events-none fixed bottom-5 right-4 z-40 hidden md:block"
       style={{ mixBlendMode: "difference" }}
     >
-      <div className="absolute inset-y-0 right-0 w-[3px]">
-        <div
-          data-cine-fill
-          className="h-full w-full origin-top bg-white"
-          style={{ transform: "scaleY(0)" }}
-        />
-      </div>
-      <p className="absolute bottom-5 right-4 font-mono text-[10px] font-bold tracking-[0.3em] text-white">
+      <p className="font-mono text-[10px] font-bold tracking-[0.3em] text-white">
         <span data-cine-n>01</span> / {String(total).padStart(2, "0")}
       </p>
     </div>
