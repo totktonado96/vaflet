@@ -444,11 +444,16 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
         wc.textContent = "343";
       };
       const host = frame.current!;
+      // scrolling slides the frame under a resting cursor without any
+      // pointer event, which would leave a stale window — scroll resets it
+      const onScroll = () => onLeave();
       host.addEventListener("pointermove", onMove);
       host.addEventListener("pointerleave", onLeave);
+      window.addEventListener("scroll", onScroll, { passive: true });
       return () => {
         host.removeEventListener("pointermove", onMove);
         host.removeEventListener("pointerleave", onLeave);
+        window.removeEventListener("scroll", onScroll);
       };
     },
     { scope: frame },
