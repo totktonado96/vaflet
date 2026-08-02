@@ -318,11 +318,142 @@ export function Dictation() {
 
 /**
  * The box itself, drawn in the mark's own isometric language — solid cap,
- * outlined shelves — with the three facts that make it the product. The
- * strokes draw themselves the first time the section is seen.
+ * outlined shelves — and fed: little 1-bit study tiles stream in from the
+ * edges of the section and vanish under the cap, the way studies arrive
+ * over C-STORE all day. The strokes draw themselves, the power light blinks.
  */
 export function MiniBox() {
   const root = useRef<HTMLDivElement>(null);
+
+  // the stream: canvas under the svg, so arrivals disappear under the cap
+  useEffect(() => {
+    const host = root.current;
+    if (!host || reducedMotion()) return;
+    const canvas = host.querySelector<HTMLCanvasElement>("[data-box-stream]");
+    const svg = host.querySelector<SVGSVGElement>("[data-box-svg]");
+    if (!canvas || !svg) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let raf = 0;
+    let running = false;
+    let width = 0;
+    let height = 0;
+    let tx = 0;
+    let ty = 0;
+    let last = 0;
+
+    type Tile = {
+      x0: number;
+      y0: number;
+      cx: number;
+      cy: number;
+      t: number;
+      dur: number;
+      size: number;
+      filled: boolean;
+      rot: number;
+      spin: number;
+    };
+    let tiles: Tile[] = [];
+
+    const spawn = (): Tile => {
+      const side = Math.random();
+      let x, y;
+      if (side < 0.4) {
+        x = -24;
+        y = Math.random() * height * 0.75;
+      } else if (side < 0.8) {
+        x = width + 24;
+        y = Math.random() * height * 0.75;
+      } else {
+        x = Math.random() * width;
+        y = -24;
+      }
+      return {
+        x0: x,
+        y0: y,
+        cx: (x + tx) / 2 + (Math.random() - 0.5) * 180,
+        cy: Math.min(y, ty) - 40 - Math.random() * 130,
+        t: -Math.random() * 0.8,
+        dur: 2.4 + Math.random() * 2.4,
+        size: 5 + Math.random() * 9,
+        filled: Math.random() < 0.5,
+        rot: Math.random() * Math.PI,
+        spin: (Math.random() - 0.5) * 1.4,
+      };
+    };
+
+    const resize = () => {
+      const rect = host.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = rect.width;
+      height = rect.height;
+      canvas.width = Math.max(1, Math.floor(width * dpr));
+      canvas.height = Math.max(1, Math.floor(height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const s = svg.getBoundingClientRect();
+      // the cap's centre, in canvas coordinates — where the tiles vanish
+      tx = s.left - rect.left + s.width / 2;
+      ty = s.top - rect.top + s.height * 0.33;
+      if (!tiles.length) tiles = Array.from({ length: 14 }, spawn);
+    };
+
+    const step = (now: number) => {
+      if (!running) return;
+      const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
+      last = now;
+      ctx.clearRect(0, 0, width, height);
+      ctx.strokeStyle = INK;
+      ctx.fillStyle = INK;
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i < tiles.length; i++) {
+        const p = tiles[i];
+        p.t += dt / p.dur;
+        if (p.t >= 1) {
+          tiles[i] = spawn();
+          continue;
+        }
+        if (p.t < 0) continue;
+        const t = p.t;
+        const u = 1 - t;
+        const x = u * u * p.x0 + 2 * u * t * p.cx + t * t * tx;
+        const y = u * u * p.y0 + 2 * u * t * p.cy + t * t * ty;
+        const alpha = t < 0.12 ? t / 0.12 : t > 0.85 ? (1 - t) / 0.15 : 1;
+        const size = p.size * (0.55 + 0.45 * u);
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.85;
+        ctx.translate(x, y);
+        ctx.rotate(p.rot + p.spin * t * Math.PI);
+        if (p.filled) ctx.fillRect(-size / 2, -size / 2, size, size);
+        else ctx.strokeRect(-size / 2, -size / 2, size, size);
+        ctx.restore();
+      }
+      raf = requestAnimationFrame(step);
+    };
+
+    resize();
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !running) {
+        running = true;
+        last = performance.now();
+        raf = requestAnimationFrame(step);
+      } else if (!entry.isIntersecting) {
+        running = false;
+        cancelAnimationFrame(raf);
+      }
+    });
+    io.observe(host);
+    const ro = new ResizeObserver(resize);
+    ro.observe(host);
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      ro.disconnect();
+    };
+  }, []);
 
   useGSAP(
     () => {
@@ -359,6 +490,16 @@ export function MiniBox() {
         ease: "power3.out",
         scrollTrigger: { trigger: root.current, start: "top 78%", once: true },
       });
+      // the machine is on
+      gsap.to("[data-box-led]", {
+        opacity: 0.15,
+        duration: 0.1,
+        repeat: -1,
+        repeatDelay: 1.7,
+        yoyo: true,
+        ease: "steps(1)",
+        delay: 1.6,
+      });
     },
     { scope: root },
   );
@@ -369,9 +510,16 @@ export function MiniBox() {
   return (
     <div
       ref={root}
-      className="grid items-center gap-10 md:grid-cols-[1fr_auto_1fr] md:gap-16"
+      className="relative grid items-center gap-10 md:grid-cols-[1fr_auto_1fr] md:gap-16"
     >
-      <div className="hidden text-right md:block">
+      {/* the stream of arriving studies, under everything */}
+      <canvas
+        data-box-stream
+        aria-hidden
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      />
+
+      <div className="relative hidden text-right md:block">
         <p data-box-label className={label}>
           one mini PC,
           <br />
@@ -379,32 +527,38 @@ export function MiniBox() {
         </p>
       </div>
 
-      <svg
-        viewBox="0 0 240 190"
-        className="mx-auto w-[240px] md:w-[300px]"
-        fill="none"
-        stroke={INK}
-        strokeWidth={3}
-        strokeLinejoin="round"
-        strokeLinecap="round"
-        aria-hidden
-      >
-        {/* the cap — solid, like the mark's own diamond */}
-        <path data-box-cap d="M120 22 L204 66 L120 110 L36 66 Z" fill={INK} stroke={INK} />
-        {/* the body */}
-        <path data-box-path d="M36 66 L36 112 L120 156 L120 110" />
-        <path data-box-path d="M204 66 L204 112 L120 156" />
-        {/* vents on the right face */}
-        <path data-box-path d="M150 122 L186 103" strokeWidth={2.5} opacity={0.55} />
-        <path data-box-path d="M150 132 L186 113" strokeWidth={2.5} opacity={0.55} />
-        <path data-box-path d="M150 142 L186 123" strokeWidth={2.5} opacity={0.55} />
-        {/* the power dot */}
-        <circle data-box-path cx="70" cy="112" r="4" strokeWidth={2.5} />
-        {/* the shelf line it sits on */}
-        <path data-box-path d="M12 168 L228 168" strokeWidth={2} opacity={0.35} />
-      </svg>
+      <div className="relative">
+        <svg
+          data-box-svg
+          viewBox="0 0 240 190"
+          className="mx-auto w-[240px] md:w-[300px]"
+          fill="none"
+          stroke={INK}
+          strokeWidth={3}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          aria-hidden
+        >
+          {/* the cap — solid, like the mark's own diamond */}
+          <path data-box-cap d="M120 22 L204 66 L120 110 L36 66 Z" fill={INK} stroke={INK} />
+          {/* the body */}
+          <path data-box-path d="M36 66 L36 112 L120 156 L120 110" />
+          <path data-box-path d="M204 66 L204 112 L120 156" />
+          {/* vents on the right face */}
+          <path data-box-path d="M150 122 L186 103" strokeWidth={2.5} opacity={0.55} />
+          <path data-box-path d="M150 132 L186 113" strokeWidth={2.5} opacity={0.55} />
+          <path data-box-path d="M150 142 L186 123" strokeWidth={2.5} opacity={0.55} />
+          {/* the power light — on */}
+          <circle data-box-path data-box-led cx="70" cy="112" r="4" strokeWidth={2.5} />
+          {/* the shelf line it sits on */}
+          <path data-box-path d="M12 168 L228 168" strokeWidth={2} opacity={0.35} />
+        </svg>
+        <p className="mt-6 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-50">
+          studies arriving over C-STORE, around the clock
+        </p>
+      </div>
 
-      <div className="flex flex-col gap-8 text-left">
+      <div className="relative flex flex-col gap-8 text-left">
         <p data-box-label className={`${label} md:hidden`}>
           one mini PC, on a shelf in the clinic
         </p>
