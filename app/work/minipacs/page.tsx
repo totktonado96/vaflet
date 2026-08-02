@@ -15,12 +15,12 @@ import {
   CaseFx,
   Deal,
   GateHead,
+  HalftoneField,
   HalftoneWordmark,
   Meter,
   Pipeline,
   Rule,
   Tape,
-  ViewerShot,
 } from "./parts";
 import { PROJECTS } from "@/lib/projects";
 
@@ -242,13 +242,19 @@ export default function MinipacsPage() {
       </section>
 
       {/* ---- the reading room: lights off. The page itself dims on the way
-              in (CaseFx), and the product's halftone cloth emerges with it --- */}
+              in (CaseFx), and the product's living halftone breathes under
+              everything — dots flow on value noise and swell to the pointer -- */}
       <section
         data-dark
-        className="inv mp-halftone"
+        className="inv relative isolate overflow-hidden"
         style={{ backgroundColor: INK, color: PAPER }}
       >
-        <div className="shell pt-24 md:pt-36">
+        <HalftoneField
+          className="pointer-events-none absolute inset-0 h-full w-full"
+          fade="left"
+          intensity={0.85}
+        />
+        <div className="shell relative pt-24 md:pt-36">
           <p
             className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
             style={{ color: OVERLAY }}
@@ -279,13 +285,14 @@ export default function MinipacsPage() {
           </Reveal>
         </div>
         {/* everything the archive accepts, dragged past by the scroll */}
-        <div className="mt-14 md:mt-20">
+        <div className="relative mt-14 md:mt-20">
           <Tape />
         </div>
-        <div className="px-5 pb-24 pt-10 md:px-10 md:pb-36 md:pt-14">
-          <ViewerShot
+        <div className="relative px-5 pb-24 pt-10 md:px-10 md:pb-36 md:pt-14">
+          <DriftShot
             src={S("viewer")}
             alt="The browser viewer: an axial MRI brain with classic orange DICOM overlays"
+            className="aspect-[16/10] w-full"
           />
         </div>
       </section>

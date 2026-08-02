@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -17,7 +16,6 @@ const PAPER = "#FAF9F6";
 const INK = "#0A0A0A";
 const LINE = "#E2DED4";
 const GREY = "#6B6B6B";
-const OVERLAY = "#F5A623";
 const RED = "#B42318";
 
 /**
@@ -87,54 +85,187 @@ export function Rule({ colour = INK, thick = 2 }: { colour?: string; thick?: num
   );
 }
 
+/** Smooth 2D value noise (bilinear + smoothstep over a hashed lattice). */
+function valueNoise(x: number, y: number): number {
+  const xi = Math.floor(x);
+  const yi = Math.floor(y);
+  const xf = x - xi;
+  const yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf);
+  const v = yf * yf * (3 - 2 * yf);
+  const a = hash01(xi, yi);
+  const b = hash01(xi + 1, yi);
+  const c = hash01(xi, yi + 1);
+  const d = hash01(xi + 1, yi + 1);
+  return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
+}
+
 /**
- * The viewer shot with the acquisition line still running: a faint overlay-
- * orange scanline sweeps the frame the whole time the section is on screen,
- * plus the same counter-scroll drift every other big shot on the site has.
+ * The living halftone off minipacs.net: a canvas dot field whose per-dot
+ * radius flows over time (layered value noise) and swells toward the pointer.
+ * Painted transparent so the page's own dimming shows through; the loop only
+ * runs while the section is on screen. Reduced motion gets one static frame.
  */
-export function ViewerShot({ src, alt }: { src: string; alt: string }) {
-  const frame = useRef<HTMLDivElement>(null);
+export function HalftoneField({
+  className = "",
+  gap = 15,
+  speed = 1,
+  fade = "left",
+  intensity = 0.9,
+}: {
+  className?: string;
+  gap?: number;
+  speed?: number;
+  /** Dissolve the dots toward this edge so text placed there stays readable. */
+  fade?: "none" | "left" | "right" | "top" | "bottom";
+  intensity?: number;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useGSAP(
-    () => {
-      if (reducedMotion()) return;
-      gsap.fromTo(
-        frame.current,
-        { y: 34 },
-        {
-          y: -34,
-          ease: "none",
-          scrollTrigger: {
-            trigger: frame.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true,
-          },
-        },
-      );
-      gsap.fromTo(
-        "[data-scan]",
-        { top: "-2%" },
-        { top: "101%", duration: 9, ease: "none", repeat: -1 },
-      );
-    },
-    { scope: frame },
-  );
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const reduce = reducedMotion();
 
-  return (
-    <div
-      ref={frame}
-      className="relative aspect-[16/10] w-full overflow-hidden rounded-[1.15rem] md:rounded-[1.5rem]"
-    >
-      <Image src={src} alt={alt} fill sizes="100vw" className="object-cover" />
-      <span
-        data-scan
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[2px]"
-        style={{ backgroundColor: OVERLAY, opacity: 0.3, boxShadow: `0 0 14px ${OVERLAY}` }}
-      />
-    </div>
-  );
+    let raf = 0;
+    let running = false;
+    let width = 0;
+    let height = 0;
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const pointer = { x: -9999, y: -9999, active: false };
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.floor(width * dpr));
+      canvas.height = Math.max(1, Math.floor(height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const edgeWeight = (x: number, y: number) => {
+      // 1 where dots stay dense, 0 where they dissolve (the text-safe zone)
+      switch (fade) {
+        case "left":
+          return Math.min(1, Math.max(0, (x / width - 0.12) / 0.5));
+        case "right":
+          return Math.min(1, Math.max(0, (0.88 - x / width) / 0.5));
+        case "top":
+          return Math.min(1, Math.max(0, (y / height - 0.12) / 0.5));
+        case "bottom":
+          return Math.min(1, Math.max(0, (0.88 - y / height) / 0.5));
+        default:
+          return 1;
+      }
+    };
+
+    const draw = (tMs: number) => {
+      const t = (tMs / 1000) * speed;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#ffffff";
+
+      // dense dots stay just short of merging, so the darkest zone still
+      // reads as halftone rather than a flat fill
+      const maxR = gap * 0.56;
+      const influence = 200;
+      const s1 = 1 / 190;
+      const s2 = 1 / 80;
+
+      let iy = 0;
+      for (let y = gap / 2; y < height; y += gap, iy++) {
+        let ix = 0;
+        for (let x = gap / 2; x < width; x += gap, ix++) {
+          const gx = x / width;
+          const gy = y / height;
+          // gentle diagonal base for an elegant overall direction
+          let n = 0.2 + 0.16 * (1 - (gx * 0.5 + (1 - gy) * 0.5));
+          // non-periodic organic flow: two octaves drifting apart
+          n += (valueNoise(x * s1 + t * 0.1, y * s1 - t * 0.06) - 0.5) * 1.5;
+          n += (valueNoise(x * s2 - t * 0.05, y * s2 + t * 0.08) - 0.5) * 0.7;
+          // per-dot twinkle on its own random phase
+          const seed = hash01(ix + 1, iy + 1);
+          n += 0.13 * Math.sin(t * (0.9 + seed * 1.8) + seed * 6.2831);
+
+          if (pointer.active) {
+            const dx = x - pointer.x;
+            const dy = y - pointer.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < influence) {
+              const k = 1 - dist / influence;
+              n += k * k * 0.55;
+            }
+          }
+
+          n = Math.max(0, Math.min(1, n * intensity * edgeWeight(x, y)));
+          n = n * n * (3 - 2 * n);
+
+          const r = n * maxR;
+          if (r < 0.3) continue;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    };
+
+    const loop = (tMs: number) => {
+      if (!running) return;
+      draw(tMs);
+      raf = requestAnimationFrame(loop);
+    };
+
+    resize();
+    if (reduce) draw(0);
+
+    // the field breathes only while it is actually on screen
+    const io = new IntersectionObserver(([entry]) => {
+      if (reduce) return;
+      if (entry.isIntersecting && !running) {
+        running = true;
+        raf = requestAnimationFrame(loop);
+      } else if (!entry.isIntersecting) {
+        running = false;
+        cancelAnimationFrame(raf);
+      }
+    });
+    io.observe(canvas);
+
+    // the canvas ignores the pointer (links live above it); the section feels it
+    const host = canvas.parentElement ?? canvas;
+    const onPointer = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = e.clientX - rect.left;
+      pointer.y = e.clientY - rect.top;
+      pointer.active = true;
+    };
+    const onLeave = () => {
+      pointer.active = false;
+    };
+
+    const ro = new ResizeObserver(() => {
+      resize();
+      if (reduce) draw(0);
+    });
+    ro.observe(canvas);
+    if (!reduce) {
+      host.addEventListener("pointermove", onPointer);
+      host.addEventListener("pointerleave", onLeave);
+    }
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      ro.disconnect();
+      host.removeEventListener("pointermove", onPointer);
+      host.removeEventListener("pointerleave", onLeave);
+    };
+  }, [gap, speed, fade, intensity]);
+
+  return <canvas ref={canvasRef} aria-hidden="true" className={className} />;
 }
 
 const MODALITIES = "CT · MR · US · XR · DX · MG · NM · PT · RF · XA";

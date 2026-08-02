@@ -398,39 +398,3 @@ html.lenis body {
     animation: none;
   }
 }
-
-/* MiniPACS case: the product's own halftone cloth, worn by the reading room.
-   Two dot layers at different pitches, corner-masked so the cloud dissolves
-   where the copy sits. White dots — invisible on paper, alive once the page
-   dims to obsidian. */
-.mp-halftone {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-}
-.mp-halftone::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.38) 42%, transparent 46%);
-  background-size: 9px 9px;
-  -webkit-mask-image: radial-gradient(125% 115% at 82% 30%, transparent 16%, #000 76%);
-  mask-image: radial-gradient(125% 115% at 82% 30%, transparent 16%, #000 76%);
-  pointer-events: none;
-}
-.mp-halftone::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.18) 44%, transparent 48%);
-  background-size: 6px 6px;
-  -webkit-mask-image: radial-gradient(130% 130% at 8% 92%, #000 6%, transparent 58%);
-  mask-image: radial-gradient(130% 130% at 8% 92%, #000 6%, transparent 58%);
-  pointer-events: none;
-}
-.mp-halftone > * {
-  position: relative;
-  z-index: 1;
-}
