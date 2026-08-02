@@ -21,6 +21,7 @@ import {
   NumbersSpark,
   OrderLog,
   Pipeline,
+  QrField,
   Rule,
   ShotZoom,
   SlotPicker,
@@ -489,20 +490,9 @@ export default function MinipacsPage() {
             </div>
           </div>
           <figure className="justify-self-center">
-            <div
-              className="rounded-[1rem] bg-white p-4 md:p-5"
-              style={{ boxShadow: `inset 0 0 0 1px ${LINE}` }}
-            >
-              <Image
-                src="/photos/minipacs/qr-site.png"
-                alt="QR code opening minipacs.net"
-                width={190}
-                height={190}
-                loading="eager"
-              />
-            </div>
-            <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
-              scan → minipacs.net
+            <QrField className="size-[280px] touch-none md:size-[340px]" />
+            <figcaption className="mt-6 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+              the halftone you can actually scan
             </figcaption>
             <a
               href="https://minipacs.net"

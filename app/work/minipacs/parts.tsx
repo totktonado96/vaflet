@@ -20,6 +20,189 @@ const GREY = "#6B6B6B";
 const OVERLAY = "#F5A623";
 const RED = "#B42318";
 
+/* The QR for https://minipacs.net (v2, ECC M) — 25×25, baked at build time */
+const QR_ROWS = [
+  "1111111010001001001111111",
+  "1000001000110010001000001",
+  "1011101011101011101011101",
+  "1011101011010010001011101",
+  "1011101001101000101011101",
+  "1000001010011111101000001",
+  "1111111010101010101111111",
+  "0000000011110010000000000",
+  "1101001100110110011101101",
+  "1000100010111111110000001",
+  "0111001011010111011001110",
+  "0100010011110100101010100",
+  "0100001100100011011111101",
+  "1111010000010101010011100",
+  "0001111011000110000001001",
+  "0010100100011101000101010",
+  "1000001001110100111110000",
+  "0000000000111110100011101",
+  "1111111010101110101011111",
+  "1000001001100101100010001",
+  "1011101000111111111111111",
+  "1011101010010000100011001",
+  "1011101000011010111001111",
+  "1000001011001010101111101",
+  "1111111010001101111001001",
+];
+
+/**
+ * The QR as what it always was — a halftone. Every dark module is a particle
+ * with a home; the pointer blows the code apart, a damped spring reassembles
+ * it into something a phone can actually scan. Same physics as the wordmark.
+ */
+export function QrField({ className = "" }: { className?: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const reduce = reducedMotion();
+
+    let raf = 0;
+    let running = false;
+    let width = 0;
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    let n = 0;
+    let hx = new Float32Array(0);
+    let hy = new Float32Array(0);
+    let px = new Float32Array(0);
+    let py = new Float32Array(0);
+    let vx = new Float32Array(0);
+    let vy = new Float32Array(0);
+    let r = 4;
+
+    const pointer = { x: -9999, y: -9999, active: false };
+    const RADIUS = 64;
+    const R2 = RADIUS * RADIUS;
+    const FORCE = 2.6;
+    const SPRING = 0.05;
+    const DAMP = 0.86;
+
+    const build = () => {
+      const rect = canvas.getBoundingClientRect();
+      width = rect.width;
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.floor(width * dpr));
+      canvas.height = canvas.width;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const m = QR_ROWS.length;
+      const pitch = width / m;
+      r = pitch * 0.46;
+      const homes: number[] = [];
+      for (let y = 0; y < m; y++) {
+        for (let x = 0; x < m; x++) {
+          if (QR_ROWS[y][x] === "1") homes.push((x + 0.5) * pitch, (y + 0.5) * pitch);
+        }
+      }
+      n = homes.length / 2;
+      hx = new Float32Array(n);
+      hy = new Float32Array(n);
+      px = new Float32Array(n);
+      py = new Float32Array(n);
+      vx = new Float32Array(n);
+      vy = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        hx[i] = px[i] = homes[i * 2];
+        hy[i] = py[i] = homes[i * 2 + 1];
+      }
+    };
+
+    const step = () => {
+      if (!running) return;
+      ctx.clearRect(0, 0, width, width);
+      ctx.fillStyle = INK;
+      for (let i = 0; i < n; i++) {
+        let ax = (hx[i] - px[i]) * SPRING;
+        let ay = (hy[i] - py[i]) * SPRING;
+        if (pointer.active) {
+          const dx = px[i] - pointer.x;
+          const dy = py[i] - pointer.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < R2) {
+            const d = Math.sqrt(d2) || 1;
+            const f = (1 - d / RADIUS) * FORCE;
+            ax += (dx / d) * f;
+            ay += (dy / d) * f;
+          }
+        }
+        vx[i] = (vx[i] + ax) * DAMP;
+        vy[i] = (vy[i] + ay) * DAMP;
+        px[i] += vx[i];
+        py[i] += vy[i];
+        ctx.beginPath();
+        ctx.arc(px[i], py[i], r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      raf = requestAnimationFrame(step);
+    };
+
+    const staticFrame = () => {
+      ctx.clearRect(0, 0, width, width);
+      ctx.fillStyle = INK;
+      for (let i = 0; i < n; i++) {
+        ctx.beginPath();
+        ctx.arc(hx[i], hy[i], r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    build();
+    if (reduce) staticFrame();
+
+    const io = new IntersectionObserver(([entry]) => {
+      if (reduce) return;
+      if (entry.isIntersecting && !running) {
+        running = true;
+        raf = requestAnimationFrame(step);
+      } else if (!entry.isIntersecting) {
+        running = false;
+        cancelAnimationFrame(raf);
+      }
+    });
+    io.observe(canvas);
+
+    const onMove = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      pointer.x = e.clientX - rect.left;
+      pointer.y = e.clientY - rect.top;
+      pointer.active = true;
+    };
+    const onLeave = () => {
+      pointer.active = false;
+    };
+    const ro = new ResizeObserver(() => {
+      build();
+      if (reduce) staticFrame();
+    });
+    ro.observe(canvas);
+    if (!reduce) {
+      canvas.addEventListener("pointermove", onMove);
+      canvas.addEventListener("pointerdown", onMove);
+      canvas.addEventListener("pointerleave", onLeave);
+    }
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+      io.disconnect();
+      ro.disconnect();
+      canvas.removeEventListener("pointermove", onMove);
+      canvas.removeEventListener("pointerdown", onMove);
+      canvas.removeEventListener("pointerleave", onLeave);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} aria-hidden="true" className={className} />;
+}
+
 /**
  * Touch-screen loupe: on coarse pointers, tapping any product screenshot on
  * the page opens it full-screen on obsidian — pinch to zoom, drag to pan,
