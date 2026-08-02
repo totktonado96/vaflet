@@ -491,9 +491,6 @@ export default function MinipacsPage() {
           </div>
           <figure className="justify-self-center">
             <QrField className="size-[280px] touch-none md:size-[340px]" />
-            <figcaption className="mt-6 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
-              the halftone you can actually scan
-            </figcaption>
             <a
               href="https://minipacs.net"
               target="_blank"
