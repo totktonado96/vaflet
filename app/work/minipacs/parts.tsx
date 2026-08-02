@@ -56,51 +56,6 @@ export function CaseFx() {
   return null;
 }
 
-/**
- * The cine scrubber off the viewer's own edge: page progress as an instance
- * counter, 01 / 22, sitting in the bottom corner. Just the number — the
- * browser already owns the scrollbar. White under mix-blend-difference, so
- * it reads on stone and in the dark room alike.
- */
-export function CineBar({ total = 22 }: { total?: number }) {
-  const root = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      if (reducedMotion()) {
-        gsap.set(root.current, { display: "none" });
-        return;
-      }
-      const num = root.current!.querySelector<HTMLElement>("[data-cine-n]");
-      ScrollTrigger.create({
-        trigger: "[data-case]",
-        start: "top top",
-        end: "bottom bottom",
-        onUpdate: (self) => {
-          num!.textContent = String(1 + Math.round(self.progress * (total - 1))).padStart(
-            2,
-            "0",
-          );
-        },
-      });
-    },
-    { scope: root },
-  );
-
-  return (
-    <div
-      ref={root}
-      aria-hidden
-      className="pointer-events-none fixed bottom-5 right-4 z-40 hidden md:block"
-      style={{ mixBlendMode: "difference" }}
-    >
-      <p className="font-mono text-[10px] font-bold tracking-[0.3em] text-white">
-        <span data-cine-n>01</span> / {String(total).padStart(2, "0")}
-      </p>
-    </div>
-  );
-}
-
 /** A rule that draws itself the first time it is seen. */
 export function Rule({ colour = INK, thick = 2 }: { colour?: string; thick?: number }) {
   const ref = useRef<HTMLDivElement>(null);
