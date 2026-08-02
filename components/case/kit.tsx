@@ -307,29 +307,37 @@ export function Filmstrip({
   useGSAP(
     () => {
       if (reducedMotion()) return;
-      const el = track.current!;
-      const distance = () => el.scrollWidth - window.innerWidth + 80;
-      gsap.to(el, {
-        x: () => -distance(),
-        ease: "none",
-        scrollTrigger: {
-          trigger: root.current,
-          start: "top top",
-          end: () => "+=" + distance(),
-          pin: true,
-          scrub: 0.6,
-          invalidateOnRefresh: true,
-        },
+      // desktop: pinned, dragged sideways by the scrollbar. Phones scroll it
+      // with a thumb instead — a pinned screen there is mostly empty air.
+      const mm = gsap.matchMedia();
+      mm.add("(min-width: 768px)", () => {
+        const el = track.current!;
+        const distance = () => el.scrollWidth - window.innerWidth + 80;
+        gsap.to(el, {
+          x: () => -distance(),
+          ease: "none",
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top top",
+            end: () => "+=" + distance(),
+            pin: true,
+            scrub: 0.6,
+            invalidateOnRefresh: true,
+          },
+        });
       });
     },
     { scope: root },
   );
 
   return (
-    <div ref={root} className="flex min-h-screen items-center overflow-hidden py-16">
-      <div ref={track} className="flex w-max gap-6 pl-5 md:gap-10 md:pl-10">
+    <div
+      ref={root}
+      className="flex snap-x snap-mandatory overflow-x-auto py-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:min-h-screen md:snap-none md:items-center md:overflow-hidden md:py-16"
+    >
+      <div ref={track} className="flex w-max gap-6 pl-5 pr-5 md:gap-10 md:pl-10 md:pr-0">
         {shots.map((s) => (
-          <figure key={s.src} className={`${itemWidth} shrink-0`}>
+          <figure key={s.src} className={`${itemWidth} shrink-0 snap-center md:snap-align-none`}>
             <div className={`relative ${ratio} overflow-hidden rounded-[1rem] md:rounded-[1.25rem]`}>
               <Image
                 src={s.src}
