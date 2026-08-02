@@ -22,6 +22,7 @@ import {
   OrderLog,
   Pipeline,
   Rule,
+  ShotZoom,
   SlotPicker,
   Tape,
   VideoDrift,
@@ -135,6 +136,7 @@ export default function MinipacsPage() {
   return (
     <main data-case style={{ backgroundColor: PAPER, color: INK }}>
       <CaseFx />
+      <ShotZoom />
       {/* ---- title, then the marble the product signs in on --------------- */}
       <section className="pt-32 md:pt-44">
         <div className="shell">

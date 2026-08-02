@@ -21,6 +21,204 @@ const OVERLAY = "#F5A623";
 const RED = "#B42318";
 
 /**
+ * Touch-screen loupe: on coarse pointers, tapping any product screenshot on
+ * the page opens it full-screen on obsidian — pinch to zoom, drag to pan,
+ * double-tap to jump in and out. Wired by delegation, so every shot on the
+ * page gets it without knowing.
+ */
+export function ShotZoom() {
+  const [shot, setShot] = useState<{ src: string; alt: string } | null>(null);
+  const stage = useRef<HTMLDivElement>(null);
+
+  // open: any tapped screenshot inside the case (not the QR, not the brand card)
+  useEffect(() => {
+    if (!window.matchMedia("(pointer: coarse)").matches) return;
+    const onClick = (e: MouseEvent) => {
+      if ((e.target as HTMLElement | null)?.closest?.("[data-shotzoom]")) return;
+      const img = (e.target as HTMLElement | null)?.closest?.("[data-case]")
+        ? ((e.target as HTMLElement).closest("img") as HTMLImageElement | null)
+        : null;
+      if (!img) return;
+      let orig = img.currentSrc || img.src;
+      try {
+        const u = new URL(orig, location.href);
+        orig = u.searchParams.get("url") ?? u.pathname;
+      } catch {
+        /* keep as is */
+      }
+      if (!orig.includes("/photos/minipacs/")) return;
+      if (orig.includes("qr-") || orig.includes("cover")) return;
+      setShot({ src: orig, alt: img.alt || "" });
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
+
+  // gestures: pinch, pan, double-tap — plain pointer math, no library
+  useEffect(() => {
+    if (!shot) return;
+    const el = stage.current;
+    const wrap = el?.querySelector<HTMLElement>("[data-zoom-wrap]");
+    if (!el || !wrap) return;
+
+    const lenis = (window as unknown as { __lenis?: { stop: () => void; start: () => void } })
+      .__lenis;
+    lenis?.stop();
+    document.documentElement.style.overflow = "hidden";
+
+    let scale = 1;
+    let tx = 0;
+    let ty = 0;
+    const pointers = new Map<number, { x: number; y: number }>();
+    let base = { dist: 0, scale: 1, mx: 0, my: 0, tx: 0, ty: 0 };
+    let lastTap = 0;
+
+    const paint = (animate = false) => {
+      wrap.style.transition = animate ? "transform 0.3s cubic-bezier(0.22,1,0.36,1)" : "none";
+      wrap.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+    };
+    const clamp = () => {
+      const r = el.getBoundingClientRect();
+      const mx = (r.width * (scale - 1)) / 2;
+      const my = (r.height * (scale - 1)) / 2;
+      tx = Math.min(mx, Math.max(-mx, tx));
+      ty = Math.min(my, Math.max(-my, ty));
+    };
+    const mid = () => {
+      const p = [...pointers.values()];
+      return p.length > 1
+        ? { x: (p[0].x + p[1].x) / 2, y: (p[0].y + p[1].y) / 2, d: Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y) }
+        : { x: p[0]?.x ?? 0, y: p[0]?.y ?? 0, d: 0 };
+    };
+    const rebase = () => {
+      const m = mid();
+      base = { dist: m.d, scale, mx: m.x, my: m.y, tx, ty };
+    };
+
+    const down = (e: PointerEvent) => {
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        /* synthetic pointers may refuse capture — bubbling covers us */
+      }
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      rebase();
+      if (pointers.size === 1) {
+        const now = Date.now();
+        if (now - lastTap < 320) {
+          const r = el.getBoundingClientRect();
+          if (scale > 1.2) {
+            scale = 1;
+            tx = 0;
+            ty = 0;
+          } else {
+            scale = 2.5;
+            tx = (r.width / 2 + r.left - e.clientX) * 1.5;
+            ty = (r.height / 2 + r.top - e.clientY) * 1.5;
+            clamp();
+          }
+          paint(true);
+        }
+        lastTap = now;
+      }
+    };
+    const move = (e: PointerEvent) => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const m = mid();
+      if (pointers.size >= 2) {
+        scale = Math.min(4, Math.max(1, (base.scale * m.d) / (base.dist || 1)));
+        tx = base.tx + (m.x - base.mx);
+        ty = base.ty + (m.y - base.my);
+      } else if (scale > 1) {
+        tx = base.tx + (m.x - base.mx);
+        ty = base.ty + (m.y - base.my);
+      }
+      clamp();
+      paint();
+    };
+    const up = (e: PointerEvent) => {
+      pointers.delete(e.pointerId);
+      if (scale < 1.05 && pointers.size === 0) {
+        scale = 1;
+        tx = 0;
+        ty = 0;
+        paint(true);
+      } else rebase();
+    };
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShot(null);
+    };
+
+    el.addEventListener("pointerdown", down);
+    el.addEventListener("pointermove", move);
+    el.addEventListener("pointerup", up);
+    el.addEventListener("pointercancel", up);
+    window.addEventListener("keydown", key);
+    paint();
+
+    return () => {
+      lenis?.start();
+      document.documentElement.style.overflow = "";
+      el.removeEventListener("pointerdown", down);
+      el.removeEventListener("pointermove", move);
+      el.removeEventListener("pointerup", up);
+      el.removeEventListener("pointercancel", up);
+      window.removeEventListener("keydown", key);
+    };
+  }, [shot]);
+
+  if (!shot) return null;
+
+  return (
+    <div
+      data-shotzoom
+      className="fixed inset-0 z-[400] flex flex-col"
+      style={{ backgroundColor: INK, color: PAPER }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={shot.alt || "Screenshot"}
+    >
+      <div className="flex items-center justify-between px-5 py-4">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+          pinch · drag · double-tap
+        </p>
+        <button
+          type="button"
+          onClick={() => setShot(null)}
+          aria-label="Close"
+          className="flex size-11 items-center justify-center rounded-full text-[20px] leading-none"
+          style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.3)" }}
+        >
+          ✕
+        </button>
+      </div>
+      <div
+        ref={stage}
+        className="relative flex-1 overflow-hidden"
+        style={{ touchAction: "none" }}
+      >
+        <div data-zoom-wrap className="absolute inset-0 flex items-center justify-center p-2">
+          {/* the untouched original file — full 1437 px, worth zooming into */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={shot.src}
+            alt={shot.alt}
+            className="max-h-full max-w-full object-contain"
+            draggable={false}
+          />
+        </div>
+      </div>
+      {shot.alt && (
+        <p className="px-5 pb-6 pt-3 text-center text-[12px] font-light leading-relaxed opacity-70">
+          {shot.alt}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
  * A screenshot behind minimal browser chrome, shown smaller than full bleed:
  * the 1437-px sources stay close to their native size on retina, which is the
  * whole point. Drifts against the scroll like every big shot on the site.
