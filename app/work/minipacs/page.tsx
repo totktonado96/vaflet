@@ -11,7 +11,18 @@ import {
   Moves,
   Reveal,
 } from "@/components/case/kit";
-import { Meter, Pipeline } from "./parts";
+import {
+  CaseFx,
+  CineBar,
+  Deal,
+  GateHead,
+  HalftoneWordmark,
+  Meter,
+  Pipeline,
+  Rule,
+  Tape,
+  ViewerShot,
+} from "./parts";
 import { PROJECTS } from "@/lib/projects";
 
 /**
@@ -135,7 +146,9 @@ export default function MinipacsPage() {
     PROJECTS[(PROJECTS.findIndex((x) => x.slug === "minipacs") + 1) % PROJECTS.length];
 
   return (
-    <main style={{ backgroundColor: PAPER, color: INK }}>
+    <main data-case style={{ backgroundColor: PAPER, color: INK }}>
+      <CaseFx />
+      <CineBar />
       {/* ---- title, then the marble the product signs in on --------------- */}
       <section className="pt-32 md:pt-44">
         <div className="shell">
@@ -145,13 +158,13 @@ export default function MinipacsPage() {
           >
             ← All work
           </Link>
-          <SplitReveal
-            as="h1"
-            onLoad
-            className="display-1 mt-6 font-extrabold uppercase leading-[0.92]"
-          >
-            MiniPACS + Vendo
-          </SplitReveal>
+          {/* the product's own masthead trick: the title in halftone, and the
+              pointer blows the letters apart */}
+          <h1 className="sr-only">MiniPACS + Vendo</h1>
+          <HalftoneWordmark
+            text="MINIPACS + VENDO"
+            className="mt-6 h-[clamp(2.4rem,9.4vw,9.4rem)] w-full"
+          />
           <div className="mt-6 flex flex-wrap items-baseline gap-x-8 gap-y-3">
             <p className="max-w-[48ch] text-[17px] font-light leading-relaxed md:text-[19px]">
               {p.desc}
@@ -203,7 +216,8 @@ export default function MinipacsPage() {
       </section>
 
       {/* ---- chapter one: the archive ------------------------------------- */}
-      <section className="shell pb-6 md:pb-10" style={{ borderTop: `2px solid ${INK}` }}>
+      <Rule />
+      <section className="shell pb-6 md:pb-10">
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 pt-16 md:pt-24">
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]">
             01 — MiniPACS
@@ -220,8 +234,13 @@ export default function MinipacsPage() {
         </div>
       </section>
 
-      {/* ---- the reading room: lights off --------------------------------- */}
-      <section className="inv" style={{ backgroundColor: INK, color: PAPER }}>
+      {/* ---- the reading room: lights off. The page itself dims on the way
+              in (CaseFx), and the product's halftone cloth emerges with it --- */}
+      <section
+        data-dark
+        className="inv mp-halftone"
+        style={{ backgroundColor: INK, color: PAPER }}
+      >
         <div className="shell pt-24 md:pt-36">
           <p
             className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
@@ -251,15 +270,15 @@ export default function MinipacsPage() {
               </p>
             </div>
           </Reveal>
-          <p className="mt-14 font-mono text-[12px] font-bold uppercase tracking-[0.4em] opacity-70 md:mt-20 md:text-[15px]">
-            CT · MR · US · XR · DX · MG · NM · PT · RF · XA
-          </p>
+        </div>
+        {/* everything the archive accepts, dragged past by the scroll */}
+        <div className="mt-14 md:mt-20">
+          <Tape />
         </div>
         <div className="px-5 pb-24 pt-10 md:px-10 md:pb-36 md:pt-14">
-          <DriftShot
+          <ViewerShot
             src={S("viewer")}
             alt="The browser viewer: an axial MRI brain with classic orange DICOM overlays"
-            className="aspect-[16/10] w-full"
           />
         </div>
       </section>
@@ -275,28 +294,14 @@ export default function MinipacsPage() {
         <div className="mt-14 md:mt-20">
           <Meter />
         </div>
-        <Reveal y={18} stagger={0.06}>
-          <div className="mt-16 md:mt-24">
-            {DEAL.map(([title, note]) => (
-              <div
-                key={title}
-                className="grid gap-2 py-7 md:grid-cols-[22%_1fr] md:gap-10"
-                style={{ borderTop: `1px solid ${LINE}` }}
-              >
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.25em]">
-                  {title}
-                </p>
-                <p className="max-w-[64ch] text-[17px] font-light leading-relaxed opacity-85 md:text-[19px]">
-                  {note}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+        <div className="mt-16 md:mt-24">
+          <Deal items={DEAL} />
+        </div>
       </section>
 
       {/* ---- chapter two: the front door ----------------------------------- */}
-      <section className="shell pb-20 md:pb-28" style={{ borderTop: `2px solid ${INK}` }}>
+      <Rule />
+      <section className="shell pb-20 md:pb-28">
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 pt-16 md:pt-24">
           <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]">
             02 — Vendo
@@ -351,17 +356,10 @@ export default function MinipacsPage() {
         </div>
       </section>
 
-      {/* ---- the safety gate: the one red on this page ---------------------- */}
+      {/* ---- the safety gate: the one red on this page. The lab value runs
+              down with the scroll and the ink flips red under 30 ------------- */}
       <section className="shell pb-24 md:pb-36">
-        <p
-          className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
-          style={{ color: RED }}
-        >
-          The safety gate
-        </p>
-        <SplitReveal className="display-2 mt-8 max-w-[18ch] font-extrabold uppercase leading-[1.0]">
-          eGFR 22. The booking stops here.
-        </SplitReveal>
+        <GateHead />
         <Reveal>
           <div className="mt-12 grid gap-10 md:grid-cols-2">
             <p className="text-[17px] font-light leading-relaxed opacity-80 md:text-[19px]">
@@ -388,13 +386,14 @@ export default function MinipacsPage() {
           <span
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-[inherit]"
-            style={{ boxShadow: `inset 0 0 0 1px rgba(180,35,24,0.4)` }}
+            style={{ boxShadow: `inset 0 0 0 1px ${RED}66` }}
           />
         </div>
       </section>
 
       {/* ---- the rest of the stack, dragged past ---------------------------- */}
-      <section style={{ borderTop: `2px solid ${INK}` }}>
+      <Rule />
+      <section>
         <p className="shell pt-16 font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60 md:pt-24">
           The rest of the stack
         </p>
