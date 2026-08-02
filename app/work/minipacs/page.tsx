@@ -130,6 +130,35 @@ const STRIP = [
   { src: S("vendo-digest"), caption: "The weekly digest — what stalls, flagged early" },
 ];
 
+
+/** A door on the obsidian banner: ink rises from the floor of the pill and
+    the label rolls away for an "open" — the archive chips' move, inverted. */
+function BannerDoor({ href, label, open }: { href: string; label: string; open: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group relative isolate overflow-hidden rounded-full border-2 border-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white"
+    >
+      <span
+        aria-hidden
+        className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-white transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
+      />
+      <span className="block h-[13px] overflow-hidden">
+        <span className="flex flex-col transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-1/2">
+          <span className="flex h-[13px] items-center justify-center leading-none">
+            {label}
+          </span>
+          <span className="flex h-[13px] items-center justify-center leading-none text-black">
+            {open}
+          </span>
+        </span>
+      </span>
+    </a>
+  );
+}
+
 export default function MinipacsPage() {
   const next =
     PROJECTS[(PROJECTS.findIndex((x) => x.slug === "minipacs") + 1) % PROJECTS.length];
@@ -167,28 +196,15 @@ export default function MinipacsPage() {
 
         <div className="mt-12 px-5 md:mt-16 md:px-10">
           <DriftShot
-            src={S("cover-dark")}
+            src={S("cover-duo")}
             alt="The MiniPACS mark — a stack of DICOM slices — with the wordmark, white on obsidian"
             className="aspect-[16/10] w-full md:aspect-[21/9]"
             priority
           >
             <span className="absolute inset-x-0 bottom-6 z-10 flex flex-wrap justify-center gap-3 px-4 md:bottom-10">
-              <a
-                href="https://demo.minipacs.net/login"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full border-2 border-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-white hover:text-black"
-              >
-                Live demo ↗
-              </a>
-              <a
-                href="https://minipacs.net"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full border-2 border-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white transition-colors duration-300 hover:bg-white hover:text-black"
-              >
-                minipacs.net ↗
-              </a>
+              <BannerDoor href="https://demo.minipacs.net/login" label="MiniPACS demo" open="read a study ↗" />
+              <BannerDoor href="https://vendo.minipacs.net/login" label="Vendo demo" open="book a slot ↗" />
+              <BannerDoor href="https://minipacs.net" label="minipacs.net" open="bring it home ↗" />
             </span>
           </DriftShot>
         </div>
