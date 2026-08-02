@@ -165,7 +165,7 @@ export default function MinipacsPage() {
           <DriftShot
             src={S("cover-dark")}
             alt="The MiniPACS mark — a stack of DICOM slices — with the wordmark, white on obsidian"
-            className="aspect-[16/10] w-full"
+            className="aspect-[16/10] w-full md:aspect-[21/9]"
             priority
           />
         </div>
