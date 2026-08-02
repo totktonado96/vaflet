@@ -398,30 +398,3 @@ html.lenis body {
     animation: none;
   }
 }
-
-/* MiniPACS case, the proof card: the product site's halftone cloud, static —
-   one dot grid, two soft hotspots parked in the card's empty zones. */
-.mp-proof-halftone {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-}
-.mp-proof-halftone::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image: radial-gradient(circle, rgba(10, 10, 10, 0.5) 40%, transparent 45%);
-  background-size: 11px 11px;
-  -webkit-mask-image:
-    radial-gradient(34% 52% at 62% 20%, #000 12%, transparent 78%),
-    radial-gradient(30% 46% at 52% 94%, #000 10%, transparent 76%);
-  mask-image:
-    radial-gradient(34% 52% at 62% 20%, #000 12%, transparent 78%),
-    radial-gradient(30% 46% at 52% 94%, #000 10%, transparent 76%);
-  pointer-events: none;
-}
-.mp-proof-halftone > * {
-  position: relative;
-  z-index: 1;
-}

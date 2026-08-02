@@ -454,7 +454,7 @@ export default function MinipacsPage() {
       {/* ---- the proof: don't take the screenshots' word for it ------------- */}
       <section className="shell pb-8 pt-4 md:pb-16 md:pt-8">
         <div
-          className="mp-proof-halftone grid gap-10 rounded-[1.25rem] px-6 py-12 md:grid-cols-[1fr_auto] md:items-center md:gap-16 md:rounded-[2rem] md:px-14 md:py-16"
+          className="grid gap-10 rounded-[1.25rem] px-6 py-12 md:grid-cols-[1fr_auto] md:items-center md:gap-16 md:rounded-[2rem] md:px-14 md:py-16"
           style={{ backgroundColor: CARD, boxShadow: `inset 0 0 0 1px ${LINE}` }}
         >
           <div>
