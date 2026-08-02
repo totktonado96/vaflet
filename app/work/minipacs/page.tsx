@@ -504,6 +504,14 @@ export default function MinipacsPage() {
             <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
               scan → minipacs.net
             </figcaption>
+            <a
+              href="https://minipacs.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mx-auto mt-5 block w-max rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+            >
+              minipacs.net ↗
+            </a>
           </figure>
         </div>
       </section>
