@@ -48,6 +48,40 @@ export type Project = {
 
 export const PROJECTS: Project[] = [
   {
+    slug: "minipacs",
+    title: "MiniPACS + Vendo",
+    desc: "A self-hosted PACS and the referral portal beside it — an imaging center's whole stack, owned outright on one mini PC",
+    services: "Product design · Full-stack build · Health tech",
+    stack: "FastAPI · React PWA · Orthanc · Medplum FHIR · Next.js 15 · PostgreSQL",
+    brief:
+      "Independent imaging centers rent their own archive from cloud PACS vendors at $150–$2,000 a month, and take referrals by fax. We built the way out twice: a PACS the clinic owns on one mini PC, and a portal that finally gives a referral a status. This time the client was us — it is our own product.",
+    did: [
+      "Built the whole PACS: FastAPI and asyncpg behind, React PWA in front, Orthanc for DICOM, Docker on one mini PC",
+      "Made reading instant — any study opens in any browser in under a second, ten modalities into one archive",
+      "Wired voice into reporting: dictation, templates and dot-phrase macros, signed as DICOM PDFs that travel inside the study",
+      "Gave patients a way out — PIN-protected links, QR, or a disc that opens on any computer",
+      "Built Vendo on Medplum FHIR: a referral inbox with SLA aging, real-slot booking, white-label branding per clinic",
+      "Put a safety gate before the scanner — an eGFR hard-block for MRI contrast, and pregnancy screening before booking",
+      "Kept it provable: a hash-chained audit log, a 17-right permission matrix, AES-256 backups, zero open ports",
+    ],
+    outcome: [
+      "A working American imaging clinic runs the exact stack in production — reading, reporting and booking on it every day",
+      "Two products sold apart or together — $300, $500 or $640 a month, flat, with no per-study fees anywhere",
+      "The live demo is one click at minipacs.net — synthetic patients, real product",
+    ],
+    facts: [
+      { value: "300", label: "dollars a month, flat — the entire pitch" },
+      { value: "10", label: "modalities into one archive" },
+      { value: "0", label: "ports open to the internet" },
+    ],
+    custom: true,
+    tags: ["Health tech", "Web app", "Self-hosted"],
+    disciplines: ["Web", "Design"],
+    ratio: "wide",
+    photo: "/photos/minipacs/viewer.jpg",
+    cover: "/photos/minipacs/login.jpg",
+  },
+  {
     slug: "asartech",
     title: "ASAR TECH",
     desc: "A Dubai tech shop where retail and wholesale share one cart — storefront, checkout and an admin the owner can actually use",
