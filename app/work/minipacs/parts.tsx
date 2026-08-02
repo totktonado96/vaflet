@@ -1668,8 +1668,8 @@ export function HalftoneWordmark({
   className = "",
   gap = 4,
   color = INK,
-  baseAlpha = 0.46,
-  dotScale = 0.34,
+  baseAlpha = 0.72,
+  dotScale = 0.36,
 }: {
   text: string;
   /** Under ~600 px the mark stacks into these lines, so phones get real type */
