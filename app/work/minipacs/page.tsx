@@ -25,6 +25,7 @@ import {
   Rule,
   SlotPicker,
   Tape,
+  VideoDrift,
   WindowLevel,
   WindowShot,
 } from "./parts";
@@ -201,11 +202,12 @@ export default function MinipacsPage() {
         </Reveal>
       </section>
 
-      {/* ---- the front door itself: the sign-in over liquid marble ---------- */}
+      {/* ---- the front door itself: the sign-in, marble still moving -------- */}
       <div className="px-5 pb-24 md:px-10 md:pb-36">
-        <DriftShot
-          src={S("login")}
-          alt="The MiniPACS sign-in screen over a black-and-white liquid-marble field"
+        <VideoDrift
+          src="/photos/minipacs/login-loop.mp4"
+          poster={S("login")}
+          label="The MiniPACS sign-in screen over a living black-and-white liquid-marble field"
           className="aspect-[16/10] w-full"
         />
       </div>
@@ -483,40 +485,22 @@ export default function MinipacsPage() {
               </a>
             </div>
           </div>
-          <div className="flex gap-6 justify-self-center md:gap-8">
-            <figure>
-              <div
-                className="rounded-[1rem] bg-white p-3 md:p-4"
-                style={{ boxShadow: `inset 0 0 0 1px ${LINE}` }}
-              >
-                <Image
-                  src="/photos/minipacs/qr-minipacs.png"
-                  alt="QR code opening the MiniPACS live demo"
-                  width={150}
-                  height={150}
-                />
-              </div>
-              <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
-                minipacs
-              </figcaption>
-            </figure>
-            <figure>
-              <div
-                className="rounded-[1rem] bg-white p-3 md:p-4"
-                style={{ boxShadow: `inset 0 0 0 1px ${LINE}` }}
-              >
-                <Image
-                  src="/photos/minipacs/qr-vendo.png"
-                  alt="QR code opening the Vendo live demo"
-                  width={150}
-                  height={150}
-                />
-              </div>
-              <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
-                vendo
-              </figcaption>
-            </figure>
-          </div>
+          <figure className="justify-self-center">
+            <div
+              className="rounded-[1rem] bg-white p-4 md:p-5"
+              style={{ boxShadow: `inset 0 0 0 1px ${LINE}` }}
+            >
+              <Image
+                src="/photos/minipacs/qr-site.png"
+                alt="QR code opening minipacs.net"
+                width={190}
+                height={190}
+              />
+            </div>
+            <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+              scan → minipacs.net
+            </figcaption>
+          </figure>
         </div>
       </section>
 

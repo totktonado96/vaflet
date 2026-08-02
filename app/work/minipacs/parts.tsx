@@ -116,6 +116,80 @@ export function WindowShot({
 }
 
 /**
+ * A screen recording in the same drifting frame as every big still — muted,
+ * looped, and paused the moment it leaves the viewport. The poster keeps the
+ * first paint honest.
+ */
+export function VideoDrift({
+  src,
+  poster,
+  label,
+  className = "",
+}: {
+  src: string;
+  poster?: string;
+  /** accessible one-liner for what the recording shows */
+  label: string;
+  className?: string;
+}) {
+  const frame = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const video = frame.current!.querySelector<HTMLVideoElement>("video");
+      if (!video) return;
+      if (!reducedMotion()) {
+        gsap.fromTo(
+          frame.current,
+          { y: 34 },
+          {
+            y: -34,
+            ease: "none",
+            scrollTrigger: {
+              trigger: frame.current,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          },
+        );
+      } else {
+        // reduced motion: hold the poster, never roll
+        video.removeAttribute("autoplay");
+        video.pause();
+        return;
+      }
+      const io = new IntersectionObserver(([e]) => {
+        if (e.isIntersecting) void video.play().catch(() => {});
+        else video.pause();
+      });
+      io.observe(video);
+      return () => io.disconnect();
+    },
+    { scope: frame },
+  );
+
+  return (
+    <div
+      ref={frame}
+      className={`relative overflow-hidden rounded-[1.15rem] md:rounded-[1.5rem] ${className}`}
+    >
+      <video
+        src={src}
+        poster={poster}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        aria-label={label}
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+    </div>
+  );
+}
+
+/**
  * The radiologist's own gesture, working: moving over the MRI windows it the
  * way a real PACS does — horizontal is window width (contrast), vertical is
  * window centre (brightness) — and the orange ww/wc readout follows. Leaving
