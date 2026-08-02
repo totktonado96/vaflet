@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -900,6 +900,363 @@ export function Tape() {
       >
         {MODALITIES} · {MODALITIES} · {MODALITIES}
       </p>
+    </div>
+  );
+}
+
+const QUEUE: [string, string][] = [
+  ["Devon Ashcroft", "XR · right clavicle"],
+  ["Sofia Marchetti", "MRI · cervical spine"],
+  ["Beatrice Kowalczyk", "XR · left hip"],
+  ["Layla Ibrahim", "ARK · thyroid"],
+  ["Marcus Webb", "MRI · brain w/wo"],
+  ["Erik Lindqvist", "MRI · right knee"],
+  ["Amara Diallo", "CT · right ankle"],
+];
+
+/**
+ * The inbox, breathing: the front desk works the top referral every few
+ * seconds — it books, strikes through, slides out, and the queue moves up.
+ * The point of the product is that this pile clears itself in one place.
+ */
+export function InboxFeed() {
+  const root = useRef<HTMLDivElement>(null);
+  const [offset, setOffset] = useState(0);
+  const [leaving, setLeaving] = useState(false);
+
+  useEffect(() => {
+    if (reducedMotion()) return;
+    const host = root.current;
+    if (!host) return;
+    let alive = true;
+    let onScreen = false;
+    let t1: ReturnType<typeof setTimeout>;
+
+    const tick = () => {
+      if (!alive) return;
+      if (onScreen) {
+        setLeaving(true);
+        t1 = setTimeout(() => {
+          setOffset((o) => (o + 1) % QUEUE.length);
+          setLeaving(false);
+        }, 650);
+      }
+      t2 = setTimeout(tick, 2600);
+    };
+    let t2 = setTimeout(tick, 1600);
+
+    const io = new IntersectionObserver(([e]) => {
+      onScreen = e.isIntersecting;
+    });
+    io.observe(host);
+    return () => {
+      alive = false;
+      clearTimeout(t1);
+      clearTimeout(t2);
+      io.disconnect();
+    };
+  }, []);
+
+  const rows = [0, 1, 2, 3].map((i) => QUEUE[(offset + i) % QUEUE.length]);
+
+  return (
+    <div ref={root}>
+      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+        needs action · the queue works itself
+      </p>
+      <div className="mt-5">
+        {rows.map(([name, study], i) => {
+          const gone = i === 0 && leaving;
+          return (
+            <div
+              key={name}
+              className="row-in flex items-baseline justify-between gap-4 py-3.5"
+              style={{
+                borderTop: `1px solid ${LINE}`,
+                transition: "opacity 0.6s ease, transform 0.6s ease",
+                opacity: gone ? 0 : 1,
+                transform: gone ? "translateX(-16px)" : "none",
+              }}
+            >
+              <span
+                className="truncate text-[13px] font-medium"
+                style={{ textDecoration: gone ? "line-through" : "none" }}
+              >
+                {name}
+              </span>
+              <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.14em] opacity-60">
+                {study}
+              </span>
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.14em] ${
+                  gone ? "bg-black text-white" : ""
+                }`}
+                style={gone ? undefined : { boxShadow: `inset 0 0 0 1px ${INK}` }}
+              >
+                {gone ? "scheduled" : i < 2 ? "stuck 8d" : "new"}
+              </span>
+            </div>
+          );
+        })}
+        <div style={{ borderTop: `1px solid ${LINE}` }} />
+      </div>
+    </div>
+  );
+}
+
+const SLOTS = [
+  "8:00",
+  "8:30",
+  "9:00",
+  "9:30",
+  "10:00",
+  "10:30",
+  "11:00",
+  "11:30",
+  "12:00",
+  "12:30",
+  "1:00",
+  "1:30",
+];
+const TAKEN = new Set([0, 3, 4, 7, 9]);
+
+/**
+ * The booking, playable: real open slots, the taken ones hatched out. Pick
+ * one — it books, the confirmation line appears, and a moment later the
+ * toy resets for the next reader.
+ */
+export function SlotPicker() {
+  const [picked, setPicked] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (picked === null) return;
+    const t = setTimeout(() => setPicked(null), 2600);
+    return () => clearTimeout(t);
+  }, [picked]);
+
+  return (
+    <div>
+      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+        jul 26 — pick a slot
+      </p>
+      <div className="mt-5 grid grid-cols-4 gap-2">
+        {SLOTS.map((t, i) => {
+          const taken = TAKEN.has(i);
+          const isPicked = picked === i;
+          return (
+            <button
+              key={t}
+              type="button"
+              disabled={taken}
+              onClick={() => setPicked(i)}
+              aria-label={taken ? `${t} — taken` : `Book ${t}`}
+              className={`rounded-[0.5rem] py-2.5 font-mono text-[10px] font-bold tracking-[0.12em] transition-colors duration-200 ${
+                isPicked
+                  ? "border-2 border-black bg-black text-white"
+                  : taken
+                    ? "cursor-not-allowed border opacity-45"
+                    : "border-2 border-black hover:bg-black hover:text-white"
+              }`}
+              style={{
+                borderColor: taken && !isPicked ? LINE : undefined,
+                backgroundImage:
+                  taken && !isPicked
+                    ? `repeating-linear-gradient(45deg, ${LINE} 0 3px, transparent 3px 8px)`
+                    : undefined,
+              }}
+            >
+              {t}
+            </button>
+          );
+        })}
+      </div>
+      <p
+        className="mt-4 font-mono text-[10px] font-bold uppercase tracking-[0.2em] transition-opacity duration-300"
+        style={{ opacity: picked !== null ? 1 : 0.45 }}
+      >
+        {picked !== null
+          ? `booked — ${SLOTS[picked]} · the referrer sees it too`
+          : "hatched = taken · the rest are real"}
+      </p>
+    </div>
+  );
+}
+
+const WEEKS = [5, 7, 6, 9, 8, 11, 10, 12, 11, 14, 13, 16];
+
+/** Twelve weeks of referrals, drawing themselves tallest-last. */
+export function NumbersSpark() {
+  const root = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      gsap.from("[data-spark-bar]", {
+        scaleY: 0,
+        duration: 0.7,
+        stagger: 0.07,
+        ease: "power3.out",
+        scrollTrigger: { trigger: root.current, start: "top 80%", once: true },
+      });
+    },
+    { scope: root },
+  );
+
+  return (
+    <div ref={root}>
+      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+        referrals a week — twelve weeks
+      </p>
+      <div className="mt-6 flex h-28 items-end gap-[6px] md:h-32">
+        {WEEKS.map((v, i) => (
+          <div
+            key={i}
+            data-spark-bar
+            className="flex-1 origin-bottom rounded-t-[3px]"
+            style={{ height: `${(v / 16) * 100}%`, backgroundColor: INK, opacity: 0.35 + (i / WEEKS.length) * 0.65 }}
+          />
+        ))}
+      </div>
+      <div className="mt-3" style={{ borderTop: `1px solid ${LINE}` }} />
+      <p className="mt-4 max-w-[36ch] font-mono text-[10px] font-bold uppercase leading-relaxed tracking-[0.2em] opacity-60">
+        lead time, no-shows, referrer movement — flagged weekly, before they stall
+      </p>
+    </div>
+  );
+}
+
+const LOG: [string, string][] = [
+  ["Submitted", "08:12 · dr e. brooks"],
+  ["In triage", "08:31 · front desk"],
+  ["Scheduled", "09:02 · jul 26, 12:30"],
+  ["Imaging done", "jul 26 · 2 views"],
+  ["Report sent", "jul 27 · signed pdf"],
+];
+
+/**
+ * One order's life as a vertical rail — the sibling of the five-state rail
+ * above, drawn station by station the first time it is seen.
+ */
+export function OrderLog() {
+  const root = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      gsap.fromTo(
+        "[data-log-rail]",
+        { scaleY: 0 },
+        {
+          scaleY: 1,
+          duration: 2,
+          ease: "power2.inOut",
+          scrollTrigger: { trigger: root.current, start: "top 78%", once: true },
+        },
+      );
+      gsap.from("[data-log-entry]", {
+        x: 14,
+        autoAlpha: 0,
+        duration: 0.55,
+        stagger: 0.38,
+        ease: "power3.out",
+        scrollTrigger: { trigger: root.current, start: "top 78%", once: true },
+      });
+    },
+    { scope: root },
+  );
+
+  return (
+    <div ref={root}>
+      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+        one order&rsquo;s life · xray, right clavicle
+      </p>
+      <div className="relative mt-7 pl-7">
+        {/* the rail and its drawn-in ink */}
+        <span
+          aria-hidden
+          className="absolute bottom-2 left-[4px] top-1 w-[2px]"
+          style={{ backgroundColor: LINE }}
+        />
+        <span
+          data-log-rail
+          aria-hidden
+          className="absolute bottom-2 left-[4px] top-1 w-[2px] origin-top"
+          style={{ backgroundColor: INK }}
+        />
+        <ol className="flex flex-col gap-6">
+          {LOG.map(([event, meta], i) => (
+            <li key={event} data-log-entry className="relative">
+              <span
+                aria-hidden
+                className="absolute -left-7 top-[2px] size-[10px] rounded-full"
+                style={
+                  i === LOG.length - 1
+                    ? { border: `2px solid ${INK}`, backgroundColor: PAPER }
+                    : { backgroundColor: INK }
+                }
+              />
+              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.18em]">
+                {event}
+              </p>
+              <p className="mt-1 font-mono text-[10px] tracking-[0.1em] opacity-50">{meta}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The gate, playable: drag the lab value down and watch the wizard refuse.
+ * Under 30 the block goes red and the booking cannot proceed — the same
+ * hard stop the product enforces, in one slider.
+ */
+export function EgfrToy() {
+  const [v, setV] = useState(58);
+  const blocked = v < 30;
+
+  return (
+    <div>
+      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+        the gate, playable — drag the result
+      </p>
+      <p className="mt-6 font-mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+        most recent eGFR (mL/min/1.73m²)
+      </p>
+      <p
+        className="mt-1 text-[56px] font-extrabold leading-none tabular-nums transition-colors duration-200 md:text-[72px]"
+        style={{ color: blocked ? RED : INK }}
+      >
+        {v}
+      </p>
+      <input
+        type="range"
+        min={12}
+        max={90}
+        value={v}
+        onChange={(e) => setV(Number(e.target.value))}
+        aria-label="Most recent eGFR"
+        className="mt-6 w-full"
+        style={{ accentColor: blocked ? RED : INK }}
+      />
+      <div className="mt-1 flex justify-between font-mono text-[9px] font-bold tracking-[0.14em] opacity-40">
+        <span>12</span>
+        <span>30 — the line</span>
+        <span>90</span>
+      </div>
+      <div
+        className="mt-6 rounded-[0.7rem] px-4 py-3.5 text-[13px] font-medium leading-relaxed transition-colors duration-200"
+        style={
+          blocked
+            ? { color: RED, backgroundColor: "rgba(180,35,24,0.07)", boxShadow: `inset 0 0 0 1px ${RED}55` }
+            : { opacity: 0.7, boxShadow: `inset 0 0 0 1px ${LINE}` }
+        }
+      >
+        {blocked
+          ? "IV contrast is contraindicated below 30 — order the study without contrast, or call the clinic. Next stays off."
+          : "Contrast cleared — the booking may proceed."}
+      </div>
     </div>
   );
 }

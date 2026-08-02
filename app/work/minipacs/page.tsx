@@ -13,12 +13,17 @@ import {
 import {
   CaseFx,
   Dictation,
+  EgfrToy,
   GateHead,
   HalftoneField,
   HalftoneWordmark,
+  InboxFeed,
   MiniBox,
+  NumbersSpark,
+  OrderLog,
   Pipeline,
   Rule,
+  SlotPicker,
   Tape,
   WindowLevel,
   WindowShot,
@@ -44,7 +49,6 @@ const LINE = "#E2DED4";
 const EDGE = "rgba(10,10,10,0.16)";
 // the colour DICOM overlays have worn since film went digital
 const OVERLAY = "#F5A623";
-const RED = "#B42318";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -374,20 +378,32 @@ export default function MinipacsPage() {
           </div>
         </div>
 
-        {/* the walk through the product, one window at a time — smaller frames
-            keep the shots close to native size, which keeps them sharp */}
-        <div className="mt-16 flex flex-col gap-14 md:mt-24 md:gap-20">
-          {VENDO_WALK.map((w, i) => (
-            <WindowShot
-              key={w.src}
-              src={w.src}
-              alt={w.alt}
-              title={w.title}
-              caption={w.caption}
-              note={w.note}
-              className={`w-full md:w-[68%] ${i % 2 ? "md:ml-auto" : ""}`}
-            />
-          ))}
+        {/* the walk through the product — each window keeps a working toy at
+            its side, so no half of the row is ever dead air */}
+        <div className="mt-16 flex flex-col gap-20 md:mt-24 md:gap-28">
+          <div className="grid gap-10 md:grid-cols-[1.6fr_1fr] md:items-center md:gap-16">
+            <WindowShot {...VENDO_WALK[0]} className="w-full" />
+            <InboxFeed />
+          </div>
+
+          <div className="grid gap-10 md:grid-cols-[1fr_1.6fr] md:items-center md:gap-16">
+            <div className="order-2 md:order-1">
+              <SlotPicker />
+            </div>
+            <WindowShot {...VENDO_WALK[1]} className="order-1 w-full md:order-2" />
+          </div>
+
+          <div className="grid gap-10 md:grid-cols-[1.6fr_1fr] md:items-center md:gap-16">
+            <WindowShot {...VENDO_WALK[2]} className="w-full" />
+            <NumbersSpark />
+          </div>
+
+          <div className="grid gap-10 md:grid-cols-[1fr_1.6fr] md:items-center md:gap-16">
+            <div className="order-2 md:order-1">
+              <OrderLog />
+            </div>
+            <WindowShot {...VENDO_WALK[3]} className="order-1 w-full md:order-2" />
+          </div>
         </div>
       </section>
 
@@ -410,31 +426,15 @@ export default function MinipacsPage() {
             </p>
           </div>
         </Reveal>
-        {/* the row itself, at native size — pixel for pixel */}
-        <figure className="mt-14">
-          <div
-            className="relative w-full max-w-[985px] overflow-hidden rounded-[0.7rem] bg-white"
-            style={{ aspectRatio: "985 / 125", boxShadow: `inset 0 0 0 1px ${RED}66` }}
-          >
-            <Image
-              src={S("crop-egfr")}
-              alt="eGFR 22 in the wizard, and the red block: IV contrast is contraindicated below 30"
-              fill
-              sizes="(min-width: 1024px) 985px, 100vw"
-              className="object-cover"
-            />
-          </div>
-          <figcaption className="mt-4 font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
-            The row, actual size
-          </figcaption>
-        </figure>
-
-        <WindowShot
-          src={S("vendo-safety-block")}
-          alt="The booking wizard refusing MRI contrast at eGFR 22 with a red hard-block"
-          title="vendo — new booking · step 4, mri safety"
-          className="mt-14 w-full md:w-[74%]"
-        />
+        <div className="mt-14 grid gap-12 md:grid-cols-[1.6fr_1fr] md:items-center md:gap-16">
+          <WindowShot
+            src={S("vendo-safety-block")}
+            alt="The booking wizard refusing MRI contrast at eGFR 22 with a red hard-block"
+            title="vendo — new booking · step 4, mri safety"
+            className="w-full"
+          />
+          <EgfrToy />
+        </div>
       </section>
 
       {/* ---- the rest of the stack, dragged past ---------------------------- */}
@@ -460,35 +460,63 @@ export default function MinipacsPage() {
               Don&rsquo;t take the screenshots&rsquo; word for it
             </SplitReveal>
             <p className="mt-6 max-w-[52ch] text-[17px] font-light leading-relaxed opacity-80 md:text-[19px]">
-              The demo is public — synthetic patients, the real product. Scan
-              it from a phone, the way a patient gets their scans, or open it
-              here.
+              Both demos are public — synthetic patients, the real products.
+              Scan them from a phone, the way a patient gets their scans, or
+              open them here.
             </p>
-            <a
-              href="https://minipacs.net"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-8 inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
-            >
-              Open the live demo ↗
-            </a>
-          </div>
-          <figure className="justify-self-center">
-            <div
-              className="rounded-[1rem] bg-white p-4 md:p-5"
-              style={{ boxShadow: `inset 0 0 0 1px ${LINE}` }}
-            >
-              <Image
-                src="/photos/minipacs/demo-qr.png"
-                alt="QR code opening the MiniPACS live demo"
-                width={190}
-                height={190}
-              />
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a
+                href="https://demo.minipacs.net/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+              >
+                MiniPACS demo ↗
+              </a>
+              <a
+                href="https://vendo.minipacs.net/login"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+              >
+                Vendo demo ↗
+              </a>
             </div>
-            <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
-              scan → the demo
-            </figcaption>
-          </figure>
+          </div>
+          <div className="flex gap-6 justify-self-center md:gap-8">
+            <figure>
+              <div
+                className="rounded-[1rem] bg-white p-3 md:p-4"
+                style={{ boxShadow: `inset 0 0 0 1px ${LINE}` }}
+              >
+                <Image
+                  src="/photos/minipacs/qr-minipacs.png"
+                  alt="QR code opening the MiniPACS live demo"
+                  width={150}
+                  height={150}
+                />
+              </div>
+              <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+                minipacs
+              </figcaption>
+            </figure>
+            <figure>
+              <div
+                className="rounded-[1rem] bg-white p-3 md:p-4"
+                style={{ boxShadow: `inset 0 0 0 1px ${LINE}` }}
+              >
+                <Image
+                  src="/photos/minipacs/qr-vendo.png"
+                  alt="QR code opening the Vendo live demo"
+                  width={150}
+                  height={150}
+                />
+              </div>
+              <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+                vendo
+              </figcaption>
+            </figure>
+          </div>
         </div>
       </section>
 
