@@ -444,16 +444,11 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
         wc.textContent = "343";
       };
       const host = frame.current!;
-      // scrolling slides the frame under a resting cursor without any
-      // pointer event, which would leave a stale window — scroll resets it
-      const onScroll = () => onLeave();
       host.addEventListener("pointermove", onMove);
       host.addEventListener("pointerleave", onLeave);
-      window.addEventListener("scroll", onScroll, { passive: true });
       return () => {
         host.removeEventListener("pointermove", onMove);
         host.removeEventListener("pointerleave", onLeave);
-        window.removeEventListener("scroll", onScroll);
       };
     },
     { scope: frame },
@@ -481,22 +476,30 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
             minipacs — viewer
           </span>
         </div>
-        <div className="relative aspect-[1437/855] w-full overflow-hidden">
-          <div data-wl-img className="absolute inset-0">
-            <Image src={src} alt={alt} fill loading="eager" sizes="80vw" className="object-cover" />
+        <div className="relative aspect-[1437/855] w-full cursor-crosshair overflow-hidden">
+          {/* the untouched product shot — the UI around the scan never windows */}
+          <Image src={src} alt={alt} fill loading="eager" sizes="80vw" className="object-cover" />
+          {/* the same frame clipped to the scan viewport: only it takes the filter,
+              exactly like a real PACS — the chrome never re-windows */}
+          <div
+            data-wl-img
+            className="absolute inset-0"
+            style={{ clipPath: "inset(15.8% 3.5% 24.2% 38.4%)" }}
+          >
+            <Image src={src} alt="" aria-hidden fill loading="eager" sizes="80vw" className="object-cover" />
           </div>
           <p
-            className="absolute right-4 top-3 font-mono text-[10px] font-bold tracking-[0.2em] md:right-6 md:top-5 md:text-[12px]"
-            style={{ color: OVERLAY }}
+            className="absolute font-mono text-[8px] font-bold tracking-[0.2em] md:text-[12px]"
+            style={{ color: OVERLAY, top: "17.2%", right: "4.8%" }}
           >
             ww/wc <span data-ww>596</span> / <span data-wc>343</span>
           </p>
           <p
             data-wl-hint
-            className="absolute bottom-3 left-4 font-mono text-[10px] font-bold uppercase tracking-[0.25em] md:bottom-5 md:left-6"
-            style={{ color: OVERLAY, opacity: 0.8 }}
+            className="absolute font-mono text-[8px] font-bold uppercase tracking-[0.25em] md:text-[10px]"
+            style={{ color: OVERLAY, opacity: 0.8, left: "40.2%", bottom: "31%" }}
           >
-            <span className="hidden sm:inline">move over the image — </span>window / level
+            <span className="hidden sm:inline">move over the scan — </span>window / level
           </p>
         </div>
       </div>
