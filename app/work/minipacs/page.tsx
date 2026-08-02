@@ -4,7 +4,6 @@ import Link from "next/link";
 import Footer from "@/components/Footer";
 import SplitReveal from "@/components/SplitReveal";
 import {
-  AssetShelf,
   Counters,
   DriftShot,
   Filmstrip,
@@ -14,13 +13,17 @@ import {
 import {
   CaseFx,
   Deal,
+  Dictation,
   GateHead,
   HalftoneField,
   HalftoneWordmark,
   Meter,
+  MiniBox,
   Pipeline,
   Rule,
   Tape,
+  WindowLevel,
+  WindowShot,
 } from "./parts";
 import { PROJECTS } from "@/lib/projects";
 
@@ -82,28 +85,35 @@ const MOVES = [
   },
 ];
 
-const VENDO_SHELF = [
+/** The Vendo screens, walked through smaller — a window at a time. */
+const VENDO_WALK = [
   {
     src: S("vendo-inbox"),
-    title: "The inbox",
+    title: "vendo — inbox",
+    caption: "The inbox",
     note: "Every appointment every doctor has sent — one queue, with SLA aging",
-    wide: true,
+    alt: "The Vendo inbox: referral pipeline with stat tiles and SLA aging",
   },
   {
     src: S("vendo-wizard"),
-    title: "Booking",
+    title: "vendo — new booking",
+    caption: "Booking",
     note: "Real open slots from the live schedule — no phone tag",
+    alt: "The booking wizard: study type cards beside a week of open slots",
   },
   {
     src: S("vendo-overview"),
-    title: "The numbers",
+    title: "vendo — overview",
+    caption: "The numbers",
     note: "Lead time, no-shows, referrer movement — watched, not guessed",
+    alt: "Clinic overview: KPI tiles and a referral volume chart",
   },
   {
     src: S("vendo-referral-detail"),
-    title: "One order, watched",
+    title: "vendo — referral",
+    caption: "One order, watched",
     note: "The same five states on the order itself — nobody has to call and ask",
-    wide: true,
+    alt: "A referral detail page with its lifecycle stepper and checklists",
   },
 ];
 
@@ -239,6 +249,32 @@ export default function MinipacsPage() {
         <div className="mt-10 md:mt-4">
           <Moves moves={MOVES} edge={EDGE} />
         </div>
+
+        {/* the dictation, shown working instead of claimed */}
+        <div
+          className="mt-8 grid gap-10 rounded-[1.25rem] px-6 py-10 md:mt-12 md:grid-cols-[1.2fr_1fr] md:items-center md:gap-16 md:rounded-[2rem] md:px-14 md:py-14"
+          style={{ backgroundColor: CARD, boxShadow: `inset 0 0 0 1px ${LINE}` }}
+        >
+          <Dictation />
+          <figure>
+            <div
+              className="relative w-full overflow-hidden rounded-[0.7rem] bg-white"
+              style={{ aspectRatio: "670 / 100", boxShadow: `inset 0 0 0 1px ${LINE}` }}
+            >
+              <Image
+                src={S("crop-impression")}
+                alt="The signed report's impression: no acute intracranial abnormality"
+                fill
+                sizes="(min-width: 768px) 40vw, 100vw"
+                className="object-cover"
+              />
+            </div>
+            <figcaption className="mt-4 text-[11px] font-light opacity-70">
+              …and the same words a minute later, in the signed PDF that travels
+              inside the study.
+            </figcaption>
+          </figure>
+        </div>
       </section>
 
       {/* ---- the reading room: lights off. The page itself dims on the way
@@ -289,11 +325,25 @@ export default function MinipacsPage() {
           <Tape />
         </div>
         <div className="relative px-5 pb-24 pt-10 md:px-10 md:pb-36 md:pt-14">
-          <DriftShot
-            src={S("viewer")}
-            alt="The browser viewer: an axial MRI brain with classic orange DICOM overlays"
-            className="aspect-[16/10] w-full"
-          />
+          <div className="mx-auto w-full md:w-[82%]">
+            <WindowLevel
+              src={S("viewer")}
+              alt="The browser viewer: an axial MRI brain with classic orange DICOM overlays"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ---- the hardware: everything above runs on this -------------------- */}
+      <section className="shell py-24 md:py-36">
+        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
+          The hardware
+        </p>
+        <SplitReveal className="display-2 mt-8 max-w-[18ch] font-extrabold uppercase leading-[1.0]">
+          Millions of images. One box.
+        </SplitReveal>
+        <div className="mt-16 md:mt-24">
+          <MiniBox />
         </div>
       </section>
 
@@ -365,8 +415,20 @@ export default function MinipacsPage() {
           </div>
         </div>
 
-        <div className="mt-16 md:mt-24">
-          <AssetShelf items={VENDO_SHELF} plain ratio="aspect-[16/10]" edge={EDGE} />
+        {/* the walk through the product, one window at a time — smaller frames
+            keep the shots close to native size, which keeps them sharp */}
+        <div className="mt-16 flex flex-col gap-14 md:mt-24 md:gap-20">
+          {VENDO_WALK.map((w, i) => (
+            <WindowShot
+              key={w.src}
+              src={w.src}
+              alt={w.alt}
+              title={w.title}
+              caption={w.caption}
+              note={w.note}
+              className={`w-full md:w-[68%] ${i % 2 ? "md:ml-auto" : ""}`}
+            />
+          ))}
         </div>
       </section>
 
@@ -389,20 +451,31 @@ export default function MinipacsPage() {
             </p>
           </div>
         </Reveal>
-        <div className="relative mt-14 aspect-[16/10] w-full overflow-hidden rounded-[1.15rem] md:rounded-[1.5rem]">
-          <Image
-            src={S("vendo-safety-block")}
-            alt="The booking wizard refusing MRI contrast at eGFR 22 with a red hard-block"
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-[inherit]"
-            style={{ boxShadow: `inset 0 0 0 1px ${RED}66` }}
-          />
-        </div>
+        {/* the row itself, at native size — pixel for pixel */}
+        <figure className="mt-14">
+          <div
+            className="relative w-full max-w-[985px] overflow-hidden rounded-[0.7rem] bg-white"
+            style={{ aspectRatio: "985 / 125", boxShadow: `inset 0 0 0 1px ${RED}66` }}
+          >
+            <Image
+              src={S("crop-egfr")}
+              alt="eGFR 22 in the wizard, and the red block: IV contrast is contraindicated below 30"
+              fill
+              sizes="(min-width: 1024px) 985px, 100vw"
+              className="object-cover"
+            />
+          </div>
+          <figcaption className="mt-4 font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+            The row, actual size
+          </figcaption>
+        </figure>
+
+        <WindowShot
+          src={S("vendo-safety-block")}
+          alt="The booking wizard refusing MRI contrast at eGFR 22 with a red hard-block"
+          title="vendo — new booking · step 4, mri safety"
+          className="mt-14 w-full md:w-[74%]"
+        />
       </section>
 
       {/* ---- the rest of the stack, dragged past ---------------------------- */}
@@ -411,7 +484,53 @@ export default function MinipacsPage() {
         <p className="shell pt-16 font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60 md:pt-24">
           The rest of the stack
         </p>
-        <Filmstrip shots={STRIP} edge={EDGE} />
+        <Filmstrip shots={STRIP} edge={EDGE} itemWidth="w-[70vw] md:w-[44vw]" />
+      </section>
+
+      {/* ---- the proof: don't take the screenshots' word for it ------------- */}
+      <section className="shell pb-8 pt-4 md:pb-16 md:pt-8">
+        <div
+          className="grid gap-10 rounded-[1.25rem] px-6 py-12 md:grid-cols-[1fr_auto] md:items-center md:gap-16 md:rounded-[2rem] md:px-14 md:py-16"
+          style={{ backgroundColor: CARD, boxShadow: `inset 0 0 0 1px ${LINE}` }}
+        >
+          <div>
+            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
+              The proof
+            </p>
+            <SplitReveal className="display-3 mt-6 max-w-[16ch] font-extrabold uppercase leading-[1.05]">
+              Don&rsquo;t take the screenshots&rsquo; word for it
+            </SplitReveal>
+            <p className="mt-6 max-w-[52ch] text-[17px] font-light leading-relaxed opacity-80 md:text-[19px]">
+              The demo is public — synthetic patients, the real product. Scan
+              it from a phone, the way a patient gets their scans, or open it
+              here.
+            </p>
+            <a
+              href="https://minipacs.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-8 inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+            >
+              Open the live demo ↗
+            </a>
+          </div>
+          <figure className="justify-self-center">
+            <div
+              className="rounded-[1rem] bg-white p-4 md:p-5"
+              style={{ boxShadow: `inset 0 0 0 1px ${LINE}` }}
+            >
+              <Image
+                src="/photos/minipacs/demo-qr.png"
+                alt="QR code opening the MiniPACS live demo"
+                width={190}
+                height={190}
+              />
+            </div>
+            <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+              scan → the demo
+            </figcaption>
+          </figure>
+        </div>
       </section>
 
       {/* ---- what came out --------------------------------------------------- */}

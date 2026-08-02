@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
@@ -16,7 +17,411 @@ const PAPER = "#FAF9F6";
 const INK = "#0A0A0A";
 const LINE = "#E2DED4";
 const GREY = "#6B6B6B";
+const OVERLAY = "#F5A623";
 const RED = "#B42318";
+
+/**
+ * A screenshot behind minimal browser chrome, shown smaller than full bleed:
+ * the 1437-px sources stay close to their native size on retina, which is the
+ * whole point. Drifts against the scroll like every big shot on the site.
+ */
+export function WindowShot({
+  src,
+  alt,
+  title,
+  caption,
+  note,
+  className = "",
+  dark = false,
+}: {
+  src: string;
+  alt: string;
+  /** the mono line in the title bar — where in the product we are */
+  title: string;
+  caption?: string;
+  note?: string;
+  className?: string;
+  dark?: boolean;
+}) {
+  const frame = useRef<HTMLElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      gsap.fromTo(
+        frame.current,
+        { y: 26 },
+        {
+          y: -26,
+          ease: "none",
+          scrollTrigger: {
+            trigger: frame.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        },
+      );
+    },
+    { scope: frame },
+  );
+
+  const line = dark ? "rgba(255,255,255,0.2)" : "rgba(10,10,10,0.16)";
+  const barBg = dark ? "rgba(255,255,255,0.06)" : "#F4F2EC";
+
+  return (
+    <figure ref={frame} className={className}>
+      <div
+        className="overflow-hidden rounded-[0.9rem] md:rounded-[1.1rem]"
+        style={{ boxShadow: `inset 0 0 0 1px ${line}` }}
+      >
+        <div
+          className="flex items-center gap-3 px-4 py-2.5 md:px-5"
+          style={{ backgroundColor: barBg, boxShadow: `inset 0 -1px 0 ${line}` }}
+        >
+          <span className="flex gap-1.5" aria-hidden>
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="size-[7px] rounded-full bg-current opacity-20"
+              />
+            ))}
+          </span>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-55">
+            {title}
+          </span>
+        </div>
+        <div className="relative aspect-[1437/855] w-full">
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            sizes="(min-width: 768px) 70vw, 100vw"
+            className="object-cover"
+          />
+        </div>
+      </div>
+      {(caption || note) && (
+        <figcaption className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          {caption && (
+            <span className="text-[11px] font-bold uppercase tracking-[0.25em]">
+              {caption}
+            </span>
+          )}
+          {note && <span className="text-[11px] font-light opacity-70">{note}</span>}
+        </figcaption>
+      )}
+    </figure>
+  );
+}
+
+/**
+ * The radiologist's own gesture, working: moving over the MRI windows it the
+ * way a real PACS does — horizontal is window width (contrast), vertical is
+ * window centre (brightness) — and the orange ww/wc readout follows. Leaving
+ * the frame settles it back to the study's stored values.
+ */
+export function WindowLevel({ src, alt }: { src: string; alt: string }) {
+  const frame = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const img = frame.current!.querySelector<HTMLElement>("[data-wl-img]");
+      const ww = frame.current!.querySelector<HTMLElement>("[data-ww]");
+      const wc = frame.current!.querySelector<HTMLElement>("[data-wc]");
+      const hint = frame.current!.querySelector<HTMLElement>("[data-wl-hint]");
+      if (!img || !ww || !wc) return;
+
+      if (!reducedMotion()) {
+        gsap.fromTo(
+          frame.current,
+          { y: 26 },
+          {
+            y: -26,
+            ease: "none",
+            scrollTrigger: {
+              trigger: frame.current,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true,
+            },
+          },
+        );
+      }
+
+      let touched = false;
+      const onMove = (e: PointerEvent) => {
+        const rect = img.getBoundingClientRect();
+        const nx = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+        const ny = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+        // narrow window = harder contrast; higher centre = darker image
+        const contrast = 2.1 - nx * 1.35;
+        const brightness = 1.55 - ny * 0.95;
+        img.style.filter = `brightness(${brightness.toFixed(3)}) contrast(${contrast.toFixed(3)})`;
+        ww.textContent = String(Math.round(150 + nx * 1350));
+        wc.textContent = String(Math.round(30 + ny * 800));
+        if (!touched && hint) {
+          touched = true;
+          gsap.to(hint, { autoAlpha: 0, duration: 0.4 });
+        }
+      };
+      const onLeave = () => {
+        img.style.filter = "";
+        ww.textContent = "596";
+        wc.textContent = "343";
+      };
+      const host = frame.current!;
+      host.addEventListener("pointermove", onMove);
+      host.addEventListener("pointerleave", onLeave);
+      return () => {
+        host.removeEventListener("pointermove", onMove);
+        host.removeEventListener("pointerleave", onLeave);
+      };
+    },
+    { scope: frame },
+  );
+
+  return (
+    <div ref={frame}>
+      <div
+        className="overflow-hidden rounded-[0.9rem] md:rounded-[1.1rem]"
+        style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.2)" }}
+      >
+        <div
+          className="flex items-center gap-3 px-4 py-2.5 md:px-5"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.06)",
+            boxShadow: "inset 0 -1px 0 rgba(255,255,255,0.2)",
+          }}
+        >
+          <span className="flex gap-1.5" aria-hidden>
+            {[0, 1, 2].map((i) => (
+              <span key={i} className="size-[7px] rounded-full bg-current opacity-25" />
+            ))}
+          </span>
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-55">
+            minipacs — viewer
+          </span>
+        </div>
+        <div className="relative aspect-[1437/855] w-full overflow-hidden">
+          <div data-wl-img className="absolute inset-0">
+            <Image src={src} alt={alt} fill sizes="80vw" className="object-cover" />
+          </div>
+          <p
+            className="absolute right-4 top-3 font-mono text-[10px] font-bold tracking-[0.2em] md:right-6 md:top-5 md:text-[12px]"
+            style={{ color: OVERLAY }}
+          >
+            ww/wc <span data-ww>596</span> / <span data-wc>343</span>
+          </p>
+          <p
+            data-wl-hint
+            className="absolute bottom-3 left-4 font-mono text-[10px] font-bold uppercase tracking-[0.25em] md:bottom-5 md:left-6"
+            style={{ color: OVERLAY, opacity: 0.8 }}
+          >
+            move over the image — window / level
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const FINDINGS =
+  "No acute infarct, intracranial hemorrhage, mass effect, or abnormal enhancement. The ventricles and sulci are normal in size. Major intracranial flow voids are preserved.";
+
+/**
+ * The dictation, happening: the findings type themselves the first time the
+ * card is seen, with the level bars running while the voice is "speaking".
+ * Reduced motion ships the finished paragraph.
+ */
+export function Dictation() {
+  const root = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      const out = root.current!.querySelector<HTMLElement>("[data-dict-out]");
+      const caret = root.current!.querySelector<HTMLElement>("[data-dict-caret]");
+      const state = root.current!.querySelector<HTMLElement>("[data-dict-state]");
+      const bars = gsap.utils.toArray<HTMLElement>("[data-dict-bar]");
+      if (!out) return;
+
+      out.textContent = "";
+      const blink = gsap.to(caret, { opacity: 0, duration: 0.5, repeat: -1, yoyo: true, ease: "steps(1)" });
+      const wave = bars.map((b, i) =>
+        gsap.to(b, {
+          scaleY: () => 0.25 + Math.random() * 0.75,
+          duration: 0.16 + (i % 3) * 0.05,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+          paused: true,
+        }),
+      );
+
+      const box = { i: 0 };
+      gsap.to(box, {
+        i: FINDINGS.length,
+        duration: FINDINGS.length * 0.024,
+        ease: "none",
+        paused: true,
+        scrollTrigger: { trigger: root.current, start: "top 72%", once: true },
+        onStart: () => wave.forEach((w) => w.play()),
+        onUpdate: () => {
+          out.textContent = FINDINGS.slice(0, Math.round(box.i));
+        },
+        onComplete: () => {
+          wave.forEach((w) => {
+            w.pause();
+            gsap.to(w.targets()[0] as HTMLElement, { scaleY: 0.2, duration: 0.3 });
+          });
+          blink.kill();
+          gsap.set(caret, { opacity: 0 });
+          if (state) state.textContent = "findings · 170 chars · dictated";
+        },
+      });
+    },
+    { scope: root },
+  );
+
+  return (
+    <div ref={root}>
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden
+          className="flex h-5 items-end gap-[3px]"
+          style={{ color: INK }}
+        >
+          {[0, 1, 2, 3, 4].map((i) => (
+            <span
+              key={i}
+              data-dict-bar
+              className="w-[3px] origin-bottom rounded-full bg-current"
+              style={{ height: `${[10, 16, 20, 14, 8][i]}px`, transform: "scaleY(0.2)" }}
+            />
+          ))}
+        </span>
+        <p
+          data-dict-state
+          className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60"
+        >
+          findings · dictating
+        </p>
+      </div>
+      <p className="mt-5 min-h-[7.5rem] max-w-[58ch] font-mono text-[13px] leading-relaxed md:min-h-[6rem] md:text-[14px]">
+        <span data-dict-out>{FINDINGS}</span>
+        <span data-dict-caret aria-hidden className="ml-[2px] inline-block h-[1em] w-[7px] translate-y-[2px] bg-current" />
+      </p>
+    </div>
+  );
+}
+
+/**
+ * The box itself, drawn in the mark's own isometric language — solid cap,
+ * outlined shelves — with the three facts that make it the product. The
+ * strokes draw themselves the first time the section is seen.
+ */
+export function MiniBox() {
+  const root = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      const paths = gsap.utils.toArray<SVGPathElement>("[data-box-path]");
+      paths.forEach((p, i) => {
+        const len = p.getTotalLength();
+        gsap.fromTo(
+          p,
+          { strokeDasharray: len, strokeDashoffset: len },
+          {
+            strokeDashoffset: 0,
+            duration: 1.1,
+            delay: i * 0.18,
+            ease: "power2.inOut",
+            scrollTrigger: { trigger: root.current, start: "top 78%", once: true },
+          },
+        );
+      });
+      gsap.from("[data-box-cap]", {
+        autoAlpha: 0,
+        y: 10,
+        duration: 0.8,
+        delay: 0.5,
+        ease: "power3.out",
+        scrollTrigger: { trigger: root.current, start: "top 78%", once: true },
+      });
+      gsap.from("[data-box-label]", {
+        y: 16,
+        autoAlpha: 0,
+        duration: 0.7,
+        stagger: 0.12,
+        delay: 0.7,
+        ease: "power3.out",
+        scrollTrigger: { trigger: root.current, start: "top 78%", once: true },
+      });
+    },
+    { scope: root },
+  );
+
+  const label =
+    "font-mono text-[11px] font-bold uppercase leading-relaxed tracking-[0.22em]";
+
+  return (
+    <div
+      ref={root}
+      className="grid items-center gap-10 md:grid-cols-[1fr_auto_1fr] md:gap-16"
+    >
+      <div className="hidden text-right md:block">
+        <p data-box-label className={label}>
+          one mini PC,
+          <br />
+          on a shelf in the clinic
+        </p>
+      </div>
+
+      <svg
+        viewBox="0 0 240 190"
+        className="mx-auto w-[240px] md:w-[300px]"
+        fill="none"
+        stroke={INK}
+        strokeWidth={3}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        aria-hidden
+      >
+        {/* the cap — solid, like the mark's own diamond */}
+        <path data-box-cap d="M120 22 L204 66 L120 110 L36 66 Z" fill={INK} stroke={INK} />
+        {/* the body */}
+        <path data-box-path d="M36 66 L36 112 L120 156 L120 110" />
+        <path data-box-path d="M204 66 L204 112 L120 156" />
+        {/* vents on the right face */}
+        <path data-box-path d="M150 122 L186 103" strokeWidth={2.5} opacity={0.55} />
+        <path data-box-path d="M150 132 L186 113" strokeWidth={2.5} opacity={0.55} />
+        <path data-box-path d="M150 142 L186 123" strokeWidth={2.5} opacity={0.55} />
+        {/* the power dot */}
+        <circle data-box-path cx="70" cy="112" r="4" strokeWidth={2.5} />
+        {/* the shelf line it sits on */}
+        <path data-box-path d="M12 168 L228 168" strokeWidth={2} opacity={0.35} />
+      </svg>
+
+      <div className="flex flex-col gap-8 text-left">
+        <p data-box-label className={`${label} md:hidden`}>
+          one mini PC, on a shelf in the clinic
+        </p>
+        <p data-box-label className={label}>
+          millions of images
+          <br />
+          in the archive on it
+        </p>
+        <p data-box-label className={label}>
+          AES-256 backups,
+          <br />
+          nightly, encrypted
+        </p>
+      </div>
+    </div>
+  );
+}
 
 /**
  * The lights. Scrolling into the reading room dims the whole page to

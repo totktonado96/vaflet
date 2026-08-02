@@ -274,12 +274,15 @@ export function Filmstrip({
   shots,
   ratio = "aspect-[16/10]",
   edge,
+  itemWidth = "w-[78vw] md:w-[56vw]",
 }: {
   shots: { src: string; caption: string }[];
   /** frame shape — must match the shots, or object-cover will crop them */
   ratio?: string;
   /** hairline over each shot, for pale pages where the frame would vanish */
   edge?: string;
+  /** frame width classes — smaller keeps a soft source sharp on retina */
+  itemWidth?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
@@ -309,7 +312,7 @@ export function Filmstrip({
     <div ref={root} className="flex min-h-screen items-center overflow-hidden py-16">
       <div ref={track} className="flex w-max gap-6 pl-5 md:gap-10 md:pl-10">
         {shots.map((s) => (
-          <figure key={s.src} className="w-[78vw] shrink-0 md:w-[56vw]">
+          <figure key={s.src} className={`${itemWidth} shrink-0`}>
             <div className={`relative ${ratio} overflow-hidden rounded-[1rem] md:rounded-[1.25rem]`}>
               <Image
                 src={s.src}
