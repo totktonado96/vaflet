@@ -245,6 +245,7 @@ export default function MinipacsPage() {
                 src={S("crop-impression")}
                 alt="The signed report's impression: no acute intracranial abnormality"
                 fill
+                loading="eager"
                 sizes="(min-width: 768px) 40vw, 100vw"
                 className="object-cover"
               />
@@ -495,6 +496,7 @@ export default function MinipacsPage() {
                 alt="QR code opening minipacs.net"
                 width={190}
                 height={190}
+                loading="eager"
               />
             </div>
             <figcaption className="mt-3 text-center font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">

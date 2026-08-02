@@ -187,23 +187,40 @@ export function Moves({
   useGSAP(
     () => {
       if (reducedMotion()) return;
-      const shots = gsap.utils.toArray<HTMLElement>("[data-move-shot]");
-      shots.forEach((shot, i) => {
-        if (i === 0) return;
-        gsap.fromTo(
-          shot,
-          { clipPath: "inset(100% 0% 0% 0%)" },
-          {
-            clipPath: "inset(0% 0% 0% 0%)",
-            ease: "none",
-            scrollTrigger: {
-              trigger: `[data-move-copy="${i}"]`,
-              start: "top 80%",
-              end: "top 30%",
-              scrub: true,
+      const mm = gsap.matchMedia();
+      // desktop: the sticky stack, each shot wiped in over the last
+      mm.add("(min-width: 768px)", () => {
+        const shots = gsap.utils.toArray<HTMLElement>("[data-move-shot]");
+        shots.forEach((shot, i) => {
+          if (i === 0) return;
+          gsap.fromTo(
+            shot,
+            { clipPath: "inset(100% 0% 0% 0%)" },
+            {
+              clipPath: "inset(0% 0% 0% 0%)",
+              ease: "none",
+              scrollTrigger: {
+                trigger: `[data-move-copy="${i}"]`,
+                start: "top 80%",
+                end: "top 30%",
+                scrub: true,
+              },
             },
-          },
-        );
+          );
+        });
+      });
+      // phones: no sticky panel, so each move rises in on its own
+      mm.add("(max-width: 767px)", () => {
+        gsap.utils.toArray<HTMLElement>("[data-move-copy]").forEach((blk) => {
+          gsap.from(blk.children, {
+            y: 26,
+            autoAlpha: 0,
+            duration: 0.85,
+            stagger: 0.1,
+            ease: "power3.out",
+            scrollTrigger: { trigger: blk, start: "top 84%", once: true },
+          });
+        });
       });
     },
     { scope: root },
@@ -217,7 +234,7 @@ export function Moves({
           <div
             key={m.kicker}
             data-move-copy={i}
-            className="flex min-h-[70vh] flex-col justify-center py-16 pr-0 md:min-h-screen md:py-0 md:pr-16"
+            className="flex flex-col justify-center py-12 pr-0 md:min-h-screen md:py-0 md:pr-16"
           >
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
               {String(i + 1).padStart(2, "0")} — {m.kicker}

@@ -96,6 +96,7 @@ export function WindowShot({
             src={src}
             alt={alt}
             fill
+            loading="eager"
             sizes="(min-width: 768px) 70vw, 100vw"
             className="object-cover"
           />
@@ -279,7 +280,7 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
         </div>
         <div className="relative aspect-[1437/855] w-full overflow-hidden">
           <div data-wl-img className="absolute inset-0">
-            <Image src={src} alt={alt} fill sizes="80vw" className="object-cover" />
+            <Image src={src} alt={alt} fill loading="eager" sizes="80vw" className="object-cover" />
           </div>
           <p
             className="absolute right-4 top-3 font-mono text-[10px] font-bold tracking-[0.2em] md:right-6 md:top-5 md:text-[12px]"
