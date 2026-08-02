@@ -177,8 +177,8 @@ export default function MinipacsPage() {
 
         <div className="mt-12 px-5 md:mt-16 md:px-10">
           <DriftShot
-            src={S("login")}
-            alt="The MiniPACS sign-in screen over a black-and-white liquid-marble field"
+            src={S("cover-dark")}
+            alt="The MiniPACS mark — a stack of DICOM slices — with the wordmark, white on obsidian"
             className="aspect-[16/10] w-full"
             priority
           />
@@ -214,6 +214,15 @@ export default function MinipacsPage() {
           </div>
         </Reveal>
       </section>
+
+      {/* ---- the front door itself: the sign-in over liquid marble ---------- */}
+      <div className="px-5 pb-24 md:px-10 md:pb-36">
+        <DriftShot
+          src={S("login")}
+          alt="The MiniPACS sign-in screen over a black-and-white liquid-marble field"
+          className="aspect-[16/10] w-full"
+        />
+      </div>
 
       {/* ---- chapter one: the archive ------------------------------------- */}
       <Rule />
