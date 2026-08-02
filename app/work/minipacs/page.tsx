@@ -454,17 +454,10 @@ export default function MinipacsPage() {
       {/* ---- the proof: don't take the screenshots' word for it ------------- */}
       <section className="shell pb-8 pt-4 md:pb-16 md:pt-8">
         <div
-          className="relative isolate grid gap-10 overflow-hidden rounded-[1.25rem] px-6 py-12 md:grid-cols-[1fr_auto] md:items-center md:gap-16 md:rounded-[2rem] md:px-14 md:py-16"
+          className="mp-proof-halftone grid gap-10 rounded-[1.25rem] px-6 py-12 md:grid-cols-[1fr_auto] md:items-center md:gap-16 md:rounded-[2rem] md:px-14 md:py-16"
           style={{ backgroundColor: CARD, boxShadow: `inset 0 0 0 1px ${LINE}` }}
         >
-          {/* the same living halftone, in ink on stone */}
-          <HalftoneField
-            className="pointer-events-none absolute inset-0 -z-10 h-full w-full"
-            dot="rgba(10,10,10,0.55)"
-            gap={13}
-            intensity={0.78}
-          />
-          <div data-halftone-avoid className="relative">
+          <div>
             <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
               The proof
             </p>
@@ -495,7 +488,7 @@ export default function MinipacsPage() {
               </a>
             </div>
           </div>
-          <figure data-halftone-avoid className="relative justify-self-center">
+          <figure className="justify-self-center">
             <div
               className="rounded-[1rem] bg-white p-4 md:p-5"
               style={{ boxShadow: `inset 0 0 0 1px ${LINE}` }}
