@@ -149,7 +149,8 @@ export default function MinipacsPage() {
           <h1 className="sr-only">MiniPACS + Vendo</h1>
           <HalftoneWordmark
             text="MINIPACS + VENDO"
-            className="mt-6 h-[clamp(2.4rem,9.4vw,9.4rem)] w-full"
+            breakLines={["MINIPACS", "+ VENDO"]}
+            className="mt-6 h-[8.4rem] w-full md:h-[clamp(2.4rem,9.4vw,9.4rem)]"
           />
           <div className="mt-6 flex flex-wrap items-baseline gap-x-8 gap-y-3">
             <p className="max-w-[48ch] text-[17px] font-light leading-relaxed md:text-[19px]">

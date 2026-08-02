@@ -292,7 +292,7 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
             className="absolute bottom-3 left-4 font-mono text-[10px] font-bold uppercase tracking-[0.25em] md:bottom-5 md:left-6"
             style={{ color: OVERLAY, opacity: 0.8 }}
           >
-            move over the image — window / level
+            <span className="hidden sm:inline">move over the image — </span>window / level
           </p>
         </div>
       </div>
@@ -1465,6 +1465,7 @@ function hash01(ix: number, iy: number): number {
  */
 export function HalftoneWordmark({
   text,
+  breakLines,
   className = "",
   gap = 4,
   color = INK,
@@ -1472,6 +1473,8 @@ export function HalftoneWordmark({
   dotScale = 0.34,
 }: {
   text: string;
+  /** Under ~600 px the mark stacks into these lines, so phones get real type */
+  breakLines?: string[];
   className?: string;
   gap?: number;
   color?: string;
@@ -1534,33 +1537,56 @@ export function HalftoneWordmark({
       off.height = Math.ceil(height);
       const octx = off.getContext("2d");
       if (!octx) return;
+
+      // phones get the mark stacked, so the dots stay big enough to read
+      const lines = breakLines && width < 600 ? breakLines : [text];
+      const nl = lines.length;
       octx.font = font(100);
-      const w100 = octx.measureText(text).width || 1;
-      const fontSize = Math.min((width * 0.985 * 100) / w100, height * 0.9);
+      const widest = Math.max(...lines.map((l) => octx.measureText(l).width || 1));
+      const fontSize = Math.min(
+        (width * 0.985 * 100) / widest,
+        (height * 0.9) / (nl + (nl - 1) * 0.14),
+      );
       octx.font = font(fontSize);
       octx.textAlign = "left";
       octx.textBaseline = "middle";
       octx.fillStyle = "#fff";
       const anchorX = width * 0.002;
-      octx.fillText(text, anchorX, height * 0.54);
+      const lineStep = fontSize * 1.14;
+      const lineY = (i: number) => height * 0.52 + (i - (nl - 1) / 2) * lineStep;
+      lines.forEach((l, i) => octx.fillText(l, anchorX, lineY(i)));
       const img = octx.getImageData(0, 0, off.width, off.height).data;
 
-      // glyph x-ranges so each dot knows which letter it belongs to
-      const ranges: { x0: number; x1: number }[] = [];
-      for (let ci = 0; ci < text.length; ci++) {
-        if (text[ci].trim() === "") continue;
-        const pre = octx.measureText(text.slice(0, ci)).width;
-        const cw = octx.measureText(text[ci]).width;
-        ranges.push({ x0: anchorX + pre, x1: anchorX + pre + cw });
-      }
-      letterCount = ranges.length;
-      const letterOf = (x: number): number => {
-        for (let r = 0; r < ranges.length; r++) {
-          if (x >= ranges[r].x0 && x <= ranges[r].x1) return r;
+      // glyph ranges per line, letter indices sequential across lines
+      const ranges: { x0: number; x1: number; line: number }[] = [];
+      lines.forEach((l, li) => {
+        for (let ci = 0; ci < l.length; ci++) {
+          if (l[ci].trim() === "") continue;
+          const pre = octx.measureText(l.slice(0, ci)).width;
+          const cw = octx.measureText(l[ci]).width;
+          ranges.push({ x0: anchorX + pre, x1: anchorX + pre + cw, line: li });
         }
+      });
+      letterCount = ranges.length;
+      const lineOf = (y: number): number => {
+        let best = 0;
+        let bestD = Infinity;
+        for (let i = 0; i < nl; i++) {
+          const d = Math.abs(y - lineY(i));
+          if (d < bestD) {
+            bestD = d;
+            best = i;
+          }
+        }
+        return best;
+      };
+      const letterOf = (x: number, y: number): number => {
+        const li = lineOf(y);
         let best = 0;
         let bestD = Infinity;
         for (let r = 0; r < ranges.length; r++) {
+          if (ranges[r].line !== li) continue;
+          if (x >= ranges[r].x0 && x <= ranges[r].x1) return r;
           const d = Math.min(Math.abs(x - ranges[r].x0), Math.abs(x - ranges[r].x1));
           if (d < bestD) {
             bestD = d;
@@ -1581,7 +1607,7 @@ export function HalftoneWordmark({
           if (a > 0.14) {
             homes.push(x, y);
             edges.push((0.3 + 0.7 * a) * (0.92 + 0.16 * hash01(ix + 1, iy + 1)));
-            letters.push(letterOf(x));
+            letters.push(letterOf(x, y));
           }
         }
       }
@@ -1710,7 +1736,7 @@ export function HalftoneWordmark({
       canvas.removeEventListener("pointerdown", onMove);
       canvas.removeEventListener("pointerleave", onLeave);
     };
-  }, [text, gap, color, baseAlpha, dotScale]);
+  }, [text, breakLines?.join("|"), gap, color, baseAlpha, dotScale]);
 
   return <canvas ref={canvasRef} className={"block " + className} aria-hidden="true" />;
 }
