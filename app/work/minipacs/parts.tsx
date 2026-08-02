@@ -1140,6 +1140,33 @@ const LOG: [string, string][] = [
 export function OrderLog() {
   const root = useRef<HTMLDivElement>(null);
 
+  // the rail runs exactly from the first dot's centre to the last dot's —
+  // measured, not guessed, so it never pokes past a station
+  useEffect(() => {
+    const host = root.current;
+    if (!host) return;
+    const wrap = host.querySelector<HTMLElement>("[data-log-wrap]");
+    if (!wrap) return;
+    const layout = () => {
+      const dots = wrap.querySelectorAll<HTMLElement>("[data-log-dot]");
+      if (dots.length < 2) return;
+      const base = wrap.getBoundingClientRect();
+      const first = dots[0].getBoundingClientRect();
+      const last = dots[dots.length - 1].getBoundingClientRect();
+      const top = first.top - base.top + first.height / 2;
+      const height = last.top - base.top + last.height / 2 - top;
+      wrap.querySelectorAll<HTMLElement>("[data-log-line]").forEach((el) => {
+        el.style.top = `${top}px`;
+        el.style.height = `${height}px`;
+      });
+    };
+    layout();
+    const ro = new ResizeObserver(layout);
+    ro.observe(wrap);
+    document.fonts?.ready.then(layout);
+    return () => ro.disconnect();
+  }, []);
+
   useGSAP(
     () => {
       if (reducedMotion()) return;
@@ -1170,25 +1197,28 @@ export function OrderLog() {
       <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
         one order&rsquo;s life · xray, right clavicle
       </p>
-      <div className="relative mt-7 pl-7">
+      <div data-log-wrap className="relative mt-7 pl-7">
         {/* the rail and its drawn-in ink */}
         <span
+          data-log-line
           aria-hidden
-          className="absolute bottom-2 left-[4px] top-1 w-[2px]"
+          className="absolute left-[4px] w-[2px]"
           style={{ backgroundColor: LINE }}
         />
         <span
+          data-log-line
           data-log-rail
           aria-hidden
-          className="absolute bottom-2 left-[4px] top-1 w-[2px] origin-top"
+          className="absolute left-[4px] w-[2px] origin-top"
           style={{ backgroundColor: INK }}
         />
         <ol className="flex flex-col gap-6">
           {LOG.map(([event, meta], i) => (
             <li key={event} data-log-entry className="relative">
               <span
+                data-log-dot
                 aria-hidden
-                className="absolute -left-7 top-[2px] size-[10px] rounded-full"
+                className="absolute -left-7 top-[2px] z-[1] size-[10px] rounded-full"
                 style={
                   i === LOG.length - 1
                     ? { border: `2px solid ${INK}`, backgroundColor: PAPER }
