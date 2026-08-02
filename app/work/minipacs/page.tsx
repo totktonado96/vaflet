@@ -12,12 +12,10 @@ import {
 } from "@/components/case/kit";
 import {
   CaseFx,
-  Deal,
   Dictation,
   GateHead,
   HalftoneField,
   HalftoneWordmark,
-  Meter,
   MiniBox,
   Pipeline,
   Rule,
@@ -124,30 +122,6 @@ const STRIP = [
   { src: S("patient-portal"), caption: "The patient side — scans on any phone, PIN first" },
   { src: S("vendo-settings"), caption: "White-label — the portal wears the clinic's name" },
   { src: S("vendo-digest"), caption: "The weekly digest — what stalls, flagged early" },
-];
-
-/** How it is sold and run — the guarantees the product prints, not implies. */
-const DEAL = [
-  [
-    "Flat",
-    "$300 a location a month for MiniPACS, $500 for Vendo, $640 for both. No per-study fees, no per-seat fees, no surprise line items.",
-  ],
-  [
-    "Yours",
-    "The archive lives on the clinic's own box with AES-256 encrypted backups — and a bulk importer that swallows the old archive on the way in.",
-  ],
-  [
-    "Provable",
-    "A hash-chained, append-only audit log verifiable from the browser, and a self-service Accounting of Disclosures report the front desk pulls itself.",
-  ],
-  [
-    "Controlled",
-    "An editable permission matrix — 17 rights across 4 roles — with instant session revocation when somebody leaves.",
-  ],
-  [
-    "Honest",
-    "No HL7 yet, and the site prints that instead of promising it. If the subscription ever lapses, the archive drops to read-only — never hostage.",
-  ],
 ];
 
 export default function MinipacsPage() {
@@ -345,22 +319,6 @@ export default function MinipacsPage() {
         </SplitReveal>
         <div className="mt-16 md:mt-24">
           <MiniBox />
-        </div>
-      </section>
-
-      {/* ---- the deal: a meter that is not the product --------------------- */}
-      <section className="shell py-24 md:py-36">
-        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
-          The deal
-        </p>
-        <SplitReveal className="display-2 mt-8 max-w-[18ch] font-extrabold uppercase leading-[1.0]">
-          The bill does not watch the counter
-        </SplitReveal>
-        <div className="mt-14 md:mt-20">
-          <Meter />
-        </div>
-        <div className="mt-16 md:mt-24">
-          <Deal items={DEAL} />
         </div>
       </section>
 
