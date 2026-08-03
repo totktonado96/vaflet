@@ -296,6 +296,7 @@ export function Filmstrip({
   ratio = "aspect-[16/10]",
   edge,
   itemWidth = "w-[78vw] md:w-[56vw]",
+  depth = false,
 }: {
   shots: { src: string; caption: string }[];
   /** frame shape — must match the shots, or object-cover will crop them */
@@ -304,6 +305,8 @@ export function Filmstrip({
   edge?: string;
   /** frame width classes — smaller keeps a soft source sharp on retina */
   itemWidth?: string;
+  /** centred frame sharp, wings receding — contact sheet, not carousel */
+  depth?: boolean;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
@@ -317,6 +320,38 @@ export function Filmstrip({
       mm.add("(min-width: 768px)", () => {
         const el = track.current!;
         const distance = () => el.scrollWidth - window.innerWidth + 80;
+
+        // depth: the centred frame reads sharp, the wings recede — a contact
+        // sheet, not a carousel. Offsets are measured once per refresh so the
+        // scrub tick stays pure arithmetic; transforms never move offsetLeft.
+        const items = depth ? gsap.utils.toArray<HTMLElement>(":scope > figure", el) : [];
+        const centers = new Array<number>(items.length).fill(0);
+        const setters = items.map((f) => ({
+          scale: gsap.quickSetter(f, "scale"),
+          alpha: gsap.quickSetter(f, "opacity"),
+        }));
+        const measure = () => {
+          items.forEach((f, i) => {
+            centers[i] = f.offsetLeft + f.offsetWidth / 2;
+          });
+        };
+        const recede = () => {
+          const x = (gsap.getProperty(el, "x") as number) || 0;
+          const mid = window.innerWidth / 2;
+          for (let i = 0; i < items.length; i++) {
+            const dist = Math.abs(centers[i] + x - mid);
+            // flat through the middle, falling off toward the wings
+            const d = Math.min(
+              1,
+              Math.max(0, dist - window.innerWidth * 0.12) / (window.innerWidth * 0.55),
+            );
+            setters[i].scale(1 - d * 0.06);
+            setters[i].alpha(1 - d * 0.45);
+          }
+        };
+        measure();
+        recede();
+
         gsap.to(el, {
           x: () => -distance(),
           ease: "none",
@@ -327,6 +362,11 @@ export function Filmstrip({
             pin: true,
             scrub: 0.6,
             invalidateOnRefresh: true,
+            onRefresh: () => {
+              measure();
+              recede();
+            },
+            onUpdate: recede,
           },
         });
       });
@@ -337,7 +377,7 @@ export function Filmstrip({
   return (
     <div
       ref={root}
-      className="flex snap-x snap-mandatory overflow-x-auto py-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:min-h-screen md:snap-none md:items-center md:overflow-hidden md:py-16"
+      className="relative flex snap-x snap-mandatory overflow-x-auto py-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:min-h-screen md:snap-none md:items-center md:overflow-hidden md:py-16"
     >
       <div ref={track} className="flex w-max gap-6 pl-5 pr-5 md:gap-10 md:pl-10 md:pr-0">
         {shots.map((s) => (

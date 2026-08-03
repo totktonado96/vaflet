@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -405,6 +405,10 @@ export function ShotZoom() {
  * A screenshot behind minimal browser chrome, shown smaller than full bleed:
  * the 1437-px sources stay close to their native size on retina, which is the
  * whole point. Drifts against the scroll like every big shot on the site.
+ * First sight is a window opening: the traffic lights pop in, the title types
+ * itself, and the screen paints down from under the bar — the way a study
+ * opens in under a second. A fine pointer can lean the window a couple of
+ * degrees; the shot inside is never scaled, so nothing is ever cropped.
  */
 export function WindowShot({
   src,
@@ -443,6 +447,31 @@ export function WindowShot({
           },
         },
       );
+
+      // a fine pointer leans the glass — the shot itself never rescales
+      const win = frame.current!.querySelector<HTMLElement>("[data-win]");
+      if (win && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+        gsap.set(win, { transformPerspective: 750 });
+        const rx = gsap.quickTo(win, "rotationX", { duration: 0.6, ease: "power3" });
+        const ry = gsap.quickTo(win, "rotationY", { duration: 0.6, ease: "power3" });
+        const onMove = (e: PointerEvent) => {
+          const r = win.getBoundingClientRect();
+          const nx = (e.clientX - r.left) / r.width - 0.5;
+          const ny = (e.clientY - r.top) / r.height - 0.5;
+          rx(ny * -2.6);
+          ry(nx * 3);
+        };
+        const onLeave = () => {
+          rx(0);
+          ry(0);
+        };
+        win.addEventListener("pointermove", onMove);
+        win.addEventListener("pointerleave", onLeave);
+        return () => {
+          win.removeEventListener("pointermove", onMove);
+          win.removeEventListener("pointerleave", onLeave);
+        };
+      }
     },
     { scope: frame },
   );
@@ -451,10 +480,17 @@ export function WindowShot({
   const barBg = dark ? "rgba(255,255,255,0.06)" : "#F4F2EC";
 
   return (
-    <figure ref={frame} className={className}>
+    <figure ref={frame} data-vel className={className}>
       <div
-        className="overflow-hidden rounded-[0.9rem] md:rounded-[1.1rem]"
-        style={{ boxShadow: `inset 0 0 0 1px ${line}` }}
+        data-win
+        data-cursor-text={title}
+        className="group/win overflow-hidden rounded-[0.9rem] hover:[--lift:0.32] md:rounded-[1.1rem]"
+        /* one declaration, two shadows: the hairline, and a lift that fades
+           in through a custom property so the inline style stays in charge */
+        style={{
+          boxShadow: `inset 0 0 0 1px ${line}, 0 30px 60px -30px rgba(10,10,10,var(--lift,0))`,
+          transition: "box-shadow 0.5s ease",
+        }}
       >
         <div
           className="flex items-center gap-3 px-4 py-2.5 md:px-5"
@@ -464,7 +500,7 @@ export function WindowShot({
             {[0, 1, 2].map((i) => (
               <span
                 key={i}
-                className="size-[7px] rounded-full bg-current opacity-20"
+                className="size-[7px] rounded-full bg-current opacity-20 transition-opacity duration-300 group-hover/win:opacity-55"
               />
             ))}
           </span>
@@ -477,7 +513,6 @@ export function WindowShot({
             src={src}
             alt={alt}
             fill
-            loading="eager"
             sizes="(min-width: 768px) 70vw, 100vw"
             className="object-cover"
           />
@@ -554,6 +589,7 @@ export function VideoDrift({
   return (
     <div
       ref={frame}
+      data-vel
       className={`relative overflow-hidden rounded-[1.15rem] md:rounded-[1.5rem] ${className}`}
     >
       <video
@@ -583,10 +619,8 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
   useGSAP(
     () => {
       const img = frame.current!.querySelector<HTMLElement>("[data-wl-img]");
-      const ww = frame.current!.querySelector<HTMLElement>("[data-ww]");
-      const wc = frame.current!.querySelector<HTMLElement>("[data-wc]");
       const hint = frame.current!.querySelector<HTMLElement>("[data-wl-hint]");
-      if (!img || !ww || !wc) return;
+      if (!img) return;
 
       if (!reducedMotion()) {
         gsap.fromTo(
@@ -614,8 +648,6 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
         const contrast = 2.1 - nx * 1.35;
         const brightness = 1.55 - ny * 0.95;
         img.style.filter = `brightness(${brightness.toFixed(3)}) contrast(${contrast.toFixed(3)})`;
-        ww.textContent = String(Math.round(150 + nx * 1350));
-        wc.textContent = String(Math.round(30 + ny * 800));
         if (!touched && hint) {
           touched = true;
           gsap.to(hint, { autoAlpha: 0, duration: 0.4 });
@@ -623,8 +655,6 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
       };
       const onLeave = () => {
         img.style.filter = "";
-        ww.textContent = "596";
-        wc.textContent = "343";
       };
       const host = frame.current!;
       host.addEventListener("pointermove", onMove);
@@ -638,7 +668,7 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
   );
 
   return (
-    <div ref={frame}>
+    <div ref={frame} data-vel>
       <div
         className="overflow-hidden rounded-[0.9rem] md:rounded-[1.1rem]"
         style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.2)" }}
@@ -671,12 +701,6 @@ export function WindowLevel({ src, alt }: { src: string; alt: string }) {
           >
             <Image src={src} alt="" aria-hidden fill loading="eager" sizes="80vw" className="object-cover" />
           </div>
-          <p
-            className="absolute font-mono text-[8px] font-bold tracking-[0.2em] md:text-[12px]"
-            style={{ color: OVERLAY, top: "17.2%", right: "4.8%" }}
-          >
-            ww/wc <span data-ww>596</span> / <span data-wc>343</span>
-          </p>
           <p
             data-wl-hint
             className="absolute font-mono text-[8px] font-bold uppercase tracking-[0.25em] md:text-[10px]"
@@ -1050,29 +1074,51 @@ export function MiniBox() {
 export function CaseFx() {
   useGSAP(() => {
     if (reducedMotion()) return;
+
+    // scroll momentum leans every big frame a degree and springs it back —
+    // the same weight the cursor's speed-stretch already gives the pointer.
+    // Frames opt in with data-vel; the lean is a skew, never a crop.
+    const frames = gsap.utils.toArray<HTMLElement>("[data-vel]");
+    const leans = frames.map((el) =>
+      gsap.quickTo(el, "skewY", { duration: 0.5, ease: "power3" }),
+    );
+    let last = 0;
+    const lean = () => {
+      const v =
+        (window as unknown as { __lenis?: { velocity?: number } }).__lenis
+          ?.velocity ?? 0;
+      const s = gsap.utils.clamp(-1.1, 1.1, v * 0.014);
+      if (Math.abs(s - last) < 0.02) return;
+      last = s;
+      for (const to of leans) to(s);
+    };
+    if (frames.length) gsap.ticker.add(lean);
+
     const main = document.querySelector<HTMLElement>("[data-case]");
     const dark = document.querySelector<HTMLElement>("[data-dark]");
-    if (!main || !dark) return;
-    gsap.set(dark, { backgroundColor: "transparent" });
-    gsap.fromTo(
-      main,
-      { backgroundColor: PAPER },
-      {
-        backgroundColor: INK,
-        ease: "none",
-        scrollTrigger: { trigger: dark, start: "top 85%", end: "top 55%", scrub: true },
-      },
-    );
-    gsap.fromTo(
-      main,
-      { backgroundColor: INK },
-      {
-        backgroundColor: PAPER,
-        ease: "none",
-        immediateRender: false,
-        scrollTrigger: { trigger: dark, start: "bottom 70%", end: "bottom 30%", scrub: true },
-      },
-    );
+    if (main && dark) {
+      gsap.set(dark, { backgroundColor: "transparent" });
+      gsap.fromTo(
+        main,
+        { backgroundColor: PAPER },
+        {
+          backgroundColor: INK,
+          ease: "none",
+          scrollTrigger: { trigger: dark, start: "top 85%", end: "top 55%", scrub: true },
+        },
+      );
+      gsap.fromTo(
+        main,
+        { backgroundColor: INK },
+        {
+          backgroundColor: PAPER,
+          ease: "none",
+          immediateRender: false,
+          scrollTrigger: { trigger: dark, start: "bottom 70%", end: "bottom 30%", scrub: true },
+        },
+      );
+    }
+    return () => gsap.ticker.remove(lean);
   });
   return null;
 }
@@ -1105,6 +1151,177 @@ export function Rule({ colour = INK, thick = 2 }: { colour?: string; thick?: num
       className="w-full origin-left"
       style={{ height: thick, backgroundColor: colour }}
     />
+  );
+}
+
+/**
+ * The obsidian cover leans a few pixels toward a fine pointer — just enough
+ * depth to say the banner is glass, not print. The wrapper moves, so it never
+ * argues with the drift the frame inside already carries.
+ */
+export function PointerDrift({
+  children,
+  strength = 8,
+  className = "",
+}: {
+  children: ReactNode;
+  strength?: number;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+      const el = ref.current!;
+      const xTo = gsap.quickTo(el, "x", { duration: 0.9, ease: "power3" });
+      const yTo = gsap.quickTo(el, "y", { duration: 0.9, ease: "power3" });
+      const onMove = (e: PointerEvent) => {
+        const r = el.getBoundingClientRect();
+        xTo(((e.clientX - r.left) / r.width - 0.5) * strength * 2);
+        yTo(((e.clientY - r.top) / r.height - 0.5) * strength * 1.4);
+      };
+      const onLeave = () => {
+        xTo(0);
+        yTo(0);
+      };
+      el.addEventListener("pointermove", onMove);
+      el.addEventListener("pointerleave", onLeave);
+      return () => {
+        el.removeEventListener("pointermove", onMove);
+        el.removeEventListener("pointerleave", onLeave);
+      };
+    },
+    { scope: ref },
+  );
+
+  return (
+    <div ref={ref} className={className}>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * A reading-room light over the obsidian cover: a soft radial glow trails the
+ * pointer with its own lag, the way a viewer's spotlight tool follows a
+ * radiologist's hand. Blend-mode soft-light, so the marble underneath is
+ * lit, never repainted. Drop it inside any overflow-hidden frame.
+ */
+export function ReadLight() {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+      const el = ref.current!;
+      const host = el.parentElement!;
+      let tx = 0;
+      let ty = 0;
+      let cx = 0;
+      let cy = 0;
+      let lit = false;
+
+      const tick = () => {
+        if (!lit && Math.abs(tx - cx) < 0.5 && Math.abs(ty - cy) < 0.5) return;
+        cx += (tx - cx) * 0.14;
+        cy += (ty - cy) * 0.14;
+        el.style.setProperty("--gx", `${cx.toFixed(1)}px`);
+        el.style.setProperty("--gy", `${cy.toFixed(1)}px`);
+      };
+      const onMove = (e: PointerEvent) => {
+        const r = host.getBoundingClientRect();
+        tx = e.clientX - r.left;
+        ty = e.clientY - r.top;
+        if (!lit) {
+          lit = true;
+          cx = tx;
+          cy = ty;
+          gsap.to(el, { opacity: 1, duration: 0.45, ease: "power2.out" });
+        }
+      };
+      const onLeave = () => {
+        lit = false;
+        gsap.to(el, { opacity: 0, duration: 0.6, ease: "power2.out" });
+      };
+
+      gsap.ticker.add(tick);
+      host.addEventListener("pointermove", onMove);
+      host.addEventListener("pointerleave", onLeave);
+      return () => {
+        gsap.ticker.remove(tick);
+        host.removeEventListener("pointermove", onMove);
+        host.removeEventListener("pointerleave", onLeave);
+      };
+    },
+    { scope: ref },
+  );
+
+  return (
+    <span
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute inset-0 z-[5] opacity-0"
+      style={{
+        background:
+          "radial-gradient(420px circle at var(--gx, 50%) var(--gy, 40%), rgba(255,255,255,0.2), transparent 70%)",
+        mixBlendMode: "soft-light",
+      }}
+    />
+  );
+}
+
+const DECODE_GLYPHS = "0123456789ABCDEF·|/+—";
+
+/**
+ * Mono kickers arrive the way a DICOM header parses: hex flickers where the
+ * line will be, and the real characters land left to right. Spaces stay
+ * spaces, so nothing rewraps. Reduced motion prints the finished line.
+ */
+export function Decode({
+  text,
+  className = "",
+  ...rest
+}: { text: string } & HTMLAttributes<HTMLParagraphElement>) {
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useGSAP(
+    () => {
+      if (reducedMotion()) return;
+      const out = ref.current!.querySelector<HTMLElement>("[data-decode-out]");
+      if (!out) return;
+      const glyph = () => DECODE_GLYPHS[(Math.random() * DECODE_GLYPHS.length) | 0];
+      const paint = (cut: number) => {
+        let s = text.slice(0, cut);
+        for (let i = cut; i < text.length; i++) {
+          s += /\s/.test(text[i]) ? text[i] : glyph();
+        }
+        out.textContent = s;
+      };
+      paint(0);
+      const box = { p: 0 };
+      gsap.to(box, {
+        p: 1,
+        duration: Math.min(1.1, Math.max(0.55, text.length * 0.022)),
+        ease: "power1.in",
+        scrollTrigger: { trigger: ref.current, start: "top 88%", once: true },
+        onUpdate: () => paint(Math.floor(box.p * text.length)),
+        onComplete: () => {
+          out.textContent = text;
+        },
+      });
+    },
+    { scope: ref },
+  );
+
+  return (
+    <p ref={ref} className={className} aria-label={text} {...rest}>
+      <span data-decode-out aria-hidden>
+        {text}
+      </span>
+    </p>
   );
 }
 
@@ -1355,6 +1572,24 @@ export function Tape() {
           },
         },
       );
+
+      // the one place velocity gets loud: a fast flick whips the tape and it
+      // settles flat as the momentum dies — modalities really do fly past
+      const tape = root.current!.querySelector<HTMLElement>("[data-tape]");
+      if (!tape) return;
+      const whip = gsap.quickTo(tape, "skewX", { duration: 0.35, ease: "power2.out" });
+      let last = 0;
+      const tick = () => {
+        const v =
+          (window as unknown as { __lenis?: { velocity?: number } }).__lenis
+            ?.velocity ?? 0;
+        const s = gsap.utils.clamp(-5, 5, v * 0.06);
+        if (Math.abs(s - last) < 0.05) return;
+        last = s;
+        whip(s);
+      };
+      gsap.ticker.add(tick);
+      return () => gsap.ticker.remove(tick);
     },
     { scope: root },
   );
@@ -1506,7 +1741,7 @@ export function SlotPicker() {
       <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
         jul 26 — pick a slot
       </p>
-      <div className="mt-5 grid grid-cols-4 gap-2">
+      <div data-cursor-text="Book" className="mt-5 grid grid-cols-4 gap-2">
         {SLOTS.map((t, i) => {
           const taken = TAKEN.has(i);
           const isPicked = picked === i;
@@ -1727,16 +1962,18 @@ export function EgfrToy() {
       >
         {v}
       </p>
-      <input
-        type="range"
-        min={12}
-        max={90}
-        value={v}
-        onChange={(e) => setV(Number(e.target.value))}
-        aria-label="Most recent eGFR"
-        className="mt-6 w-full"
-        style={{ accentColor: blocked ? RED : INK }}
-      />
+      <div data-cursor-text="Drag" data-cursor-dwell="It really blocks the booking">
+        <input
+          type="range"
+          min={12}
+          max={90}
+          value={v}
+          onChange={(e) => setV(Number(e.target.value))}
+          aria-label="Most recent eGFR"
+          className="mt-6 w-full"
+          style={{ accentColor: blocked ? RED : INK }}
+        />
+      </div>
       <div className="mt-1 flex justify-between font-mono text-[9px] font-bold tracking-[0.14em] opacity-40">
         <span>12</span>
         <span>30 — the line</span>

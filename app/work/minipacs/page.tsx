@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import Magnetic from "@/components/Magnetic";
 import SplitReveal from "@/components/SplitReveal";
 import {
   DriftShot,
@@ -11,6 +12,7 @@ import {
 } from "@/components/case/kit";
 import {
   CaseFx,
+  Decode,
   Dictation,
   EgfrToy,
   GateHead,
@@ -21,7 +23,9 @@ import {
   NumbersSpark,
   OrderLog,
   Pipeline,
+  PointerDrift,
   QrField,
+  ReadLight,
   Rule,
   ShotZoom,
   SlotPicker,
@@ -139,7 +143,7 @@ function BannerDoor({ href, label, open }: { href: string; label: string; open: 
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative isolate overflow-hidden rounded-full border-2 border-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white"
+      className="group relative isolate inline-block overflow-hidden rounded-full border-2 border-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white"
     >
       <span
         aria-hidden
@@ -194,27 +198,37 @@ export default function MinipacsPage() {
           </div>
         </div>
 
-        <div className="mt-12 px-5 md:mt-16 md:px-10">
-          <DriftShot
-            src={S("cover-duo")}
-            alt="The MiniPACS mark — a stack of DICOM slices — with the wordmark, white on obsidian"
-            className="aspect-[16/10] w-full md:aspect-[21/9]"
-            priority
-          >
-            <span className="absolute inset-x-0 bottom-6 z-10 flex flex-wrap justify-center gap-3 px-4 md:bottom-10">
-              <BannerDoor href="https://demo.minipacs.net/login" label="MiniPACS demo" open="read a study ↗" />
-              <BannerDoor href="https://vendo.minipacs.net/login" label="Vendo demo" open="book a slot ↗" />
-              <BannerDoor href="https://minipacs.net" label="minipacs.net" open="bring it home ↗" />
-            </span>
-          </DriftShot>
+        <div data-vel className="mt-12 px-5 md:mt-16 md:px-10">
+          <PointerDrift>
+            <DriftShot
+              src={S("cover-duo")}
+              alt="The MiniPACS mark — a stack of DICOM slices — with the wordmark, white on obsidian"
+              className="aspect-[16/10] w-full md:aspect-[21/9]"
+              priority
+            >
+              <ReadLight />
+              <span className="absolute inset-x-0 bottom-6 z-10 flex flex-wrap justify-center gap-3 px-4 md:bottom-10">
+                <Magnetic strength={0.3}>
+                  <BannerDoor href="https://demo.minipacs.net/login" label="MiniPACS demo" open="read a study ↗" />
+                </Magnetic>
+                <Magnetic strength={0.3}>
+                  <BannerDoor href="https://vendo.minipacs.net/login" label="Vendo demo" open="book a slot ↗" />
+                </Magnetic>
+                <Magnetic strength={0.3}>
+                  <BannerDoor href="https://minipacs.net" label="minipacs.net" open="bring it home ↗" />
+                </Magnetic>
+              </span>
+            </DriftShot>
+          </PointerDrift>
         </div>
       </section>
 
       {/* ---- the brief: rent, fax, and the way out ------------------------ */}
       <section className="shell py-24 md:py-36">
-        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
-          For independent imaging centers
-        </p>
+        <Decode
+          text="For independent imaging centers"
+          className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60"
+        />
         <SplitReveal className="display-2 mt-8 max-w-[16ch] font-extrabold uppercase leading-[1.0]">
           Own the archive. Retire the fax.
         </SplitReveal>
@@ -254,12 +268,14 @@ export default function MinipacsPage() {
       <Rule />
       <section className="shell pb-6 md:pb-10">
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 pt-16 md:pt-24">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]">
-            01 — MiniPACS
-          </p>
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
-            $300 a month, flat
-          </p>
+          <Decode
+            text="01 — MiniPACS"
+            className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
+          />
+          <Decode
+            text="$300 a month, flat"
+            className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60"
+          />
         </div>
         <SplitReveal className="display-2 mt-8 max-w-[16ch] font-extrabold uppercase leading-[1.0]">
           The archive comes home
@@ -310,13 +326,12 @@ export default function MinipacsPage() {
           intensity={0.85}
         />
         <div className="shell relative pt-24 md:pt-36">
-          <p
+          <Decode
             data-halftone-avoid
+            text="MRI Brain w wo contrast · 401 | T2 FLAIR · ww/wc 596 / 343"
             className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
             style={{ color: OVERLAY }}
-          >
-            MRI Brain w wo contrast · 401 | T2 FLAIR · ww/wc 596 / 343
-          </p>
+          />
           <SplitReveal className="display-2 mt-8 max-w-[16ch] font-extrabold uppercase leading-[1.0]">
             Reading happens in the dark
           </SplitReveal>
@@ -356,9 +371,10 @@ export default function MinipacsPage() {
 
       {/* ---- the hardware: everything above runs on this -------------------- */}
       <section className="shell py-24 md:py-36">
-        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
-          The hardware
-        </p>
+        <Decode
+          text="The hardware"
+          className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60"
+        />
         <SplitReveal className="display-2 mt-8 max-w-[18ch] font-extrabold uppercase leading-[1.0]">
           Millions of images. One box.
         </SplitReveal>
@@ -371,12 +387,14 @@ export default function MinipacsPage() {
       <Rule />
       <section className="shell pb-20 md:pb-28">
         <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2 pt-16 md:pt-24">
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]">
-            02 — Vendo
-          </p>
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
-            $500 a month, flat
-          </p>
+          <Decode
+            text="02 — Vendo"
+            className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]"
+          />
+          <Decode
+            text="$500 a month, flat"
+            className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60"
+          />
         </div>
         <SplitReveal className="display-2 mt-8 max-w-[16ch] font-extrabold uppercase leading-[1.0]">
           A fax has no status
@@ -481,10 +499,16 @@ export default function MinipacsPage() {
       {/* ---- the rest of the stack, dragged past ---------------------------- */}
       <Rule />
       <section>
-        <p className="shell pt-16 font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60 md:pt-24">
-          The rest of the stack
-        </p>
-        <Filmstrip shots={STRIP} edge={EDGE} itemWidth="w-[70vw] md:w-[44vw]" />
+        <Decode
+          text="The rest of the stack"
+          className="shell pt-16 font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60 md:pt-24"
+        />
+        <Filmstrip
+          shots={STRIP}
+          edge={EDGE}
+          itemWidth="w-[70vw] md:w-[44vw]"
+          depth
+        />
       </section>
 
       {/* ---- the proof: don't take the screenshots' word for it ------------- */}
@@ -494,9 +518,10 @@ export default function MinipacsPage() {
           style={{ backgroundColor: CARD, boxShadow: `inset 0 0 0 1px ${LINE}` }}
         >
           <div>
-            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60">
-              The proof
-            </p>
+            <Decode
+              text="The proof"
+              className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60"
+            />
             <SplitReveal className="display-3 mt-6 max-w-[16ch] font-extrabold uppercase leading-[1.05]">
               Don&rsquo;t take the screenshots&rsquo; word for it
             </SplitReveal>
@@ -506,50 +531,68 @@ export default function MinipacsPage() {
               open them here.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="https://demo.minipacs.net/login"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
-              >
-                MiniPACS demo ↗
-              </a>
-              <a
-                href="https://vendo.minipacs.net/login"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
-              >
-                Vendo demo ↗
-              </a>
+              <Magnetic strength={0.2}>
+                <a
+                  href="https://demo.minipacs.net/login"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+                >
+                  MiniPACS demo ↗
+                </a>
+              </Magnetic>
+              <Magnetic strength={0.2}>
+                <a
+                  href="https://vendo.minipacs.net/login"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+                >
+                  Vendo demo ↗
+                </a>
+              </Magnetic>
             </div>
           </div>
-          <figure className="justify-self-center">
+          <figure data-cursor-text="Scan" className="justify-self-center">
             <QrField className="size-[280px] touch-none md:size-[340px]" />
-            <a
-              href="https://minipacs.net"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mx-auto mt-5 block w-max rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
-            >
-              minipacs.net ↗
-            </a>
+            <div className="mt-5 flex justify-center">
+              <Magnetic strength={0.2}>
+                <a
+                  href="https://minipacs.net"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+                >
+                  minipacs.net ↗
+                </a>
+              </Magnetic>
+            </div>
           </figure>
         </div>
       </section>
 
       {/* ---- out -------------------------------------------------------------- */}
       <section className="shell pb-24 md:pb-32">
+        {/* the last beat gets the same drawn-in entrance every chapter got */}
+        <Rule />
         <Link
           href={`/work/${next.slug}`}
-          className="group block pt-8"
-          style={{ borderTop: `2px solid ${INK}` }}
-          data-cursor-text="Next"
+          className="group relative isolate block overflow-hidden pb-6 pt-8 md:pb-8"
+          data-cursor-text={next.title}
+          data-cursor-ratio={next.ratio}
         >
-          <span className="text-xs font-bold uppercase tracking-[0.2em]">
+          {/* the doors' move at full page width: ink rises, the reader leaves */}
+          <span
+            aria-hidden
+            className="absolute inset-0 -z-10 origin-bottom scale-y-0 transition-transform duration-[550ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
+            style={{ backgroundColor: INK }}
+          />
+          <span
+            className="block text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-[450ms] group-hover:text-[#FAF9F6]"
+          >
             Next project
           </span>
-          <span className="display-2 mt-2 flex items-baseline gap-5 font-extrabold uppercase leading-[1.0]">
+          <span className="display-2 mt-2 flex items-baseline gap-5 font-extrabold uppercase leading-[1.0] transition-colors duration-[450ms] group-hover:text-[#FAF9F6]">
             <span className="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-3">
               {next.title}
             </span>
