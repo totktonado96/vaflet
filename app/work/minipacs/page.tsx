@@ -523,7 +523,7 @@ export default function MinipacsPage() {
               className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60"
             />
             <SplitReveal className="display-3 mt-6 max-w-[16ch] font-extrabold uppercase leading-[1.05]">
-              Don&rsquo;t take the screenshots&rsquo; word for it
+              Don&rsquo;t believe us. Log in.
             </SplitReveal>
             <p className="mt-6 max-w-[52ch] text-[17px] font-light leading-relaxed opacity-80 md:text-[19px]">
               Both demos are public — synthetic patients, the real products.
@@ -579,7 +579,6 @@ export default function MinipacsPage() {
           href={`/work/${next.slug}`}
           className="group relative isolate block overflow-hidden pb-6 pt-8 md:pb-8"
           data-cursor-text={next.title}
-          data-cursor-ratio={next.ratio}
         >
           {/* the doors' move at full page width: ink rises, the reader leaves */}
           <span

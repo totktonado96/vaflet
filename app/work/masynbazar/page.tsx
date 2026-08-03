@@ -196,13 +196,18 @@ export default function MasynbazarPage() {
       <section className="shell pb-24 pt-10 md:pb-32">
         <Link
           href={`/work/${next.slug}`}
-          className="group block border-t-2 border-white pt-8"
-          data-cursor-text="Next"
+          className="group relative isolate block overflow-hidden border-t-2 border-white pb-6 pt-8 md:pb-8"
+          data-cursor-text={next.title}
         >
-          <span className="text-xs font-bold uppercase tracking-[0.2em]">
+          {/* the ink rises and the reader leaves — same exit on every case */}
+          <span
+            aria-hidden
+            className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-white transition-transform duration-[550ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
+          />
+          <span className="block text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-[450ms] group-hover:text-black">
             Next project
           </span>
-          <span className="display-2 mt-2 flex items-baseline gap-5 font-extrabold uppercase leading-[1.0]">
+          <span className="display-2 mt-2 flex items-baseline gap-5 font-extrabold uppercase leading-[1.0] transition-colors duration-[450ms] group-hover:text-black">
             <span className="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-3">
               {next.title}
             </span>
