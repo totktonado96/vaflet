@@ -398,3 +398,80 @@ html.lenis body {
     animation: none;
   }
 }
+
+/* ————— FACE2ME — the kiosk's own soft world, a site inside the site —————
+   The case wears the product's skin, not ours: face2.me is neumorphic —
+   one pale material, light from the top left, everything either extruded
+   from the surface or pressed into it. No hairlines here: edges are shadow.
+   The accent is whatever face2.me's /api/theme wears; today, malachite. */
+[data-f2m] {
+  --f2m-bg: #e0e5ec;
+  --f2m-ink: #173543;
+  --f2m-fg: #3d4852;
+  --f2m-muted: #6b7280;
+  --f2m-accent: #0bda51;
+  --f2m-accent-deep: #00a86b;
+  --f2m-hi: #ffffff;
+  --f2m-lo: #b8c0cc;
+  background: var(--f2m-bg);
+  color: var(--f2m-fg);
+  font-family: var(--f2m-body), system-ui, sans-serif;
+}
+[data-f2m-dark] {
+  --f2m-bg: #2a2d35;
+  --f2m-ink: #e2e8f0;
+  --f2m-fg: #cbd5e1;
+  --f2m-muted: #94a3b8;
+  --f2m-hi: #343945;
+  --f2m-lo: #1e2128;
+  background: var(--f2m-bg);
+  color: var(--f2m-fg);
+}
+[data-f2m] .f2m-display {
+  font-family: var(--f2m-display), var(--f2m-body), system-ui, sans-serif;
+  color: var(--f2m-ink);
+  letter-spacing: -0.03em;
+}
+/* raised slab — the default material of this world */
+.f2m-neu {
+  background: var(--f2m-bg);
+  border-radius: 1.5rem;
+  box-shadow:
+    10px 10px 24px var(--f2m-lo),
+    -10px -10px 24px var(--f2m-hi);
+}
+.f2m-neu-sm {
+  background: var(--f2m-bg);
+  border-radius: 1rem;
+  box-shadow:
+    5px 5px 12px var(--f2m-lo),
+    -5px -5px 12px var(--f2m-hi);
+}
+/* pressed into the surface — inputs, screens, grooves */
+.f2m-in {
+  background: var(--f2m-bg);
+  border-radius: 1rem;
+  box-shadow:
+    inset 6px 6px 12px var(--f2m-lo),
+    inset -6px -6px 12px var(--f2m-hi);
+}
+/* a soft pill that presses when touched */
+.f2m-btn {
+  background: var(--f2m-bg);
+  border-radius: 9999px;
+  box-shadow:
+    6px 6px 14px var(--f2m-lo),
+    -6px -6px 14px var(--f2m-hi);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.f2m-btn:hover {
+  box-shadow:
+    3px 3px 8px var(--f2m-lo),
+    -3px -3px 8px var(--f2m-hi);
+}
+.f2m-btn:active {
+  box-shadow:
+    inset 4px 4px 10px var(--f2m-lo),
+    inset -4px -4px 10px var(--f2m-hi);
+  transform: scale(0.985);
+}

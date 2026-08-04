@@ -81,10 +81,10 @@ export function ShiftClock({ since }: { since: string }) {
 
   return (
     <div ref={root}>
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+      <p className="f2m-neu-sm inline-block rounded-full! px-3 py-1 text-xs font-bold tracking-normal text-[color:var(--f2m-muted)]">
         Time card — no clock out
       </p>
-      <p className="display-3 mt-3 font-extrabold uppercase leading-[1.05] tabular-nums">
+      <p className="f2m-display mt-3 text-[clamp(1.7rem,4.5vw,3.8rem)] font-extrabold leading-[1.05] tabular-nums">
         On shift for {days === null ? "—" : `${days} day${days === 1 ? "" : "s"}`},{" "}
         {hh === null ? "--:--:--" : `${hh}:${mm}:${ss}`}. No breaks.
       </p>
@@ -162,11 +162,11 @@ function DriftRow({
           }}
         >
           {words.map((w, i) => (
-            <span key={`${w}-${i}`} className={`inline-flex shrink-0 items-center whitespace-nowrap ${textClass}`}>
+            <span
+              key={`${w}-${i}`}
+              className={`f2m-neu-sm inline-flex shrink-0 items-center whitespace-nowrap rounded-full! px-4 py-2 ${gapClass} ${textClass}`}
+            >
               <span dir="auto">{w}</span>
-              <span aria-hidden className={`opacity-30 ${gapClass}`}>
-                ·
-              </span>
             </span>
           ))}
         </div>
@@ -193,16 +193,16 @@ export function LanguageDrift() {
           reverse={false}
           seconds={46}
           paused={paused}
-          textClass="text-[1.8rem] font-extrabold uppercase leading-none sm:text-[2.4rem] md:text-[3.4rem]"
-          gapClass="mx-6 md:mx-10"
+          textClass="f2m-display text-[1.8rem] font-extrabold leading-none sm:text-[2.4rem] md:text-[3.4rem]"
+          gapClass="mx-3 md:mx-4"
         />
         <DriftRow
           words={ROW_B}
           reverse
           seconds={34}
           paused={paused}
-          textClass="text-[1rem] font-light uppercase leading-none opacity-55 sm:text-[1.2rem] md:text-[1.5rem]"
-          gapClass="mx-4 md:mx-6"
+          textClass="text-[1rem] font-light leading-none text-[color:var(--f2m-muted)] sm:text-[1.2rem] md:text-[1.5rem]"
+          gapClass="mx-2 md:mx-3"
         />
       </div>
       <p className="sr-only">
@@ -272,8 +272,8 @@ export function FallbackToggle() {
         className="inline-flex items-center gap-4 rounded-full md:gap-5"
       >
         <span
-          className={`font-mono text-[11px] font-bold uppercase tracking-[0.25em] transition-opacity duration-300 ${
-            isLocal ? "opacity-35" : "opacity-100"
+          className={`text-[11px] font-bold tracking-normal transition-colors duration-300 ${
+            isLocal ? "text-[color:var(--f2m-muted)]" : "text-[color:var(--f2m-accent)]"
           }`}
         >
           Cloud
@@ -281,25 +281,25 @@ export function FallbackToggle() {
 
         <span
           ref={trackRef}
-          className="relative inline-block h-9 w-16 shrink-0 rounded-full border-2 border-black bg-white md:h-10 md:w-[4.5rem]"
+          className="f2m-in relative inline-block h-9 w-16 shrink-0 rounded-full! md:h-10 md:w-[4.5rem]"
         >
           <span
             ref={knobRef}
             aria-hidden
-            className="absolute left-1 top-1 size-6 rounded-full bg-black md:size-7"
+            className="f2m-neu-sm absolute left-1 top-1 size-6 rounded-full! md:size-7"
           />
         </span>
 
         <span
-          className={`font-mono text-[11px] font-bold uppercase tracking-[0.25em] transition-opacity duration-300 ${
-            isLocal ? "opacity-100" : "opacity-35"
+          className={`text-[11px] font-bold tracking-normal transition-colors duration-300 ${
+            isLocal ? "text-[color:var(--f2m-accent)]" : "text-[color:var(--f2m-muted)]"
           }`}
         >
           Local
         </span>
       </button>
 
-      <p className="mt-3 font-mono text-[12px] font-medium tracking-[0.01em] opacity-70">
+      <p className="mt-3 text-xs font-medium text-[color:var(--f2m-muted)]">
         {isLocal
           ? "local model — slower, still answering"
           : "cloud model — answering from the internet"}

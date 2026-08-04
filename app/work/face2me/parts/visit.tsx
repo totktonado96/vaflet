@@ -63,10 +63,11 @@ export function VisitRail() {
       tl.fromTo("[data-visit-rail]", { scaleY: 0 }, { scaleY: 1, ease: "none", duration: 1 }, 0);
       gsap.utils.toArray<HTMLElement>("[data-visit-dot]").forEach((el, i) => {
         const at = i / (STATIONS.length - 1);
+        const isLast = i === STATIONS.length - 1;
         tl.fromTo(
           el,
           { backgroundColor: "rgba(0,0,0,0)" },
-          { backgroundColor: "#000", duration: 0.04 },
+          { backgroundColor: isLast ? "#0bda51" : "#173543", duration: 0.04 },
           Math.max(0, at - 0.02),
         );
       });
@@ -80,16 +81,16 @@ export function VisitRail() {
 
   return (
     <div ref={root}>
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
-        one visit, start to finish
+      <p className="f2m-neu-sm inline-block rounded-full px-3 py-1 text-xs font-bold text-[color:var(--f2m-muted)]">
+        One visit, start to finish
       </p>
       <div data-visit-wrap className="relative mt-7 pl-7">
-        <span data-visit-line aria-hidden className="absolute left-[4px] w-[2px] bg-black/15" />
+        <span data-visit-line aria-hidden className="f2m-in absolute left-[3px] w-1" />
         <span
           data-visit-line
           data-visit-rail
           aria-hidden
-          className="absolute left-[4px] w-[2px] origin-top bg-black"
+          className="absolute left-[3px] w-1 origin-top rounded-full bg-[color:var(--f2m-ink)]"
         />
         <ol className="flex flex-col gap-8">
           {STATIONS.map((s) => (
@@ -97,12 +98,10 @@ export function VisitRail() {
               <span
                 data-visit-dot
                 aria-hidden
-                className="absolute -left-7 top-[2px] z-[1] size-[10px] rounded-full border-2 border-black bg-black"
+                className="absolute -left-7 top-[2px] z-[1] size-[10px] rounded-full shadow-[inset_2px_2px_4px_var(--f2m-lo),inset_-2px_-2px_4px_var(--f2m-hi)]"
               />
-              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.18em]">
-                {s.label}
-              </p>
-              <p className="mt-1 max-w-[34ch] text-[13px] font-medium leading-relaxed opacity-70">
+              <p className="text-[13px] font-bold text-[color:var(--f2m-ink)]">{s.label}</p>
+              <p className="mt-1 max-w-[34ch] text-[13px] font-medium leading-relaxed text-[color:var(--f2m-muted)]">
                 {s.line}
               </p>
             </li>
@@ -178,38 +177,36 @@ export function StaffFeed() {
 
   return (
     <div ref={root}>
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
-        texts to the front desk · clears itself
+      <p className="f2m-neu-sm inline-block rounded-full px-3 py-1 text-xs font-bold text-[color:var(--f2m-muted)]">
+        Texts to the front desk · clears itself
       </p>
-      <div className="mt-5">
+      <div className="mt-5 flex flex-col gap-3">
         {rows.map((text, i) => {
           const gone = live && i === 0 && leaving;
           const handled = gone || !live;
           return (
             <div
               key={text}
-              className={`row-in flex items-baseline justify-between gap-4 border-t border-black/15 py-3.5 transition-[opacity,transform] duration-500 ease-out ${
+              className={`row-in f2m-neu-sm flex items-center justify-between gap-4 px-4 py-3.5 transition-[opacity,transform] duration-500 ease-out ${
                 gone ? "-translate-x-4 opacity-0" : "translate-x-0 opacity-100"
               }`}
             >
               <span
                 className={`truncate text-[13px] font-medium ${
-                  handled ? "line-through opacity-60" : ""
+                  handled ? "text-[color:var(--f2m-muted)] line-through" : ""
                 }`}
               >
                 {text}
               </span>
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-[0.14em] ${
-                  handled ? "bg-black text-white" : "shadow-[inset_0_0_0_1px_black]"
-                }`}
-              >
-                {handled ? "read" : "unread"}
+              <span className="f2m-neu-sm inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold text-[color:var(--f2m-muted)]">
+                {!handled && (
+                  <span aria-hidden className="size-1.5 rounded-full bg-[color:var(--f2m-accent)]" />
+                )}
+                {handled ? "Read" : "Unread"}
               </span>
             </div>
           );
         })}
-        <div className="border-t border-black/15" />
       </div>
     </div>
   );

@@ -107,7 +107,7 @@ function useDots(canvas: HTMLCanvasElement | null, phase: Phase) {
       const box = canvas.getBoundingClientRect();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, box.width, box.height);
-      ctx.fillStyle = "#000";
+      ctx.fillStyle = "#173543";
       for (const d of dots.current) {
         ctx.beginPath();
         ctx.arc(d.x, d.y, d.r * (0.55 + 0.45 * settle), 0, Math.PI * 2);
@@ -204,16 +204,13 @@ export function Door() {
   useGSAP(
     () => {
       if (reducedMotion()) return;
-      const lines = gsap.utils.toArray<SVGPathElement>("[data-draw]");
-      lines.forEach((line, i) => {
-        const len = line.getTotalLength();
-        gsap.set(line, { strokeDasharray: len, strokeDashoffset: len });
-        gsap.to(line, {
-          strokeDashoffset: 0,
-          duration: 0.9,
-          delay: 0.15 * i,
-          ease: "power2.inOut",
-        });
+      // the kiosk surfaces from its own material — rise and settle, no wipe
+      gsap.from(root.current!.querySelectorAll("[data-rise]"), {
+        y: 26,
+        autoAlpha: 0,
+        duration: 1.1,
+        stagger: 0.12,
+        ease: "power3.out",
       });
     },
     { scope: root },
@@ -278,80 +275,73 @@ export function Door() {
   return (
     <div ref={root} className="flex flex-col items-center">
       <div className="relative w-full max-w-[26rem]">
-        {/* the screen */}
-        <div
-          className="relative aspect-[3/4] overflow-hidden rounded-[1.25rem] border-2 border-black bg-black md:rounded-[1.5rem]"
-          data-cursor-text={
-            phase === "asleep" ? "Wake her" : lit ? "Say something" : undefined
-          }
-        >
-          <canvas
-            ref={setCanvas}
-            className={`absolute inset-0 h-full w-full bg-white transition-opacity duration-700 ${
-              lit ? "opacity-0" : "opacity-100"
-            }`}
-          />
-          <video
-            ref={video}
-            playsInline
-            autoPlay
-            className={`absolute inset-0 h-full w-full object-cover transition-[opacity,filter] duration-700 ${
-              lit ? "opacity-100" : "opacity-0"
-            } ${speaking ? "grayscale-0 contrast-100" : "grayscale contrast-125"}`}
-          />
+        {/* the kiosk: a raised slab, its screen pressed into it */}
+        <div data-rise className="f2m-neu p-4 md:p-5">
+          <div
+            className="f2m-in relative aspect-[3/4] overflow-hidden rounded-[1.1rem]!"
+            data-cursor-text={
+              phase === "asleep" ? "Wake her" : lit ? "Say something" : undefined
+            }
+          >
+            <canvas
+              ref={setCanvas}
+              className={`absolute inset-0 h-full w-full transition-opacity duration-700 ${
+                lit ? "opacity-0" : "opacity-100"
+              }`}
+            />
+            <video
+              ref={video}
+              playsInline
+              autoPlay
+              className={`absolute inset-0 h-full w-full rounded-[1.1rem] object-cover transition-[opacity,filter] duration-700 ${
+                lit ? "opacity-100" : "opacity-0"
+              } ${speaking ? "grayscale-0 contrast-100" : "grayscale contrast-125"}`}
+            />
 
-          {/* status strip, printed on the glass */}
-          <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 border-t-2 border-black bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em]">
-            <span>
-              {phase === "asleep" && "Front desk — asleep"}
-              {phase === "waking" && "Waking her"}
-              {phase === "live" && (speaking ? "Speaking" : "Listening")}
-              {phase === "closed" && "Desk closed"}
-              {phase === "over" && "Shift over"}
-            </span>
-            {lit && (
-              <span>
-                <Countdown seconds={seconds} onDone={hangUp} />
-              </span>
-            )}
+            {/* status chip, floating on the glass like the product's own UI */}
+            <div className="absolute inset-x-0 bottom-3 flex justify-center">
+              <div className="f2m-neu-sm flex items-center gap-2.5 rounded-full px-4 py-2 text-xs font-bold text-[color:var(--f2m-fg)]">
+                <span
+                  aria-hidden
+                  className={`size-2 rounded-full transition-colors duration-300 ${
+                    lit
+                      ? "bg-[color:var(--f2m-accent)]"
+                      : "bg-[color:var(--f2m-muted)]"
+                  } ${lit && !speaking ? "animate-pulse" : ""}`}
+                />
+                <span>
+                  {phase === "asleep" && "Front desk — asleep"}
+                  {phase === "waking" && "Waking her…"}
+                  {phase === "live" && (speaking ? "Speaking" : "Listening…")}
+                  {phase === "closed" && "Desk closed"}
+                  {phase === "over" && "Shift over"}
+                </span>
+                {lit && <Countdown seconds={seconds} onDone={hangUp} />}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* the stand — drawn, so the screen reads as a thing in a lobby */}
-        <svg
-          viewBox="0 0 200 60"
-          className="mt-[-2px] w-full"
-          fill="none"
-          aria-hidden
-        >
-          <path
-            data-draw
-            d="M88 0 L88 38 L112 38 L112 0"
-            stroke="#000"
-            strokeWidth="2.5"
-          />
-          <path data-draw d="M52 52 L148 52" stroke="#000" strokeWidth="2.5" />
-          <path
-            data-draw
-            d="M88 38 L52 52 M112 38 L148 52"
-            stroke="#000"
-            strokeWidth="2.5"
-          />
-        </svg>
+        {/* the stand — extruded from the same material, nothing drawn on top */}
+        <div data-rise aria-hidden className="flex flex-col items-center">
+          <div className="f2m-neu h-14 w-16 rounded-none! md:h-16" />
+          <div className="f2m-neu h-4 w-44 rounded-[9999px]! md:w-52" />
+        </div>
       </div>
 
-      <div className="mt-8 flex w-full max-w-[26rem] flex-col items-center gap-4">
+      <div className="mt-10 flex w-full max-w-[26rem] flex-col items-center gap-5">
         {phase === "asleep" && (
           <button
             type="button"
             onClick={wake}
-            className="w-full rounded-full border-2 border-black px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+            data-rise
+            className="f2m-btn w-full px-8 py-4 text-sm font-bold text-[color:var(--f2m-ink)]"
           >
             Buzz her in
           </button>
         )}
         {phase === "waking" && (
-          <p className="text-xs font-bold uppercase tracking-[0.2em]">
+          <p className="text-sm font-bold text-[color:var(--f2m-muted)]">
             She is putting her face on
           </p>
         )}
@@ -359,7 +349,7 @@ export function Door() {
           <button
             type="button"
             onClick={hangUp}
-            className="w-full rounded-full border-2 border-black px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+            className="f2m-btn w-full px-8 py-4 text-sm font-bold text-[color:var(--f2m-ink)]"
           >
             End the shift
           </button>
@@ -368,7 +358,7 @@ export function Door() {
           <button
             type="button"
             onClick={wake}
-            className="w-full rounded-full border-2 border-black px-8 py-4 text-xs font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
+            className="f2m-btn w-full px-8 py-4 text-sm font-bold text-[color:var(--f2m-ink)]"
           >
             Again
           </button>
@@ -376,14 +366,17 @@ export function Door() {
         {phase === "closed" && (
           <p className="text-center text-[15px] font-medium leading-relaxed">
             Nobody is at the desk right now.{" "}
-            <a href="/contact" className="underline underline-offset-4">
+            <a
+              href="/contact"
+              className="font-bold text-[color:var(--f2m-ink)] underline underline-offset-4"
+            >
               Leave it with the founders
             </a>{" "}
             — there is no one else here anyway.
           </p>
         )}
 
-        <p className="text-center text-[11px] font-bold uppercase leading-relaxed tracking-[0.15em] opacity-60">
+        <p className="max-w-xs text-center text-xs font-medium leading-relaxed text-[color:var(--f2m-muted)]">
           You are talking to an AI. She answers questions and books nothing —
           the one in a lobby does the rest. Three minutes a visit, then she
           hangs up.

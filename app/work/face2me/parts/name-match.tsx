@@ -210,8 +210,8 @@ export function NameMatch() {
           const label = labelRefs.current[i];
           if (dot) {
             gsap.set(dot, {
-              backgroundColor: o.pass ? "rgba(0,0,0,1)" : "rgba(0,0,0,0)",
-              borderColor: o.pass ? "rgba(0,0,0,1)" : "rgba(0,0,0,0.85)",
+              backgroundColor: o.pass ? "#0bda51" : "rgba(23,53,67,0)",
+              borderColor: o.pass ? "#0bda51" : "rgba(23,53,67,0.85)",
             });
           }
           if (label) gsap.set(label, { opacity: 1 });
@@ -236,8 +236,8 @@ export function NameMatch() {
           tl.to(
             dot,
             {
-              backgroundColor: o.pass ? "rgba(0,0,0,1)" : "rgba(0,0,0,0)",
-              borderColor: o.pass ? "rgba(0,0,0,1)" : "rgba(0,0,0,0.85)",
+              backgroundColor: o.pass ? "#0bda51" : "rgba(23,53,67,0)",
+              borderColor: o.pass ? "#0bda51" : "rgba(23,53,67,0.85)",
               duration: 0.25,
               ease: "power2.out",
             },
@@ -285,7 +285,7 @@ export function NameMatch() {
 
   return (
     <div ref={root}>
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] opacity-60">
+      <p className="f2m-neu-sm inline-block rounded-full px-3 py-1 text-xs font-bold tracking-normal text-[color:var(--f2m-muted)]">
         front desk, playable — misspell it on purpose
       </p>
       <p className="mt-3 max-w-[46ch] text-[13px] font-medium leading-relaxed opacity-70">
@@ -294,7 +294,7 @@ export function NameMatch() {
       </p>
 
       <form onSubmit={handleSubmit} className="mt-7">
-        <label htmlFor={nameId} className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+        <label htmlFor={nameId} className="text-[11px] font-bold text-[color:var(--f2m-muted)]">
           Visitor name
         </label>
         <div data-cursor-text="Type" className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-stretch">
@@ -307,12 +307,12 @@ export function NameMatch() {
             placeholder="e.g. Katerina Volkov"
             autoComplete="off"
             spellCheck={false}
-            className="w-full rounded-[0.75rem] border-2 border-black bg-transparent px-4 py-3 text-[15px] font-medium placeholder:opacity-40"
+            className="f2m-in w-full px-5 py-4 text-[15px] font-medium text-[color:var(--f2m-ink)] outline-none placeholder:text-[color:var(--f2m-muted)] focus:ring-2 focus:ring-[color:var(--f2m-accent)]"
           />
           <button
             type="submit"
             data-cursor-text="Check"
-            className="shrink-0 rounded-[0.75rem] border-2 border-black px-6 py-3 text-[11px] font-bold uppercase tracking-[0.14em] transition-colors duration-200 hover:bg-black hover:text-white"
+            className="f2m-btn shrink-0 px-6 py-4 text-sm font-bold text-[color:var(--f2m-ink)]"
           >
             Check in
           </button>
@@ -325,7 +325,7 @@ export function NameMatch() {
             key={ex}
             type="button"
             onClick={() => runSearch(ex)}
-            className="rounded-full border border-black/40 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] transition-colors duration-200 hover:border-black hover:bg-black hover:text-white"
+            className="f2m-btn px-3 py-1.5 text-xs font-bold text-[color:var(--f2m-muted)]"
           >
             try: {ex}
           </button>
@@ -333,11 +333,11 @@ export function NameMatch() {
       </div>
 
       <div className="relative mt-10">
-        <div aria-hidden className="absolute left-1 right-1 top-[4px] h-[2px] bg-black/15" />
+        <div aria-hidden className="f2m-in absolute left-1 right-1 top-[1px] h-2 !rounded-full" />
         <div
           ref={railRef}
           aria-hidden
-          className="absolute left-1 right-1 top-[4px] h-[2px] origin-left scale-x-0 bg-black"
+          className="absolute left-1 right-1 top-[1px] h-2 origin-left scale-x-0 rounded-full bg-[color:var(--f2m-accent)]"
         />
         <ol className="relative flex justify-between">
           {STAGE_LABELS.map((label, i) => (
@@ -356,13 +356,13 @@ export function NameMatch() {
                   dotRefs.current[i] = el;
                 }}
                 aria-hidden
-                className="block size-[10px] rounded-full border-2 border-black/20 bg-transparent"
+                className="block size-[10px] rounded-full border-2 border-[color:var(--f2m-ink)]/20 bg-transparent"
               />
               <span
                 ref={(el) => {
                   labelRefs.current[i] = el;
                 }}
-                className="font-mono text-[9px] font-bold uppercase leading-snug tracking-[0.16em] opacity-40 md:text-[10px] md:tracking-[0.2em]"
+                className="text-[10px] font-bold leading-snug tracking-normal text-[color:var(--f2m-muted)] opacity-40 md:text-[11px]"
               >
                 {label}
               </span>
@@ -374,14 +374,15 @@ export function NameMatch() {
       {result && (
         <div ref={resultRef} role="status" aria-live="polite" className="mt-8 opacity-0">
           {result.matched ? (
-            <div className="rounded-[1rem] border-2 border-black p-6">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+            <div className="f2m-neu p-6">
+              <p className="f2m-neu-sm inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold tracking-normal text-[color:var(--f2m-fg)]">
+                <span aria-hidden className="size-1.5 rounded-full bg-[color:var(--f2m-accent)]" />
                 {tierCaption(result.matchedTier)}
               </p>
-              <p className="mt-3 text-[20px] font-extrabold uppercase leading-tight md:text-[26px]">
+              <p className="f2m-display mt-3 text-[20px] font-extrabold leading-tight md:text-[26px]">
                 {result.matched.name}
               </p>
-              <p className="mt-1 font-mono text-[11px] tracking-[0.12em] opacity-60">
+              <p className="mt-1 font-mono text-[11px] tracking-[0.1em] text-[color:var(--f2m-muted)]">
                 {result.matched.id} · dob {result.matched.dob} · next {result.matched.next}
               </p>
               <p className="mt-4 max-w-[48ch] text-[13px] font-medium leading-relaxed opacity-80">
@@ -389,8 +390,9 @@ export function NameMatch() {
               </p>
             </div>
           ) : (
-            <div className="rounded-[1rem] border-2 border-black/25 p-6">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] opacity-60">
+            <div className="f2m-neu-sm p-6">
+              <p className="f2m-neu-sm inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold tracking-normal text-[color:var(--f2m-fg)]">
+                <span aria-hidden className="size-1.5 rounded-full bg-[color:var(--f2m-muted)]" />
                 no match — three for three
               </p>
               <p className="mt-4 max-w-[48ch] text-[13px] font-medium leading-relaxed opacity-80">
@@ -401,14 +403,14 @@ export function NameMatch() {
           <button
             type="button"
             onClick={handleReset}
-            className="mt-4 font-mono text-[10px] font-bold uppercase tracking-[0.2em] underline decoration-black/40 underline-offset-4 hover:decoration-black"
+            className="mt-4 text-xs font-bold text-[color:var(--f2m-muted)] underline decoration-[color:var(--f2m-muted)] underline-offset-4 transition-colors hover:text-[color:var(--f2m-ink)] hover:decoration-[color:var(--f2m-ink)]"
           >
             try another name
           </button>
         </div>
       )}
 
-      <p className="mt-10 max-w-[52ch] text-[11px] font-medium leading-relaxed opacity-50">
+      <p className="mt-10 max-w-[52ch] text-[11px] font-medium leading-relaxed text-[color:var(--f2m-muted)]">
         Roster is invented for this page — {ROSTER.length} patients, none real. Every pass above
         runs in your browser; nothing you type leaves it.
       </p>
