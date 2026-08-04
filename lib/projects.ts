@@ -84,6 +84,43 @@ export const PROJECTS: Project[] = [
     cover: "/photos/minipacs/cover.jpg",
   },
   {
+    slug: "face2me",
+    title: "Face2me",
+    desc: "An AI receptionist that stands in the lobby — a kiosk with a face that greets, checks people in and takes the payment, in their own language",
+    services: "Product design · Full-stack build · Voice AI",
+    stack:
+      "Pipecat · GPT-4o · Realtime STT · WebRTC · FastAPI · React PWA · Stripe · Twilio",
+    brief:
+      "A front desk costs three to four and a half thousand a month and goes home at five. The phone AIs are a voice with nobody behind it, and the lobby kiosks the enterprises sell start at fifty thousand to install. We built the third answer, and again the client was us: a face on a screen that talks back, hears the language you walked in speaking, and arrives as one monthly bill with the hardware inside it.",
+    did: [
+      "Built the voice pipeline: Pipecat orchestrating GPT-4o, realtime speech-to-text, and a text-to-speech that runs on the machine itself",
+      "Put a face on it — a lip-synced avatar streamed over WebRTC, so the visitor watches a mouth move instead of a waveform",
+      "Taught it to find people: exact lookup, then SOUNDEX, then fuzzy — a name said with an accent is still that name",
+      "Wired it into the practice's own database, so a check-in lands live instead of in a batch after closing",
+      "Took the copay at the kiosk through a Stripe terminal, and sent the reminders and follow-ups over Twilio",
+      "Left the staff a way back in — an override panel that picks the session up mid-sentence, without restarting it",
+      "Held it together when the line drops: local speech models as the fallback, a hard session cap, and a timestamped audit log of every interaction",
+    ],
+    outcome: [
+      "One monthly bill carries the hardware, the software, the integration and the install — there is no per-minute meter anywhere",
+      "Month to month, no annual contract: the day it stops earning its place, it goes back",
+      "Twenty-three industries have a flow written for them, from dental intake to a hotel key handover",
+    ],
+    facts: [
+      { value: "30+", label: "languages, picked up from the first sentence" },
+      { value: "3", label: "tiers of name matching before it asks again" },
+      { value: "0", label: "per-minute fees — the meter runs monthly" },
+    ],
+    custom: true,
+    tags: ["AI avatar", "Kiosk", "Voice"],
+    disciplines: ["AI", "Design", "Automation"],
+    ratio: "wide",
+    // the mark on the same limestone as MiniPACS — both cards are our own brands
+    cover: "/photos/face2me/cover-mark.jpg",
+    // ripples — a voice leaving a face, which is the whole product
+    pattern: 1,
+  },
+  {
     slug: "asartech",
     title: "ASAR TECH",
     desc: "A Dubai tech shop where retail and wholesale share one cart — storefront, checkout and an admin the owner can actually use",

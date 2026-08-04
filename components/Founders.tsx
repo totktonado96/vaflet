@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import InkField from "@/components/InkField";
 import SplitReveal from "@/components/SplitReveal";
 
@@ -139,9 +140,51 @@ export default function Founders() {
           </div>
         ))}
       </div>
+      {/* The third hire gets its own row, not a third cell: the grid is a
+          strict two-up, and a face that isn't a person shouldn't queue with
+          the ones that are. Colour only arrives on hover — the same rule her
+          own case page runs on, where speech is the only thing that lights up. */}
+      <Link
+        href="/work/face2me"
+        className="group mt-10 flex flex-col gap-6 rounded-[1.5rem] border-2 border-black p-6 md:mt-12 md:flex-row md:items-center md:gap-10 md:rounded-[2rem] md:p-8"
+        data-cursor-text="Talks to whoever's here."
+      >
+        <div className="relative aspect-[3/2] shrink-0 overflow-hidden rounded-[1rem] md:aspect-[4/5] md:w-64 md:rounded-[1.25rem]">
+          <Image
+            src="/photos/face2me/ren-idle.jpg"
+            alt="Ren, the studio's AI receptionist"
+            fill
+            sizes="(min-width: 768px) 16rem, 90vw"
+            className="object-cover grayscale contrast-125 transition-[filter] duration-700 ease-out group-hover:grayscale-0 group-hover:contrast-100"
+          />
+        </div>
+        <div>
+          <div className="flex items-baseline gap-4">
+            <h3 className="text-2xl font-extrabold uppercase tracking-[-0.02em] md:text-3xl">
+              Ren
+            </h3>
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] opacity-60">
+              Hired 24.06.26
+            </span>
+          </div>
+          <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em]">
+            Front desk — nights, weekends, whenever you show up
+          </p>
+          <p className="mt-4 max-w-md font-medium leading-relaxed">
+            Our own product, working our own lobby. Answers in thirty
+            languages, never claims to be human, and hands you to one of us the
+            moment it matters.
+          </p>
+          <span className="mt-5 inline-block text-xs font-bold uppercase tracking-[0.2em] underline underline-offset-4">
+            Buzz her in →
+          </span>
+        </div>
+      </Link>
+
       <p className="mt-14 max-w-md text-[15px] font-medium leading-relaxed">
-        That&apos;s the whole org chart, by the way. The one answering your
-        messages is the one building your product.
+        Make that two and a half. The one answering your messages is still the
+        one building your product — the newest hire just covers the hours we
+        sleep.
       </p>
     </section>
   );
