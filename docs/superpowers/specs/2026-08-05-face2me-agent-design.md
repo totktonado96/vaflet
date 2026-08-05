@@ -56,7 +56,8 @@ Perception (Raven): `perception_model: "raven-1"`, `visual_awareness_queries` (�
 
 - **`ReceptionController`** (не-React ядро): `POST /api/reception` → `@daily-co/daily-js` call object (`audioSource: true`, `videoSource: true` — камера сразу), join, подписка на `app-message` и `track-started`/`left-meeting`/`error`.
 - **Маршрутизация событий** (typed): `conversation.tool_call` → менеджер карточек; `conversation.utterance.streaming` → субтитры; `conversation.started_speaking`/`stopped_speaking` (`properties.role: "pal"|"user"`, принимать и legacy `"replica"`) → сцена (цвет/свет); `system.shutdown` → финал.
-- **Мост в сцену**: `hero-scene.tsx` получает от контроллера видеоэлемент и слушает узкий интерфейс (`onSpeaking(bool)`, `onLive(bool)`, `onFarewell()`); связь через рефы/CustomEvent — по паттерну `vaflet:face2me-fallback` (литералы имён событий не пересекают серверную границу).
+- **Мост в сцену**: `hero-scene.tsx` получает от контроллера видеоэлемент и слушает узкий интерфейс (`onSpeaking(bool)`, `onLive(bool)`, `onFarewell()`); связь — window-события по живой конвенции репо `vaflet:*` (прецеденты: `vaflet:singularity` в `Starfield.tsx`/`PageTransition.tsx`, `vaflet:hero-word`), новое имя `vaflet:f2m-reception` с typed detail.
+- **Скролл-трансформации сцены** (z/yaw камеры, rotate второго акта) видеослою не мешают: видео — текстура на существующем меше экрана и просто следует за ним; отдельной синхронизации не нужно.
 - **Кнопка звонка** появляется, когда walk-up дошёл до конца (progress ≈ 1), рядом с rotate/fullscreen. Fullscreen-звонок поддержан (кнопка уже есть).
 - **Скролл во время live**: не блокируем; уход со сцены (ScrollTrigger leave) = hang up («ушёл от стойки»). Возврат — новая сессия.
 - **Self-view**: маленькая виньетка «what she sees» с локальным видеотреком — честно показываем, что камера включена (и это демо реального киоска).
@@ -70,7 +71,9 @@ Perception (Raven): `perception_model: "raven-1"`, `visual_awareness_queries` (�
 
 ## 5. Окна и субтитры — DOM-слой
 
-`CardLayer` в `hero.tsx` поверх stage (там же, где margin notes), эстетика пустоты: чёрный фон, тонкая белая рамка, display-шрифт; **не** неоморфизм (мир `data-f2m` начинается ниже). Слоты слева/справа от киоска; на мобиле — bottom-sheet. GSAP-появление в духе margin notes (смещение + растворение).
+`CardLayer` — **отдельный файл `parts/cards.tsx`** (та же файловая граница, что `reception.tsx` для рантайма и `hero-scene.tsx` для рендера), монтируется в `hero.tsx` поверх stage, там же, где margin notes. Эстетика пустоты: чёрный фон, тонкая белая рамка, display-шрифт; **не** неоморфизм (мир `data-f2m` начинается ниже). Слоты слева/справа от киоска; на мобиле — bottom-sheet. GSAP-появление в духе margin notes (смещение + растворение).
+
+Мобильная вертикаль (карточки и субтитры оба претендуют на низ): bottom-sheet карточки ограничен `max-height: 45vh`; субтитры при открытом sheet сжимаются до одной строки и прижимаются к его верхней кромке (z-order: субтитры выше). Закрылся sheet — субтитры возвращаются вниз сцены.
 
 Карточки: **The bill** (три тарифа, malachite скупо), **Spec**, **Languages** (EN/ES/RU), **Bundle** (железо+софт+установка, железо остаётся собственностью Face2me), **Lead form**, **квитанция «заявка принята»**. Контент — из уже утверждённого копирайта страницы, без новых заявлений.
 
@@ -85,11 +88,11 @@ Perception (Raven): `perception_model: "raven-1"`, `visual_awareness_queries` (�
 ### `/api/reception` (v2)
 - Пул аккаунтов: env `TAVUS_ACCOUNTS` = JSON-массив `[{key, personaId, replicaId}, …]` (обратная совместимость: если переменной нет — старые `TAVUS_API_KEY/PERSONA_ID/REPLICA_ID` как пул из одного).
 - Перебор по порядку: не-2xx от `POST /v2/conversations` (минуты кончились, конкурентность занята) → следующий аккаунт; все мертвы → `503 desk-closed`.
-- Turnstile: проверка токена за env-флагом (`TURNSTILE_SECRET` задан → проверяем; на деве выключено).
+- Turnstile: **реализация проверки — в скоупе этого спека** (env-флаг: `TURNSTILE_SECRET` задан → проверяем, на деве выключено); **включение на проде** — отдельное решение при выкате, вне скоупа.
 - Ответ клиенту: `{url, id, seconds}` как сейчас.
 
 ### `/api/lead` (новый)
-- `POST {name, email, note?, conversationId?}`, валидация, rate-limit по IP (простая, в памяти инстанса).
+- `POST {name, email, note?, conversationId?}`, валидация; rate-limit по IP в памяти инстанса — **best-effort дедупликация, не защита** (в serverless-окружении память между инвокациями не живёт; реальный контроль — Turnstile при включении на проде).
 - Доставка: **Telegram-бот** (env `TG_BOT_TOKEN`, `TG_CHAT_ID`; sendMessage основателям). Плюс `console.log` структурированной записи как минимальный дублирующий след. Resend — осознанно отложен (нужна верификация домена).
 - Используется и без звонка: состояние «смена окончена» открывает ту же форму локально — **лид не теряется никогда**.
 
@@ -121,7 +124,8 @@ Perception (Raven): `perception_model: "raven-1"`, `visual_awareness_queries` (�
 - Perception-тулы (vision/audio triggers) — после MVP.
 - Навигация агентом по странице (скролл к секциям) — отвергнуто: конфликт с запиненной сценой.
 - Реальный календарный букинг (Calendly) — заменён на гибрид-форму решением пользователя.
-- Бюджетный счётчик в KV и продовый Turnstile — включаются при выкате (код готов, флаги выключены).
+- Бюджетный счётчик минут — **не существует и не пишется в этом спеке**. Контракт на будущее (одной строкой): durable-хранилище (KV/Upstash) с ключом `f2m:minutes:<месяц>`, инкремент на каждый созданный разговор, `/api/reception` отдаёт 503 при превышении месячного лимита. До тех пор бюджет держат капы Tavus (180 с/сессия, free-лимит аккаунтов) и ротация пула.
+- Включение Turnstile на проде (реализация проверки — в скоупе, см. раздел 7).
 - Карточка Ren в `components/Founders.tsx` — отдельная задача из старого плана, не трогаем здесь.
 
 ## Справка: точные факты Tavus API (из ресёрча 2026-08-05)
