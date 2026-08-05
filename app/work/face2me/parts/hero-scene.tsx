@@ -11,6 +11,7 @@ import {
   Renderer,
   Texture,
   Transform,
+  Vec2,
   Vec3,
 } from "ogl";
 import { reducedMotion } from "@/components/case/kit";
@@ -55,6 +56,7 @@ type State = {
   glow: number;
   wake: number;
   pool: number;
+  focus: number;
 };
 
 /** Rounded-rect slab, extruded. Caps + a smooth side band, hard edge between. */
@@ -141,6 +143,7 @@ const BODY_FRAG = /* glsl */ `
   uniform vec3 uColor;
   uniform vec3 uCam;
   uniform float uMirror;
+  uniform float uSceneGlow;
   varying vec3 vNormal;
   varying vec3 vWorld;
   const vec3 KEY_DIR = vec3(-0.4517, 0.7228, 0.5230); // top-left, camera side
@@ -151,11 +154,13 @@ const BODY_FRAG = /* glsl */ `
     vec3 V = normalize(uCam - vWorld);
     float diff = max(dot(N, KEY_DIR), 0.0);
     float rim = pow(1.0 - abs(dot(N, V)), 2.6);
-    vec3 col = uColor * (0.16 + 0.95 * diff) * KEY_COL + RIM_COL * rim * 0.58;
+    // a white shell wants fill light: higher ambient, gentler key
+    vec3 col = uColor * (0.28 + 0.85 * diff) * KEY_COL + RIM_COL * rim * 0.58;
     float a = 1.0;
     if (uMirror > 0.5) {
+      // the floor only reflects to the degree the machine has woken
       float drop = clamp((${FLOOR_Y.toFixed(2)} - vWorld.y) / 2.1, 0.0, 1.0);
-      a = 0.2 * (1.0 - drop);
+      a = mix(0.08, 0.24, uSceneGlow) * (1.0 - drop);
       col *= 0.85;
     }
     gl_FragColor = vec4(col, a);
@@ -178,11 +183,12 @@ const PLATE_VERT = /* glsl */ `
   }
 `;
 
-/** The back-cover branding: lit like the body, but self-evident in the dark. */
+/** The back-cover branding: the printed lockup, lit like the body around it. */
 const PLATE_FRAG = /* glsl */ `
   precision highp float;
   uniform sampler2D tMap;
   uniform float uMirror;
+  uniform float uSceneGlow;
   varying vec2 vUv;
   varying vec3 vNormal;
   varying vec3 vWorld;
@@ -194,7 +200,7 @@ const PLATE_FRAG = /* glsl */ `
     float a = tex.a;
     if (uMirror > 0.5) {
       float drop = clamp((${FLOOR_Y.toFixed(2)} - vWorld.y) / 2.1, 0.0, 1.0);
-      a *= 0.2 * (1.0 - drop);
+      a *= mix(0.08, 0.24, uSceneGlow) * (1.0 - drop);
     }
     gl_FragColor = vec4(col, a);
   }
@@ -207,6 +213,8 @@ const SCREEN_FRAG = /* glsl */ `
   uniform float uWake;
   uniform float uTime;
   uniform float uMirror;
+  uniform float uSceneGlow;
+  uniform vec2 uGaze;
   varying vec2 vUv;
   varying vec3 vWorld;
   varying vec3 vNormal;
@@ -222,14 +230,16 @@ const SCREEN_FRAG = /* glsl */ `
     // asleep: barely-there glass with a cold diagonal sheen
     float sheen = smoothstep(0.0, 1.0, 1.0 - abs(vUv.x + vUv.y - 1.06 - sin(uTime * 0.13) * 0.02)) * 0.05;
     vec3 glass = vec3(0.030, 0.042, 0.050) + vec3(0.35, 0.45, 0.52) * sheen * (1.0 - uGlow);
-    // awake: backlight pooled toward the middle, malachite-cold
-    float vig = 1.0 - smoothstep(0.12, 0.62, length(vUv - vec2(0.5, 0.52)));
+    // awake: backlight pooled toward the middle, malachite-cold — and for a
+    // beat while the face gathers it leans toward the pointer (uGaze), then
+    // re-centers so the settled frame is symmetric
+    float vig = 1.0 - smoothstep(0.12, 0.62, length(vUv - vec2(0.5 + uGaze.x, 0.52 + uGaze.y)));
     vec3 lit = vec3(0.024, 0.10, 0.062) * (0.35 + 0.65 * vig);
     vec3 col = glass + lit * uGlow + vec3(0.043, 0.855, 0.318) * 0.012 * uWake;
     float a = mask;
     if (uMirror > 0.5) {
       float drop = clamp((${FLOOR_Y.toFixed(2)} - vWorld.y) / 2.1, 0.0, 1.0);
-      a *= 0.2 * (1.0 - drop);
+      a *= mix(0.08, 0.24, uSceneGlow) * (1.0 - drop);
     }
     gl_FragColor = vec4(col, a);
   }
@@ -240,6 +250,7 @@ const LED_FRAG = /* glsl */ `
   uniform float uWake;
   uniform float uTime;
   uniform float uMirror;
+  uniform float uSceneGlow;
   varying vec2 vUv;
   varying vec3 vWorld;
   varying vec3 vNormal;
@@ -248,22 +259,25 @@ const LED_FRAG = /* glsl */ `
     float m = 1.0 - smoothstep(0.30, 0.5, length(vec2(p.x * 1.4, p.y)));
     float breathe = 0.72 + 0.28 * sin(uTime * 1.9);
     float a = m * uWake * breathe;
-    if (uMirror > 0.5) a *= 0.2;
+    if (uMirror > 0.5) a *= mix(0.08, 0.24, uSceneGlow);
     gl_FragColor = vec4(vec3(0.043, 0.855, 0.318) * 1.2, a);
   }
 `;
 
-/** The light the kiosk stands in — a quiet key-light pool that learns green. */
+/** The light the kiosk stands in — a quiet key-light pool that learns green.
+    At the top of the walk it is a wide, half-forgotten wash (uFocus 0); as
+    the walk closes in it narrows to a tight circle under the kiosk. */
 const POOL_FRAG = /* glsl */ `
   precision highp float;
   uniform float uPool;
   uniform float uGlow;
+  uniform float uFocus;
   varying vec2 vUv;
   void main() {
     float d = length((vUv - vec2(0.5, 0.46)) * vec2(1.0, 1.55));
-    float fall = pow(max(1.0 - d * 2.1, 0.0), 2.2);
+    float fall = pow(max(1.0 - d * mix(1.15, 2.1, uFocus), 0.0), mix(1.5, 2.2, uFocus));
     vec3 col = mix(vec3(0.30, 0.38, 0.44), vec3(0.16, 0.52, 0.33), uGlow * 0.55);
-    gl_FragColor = vec4(col, fall * uPool * 0.20);
+    gl_FragColor = vec4(col, fall * uPool * mix(0.42, 0.22, uFocus));
   }
 `;
 
@@ -310,6 +324,7 @@ const DOTS_VERT = /* glsl */ `
 const DOTS_FRAG = /* glsl */ `
   precision highp float;
   uniform float uMirror;
+  uniform float uSceneGlow;
   varying float vAlpha;
   varying float vLum;
   void main() {
@@ -319,7 +334,7 @@ const DOTS_FRAG = /* glsl */ `
     vec3 col = mix(vec3(0.875, 0.906, 0.933), vec3(0.36, 0.93, 0.55), smoothstep(0.55, 1.0, vLum) * 0.26);
     col *= 0.4 + 0.75 * vLum; // tone lives in brightness too, not just dot size
     float a = m * vAlpha;
-    if (uMirror > 0.5) a *= 0.14;
+    if (uMirror > 0.5) a *= mix(0.05, 0.16, uSceneGlow);
     gl_FragColor = vec4(col, a);
   }
 `;
@@ -349,9 +364,10 @@ function loadImage(src: string) {
 
 /**
  * The real branding, not a redrawing of it: take the cover mark, read the
- * ink off its paper, and re-ink it for the dark — paper-grey strokes, the
- * "me" keeps its malachite. The pixel pass runs at output resolution, not
- * at print size.
+ * ink off its paper, and restack it for the back of a white kiosk — the
+ * symbol above the wordmark, both keeping their printed colors (dark navy
+ * ink, malachite "me"). The pixel pass runs at output resolution, not at
+ * print size.
  */
 async function extractBrand(): Promise<HTMLCanvasElement | null> {
   try {
@@ -368,6 +384,7 @@ async function extractBrand(): Promise<HTMLCanvasElement | null> {
     const px = data.data;
 
     let minX = w, minY = h, maxX = 0, maxY = 0;
+    const colInk = new Uint8Array(w);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const i = (y * w + x) * 4;
@@ -381,27 +398,83 @@ async function extractBrand(): Promise<HTMLCanvasElement | null> {
           if (x > maxX) maxX = x;
           if (y < minY) minY = y;
           if (y > maxY) maxY = y;
+          colInk[x] = 1;
         }
-        if (green > 30) {
-          px[i] = 11; px[i + 1] = 218; px[i + 2] = 81; px[i + 3] = 255;
+        // keep the printed color, drop the paper
+        const a255 = green > 30 ? 255 : Math.round(ink * 255);
+        px[i + 3] = a255;
+        if (a255 === 0) {
+          // transparent texels still carry the ink's own color, so bilinear
+          // filtering and mipmaps never bleed paper-white into glyph edges
+          px[i] = 29; px[i + 1] = 45; px[i + 2] = 58;
         } else {
-          px[i] = 223; px[i + 1] = 231; px[i + 2] = 238;
-          px[i + 3] = Math.round(ink * 255);
+          // anti-aliased edges are ink mixed with limestone (#FAF9F6):
+          // un-mix the paper out, or it rings every glyph with a pale halo
+          const a = a255 / 255;
+          px[i] = Math.min(255, Math.max(0, Math.round((r - 250 * (1 - a)) / a)));
+          px[i + 1] = Math.min(255, Math.max(0, Math.round((g - 249 * (1 - a)) / a)));
+          px[i + 2] = Math.min(255, Math.max(0, Math.round((b - 246 * (1 - a)) / a)));
         }
       }
     }
     if (maxX <= minX || maxY <= minY) return null;
     sctx.putImageData(data, 0, 0);
 
-    const pad = Math.round((maxX - minX) * 0.05);
-    const bw = maxX - minX + pad * 2;
-    const bh = maxY - minY + pad * 2;
+    // the lockup is one row: symbol, gap, wordmark. Find the widest empty
+    // column run between them and cut there.
+    let gapStart = -1, gapLen = 0, runStart = -1;
+    for (let x = minX; x <= maxX + 1; x++) {
+      if (x <= maxX && !colInk[x]) {
+        if (runStart < 0) runStart = x;
+      } else if (runStart >= 0) {
+        if (x - runStart > gapLen) {
+          gapLen = x - runStart;
+          gapStart = runStart;
+        }
+        runStart = -1;
+      }
+    }
+    if (gapStart < 0) return null;
+
+    const bboxOf = (x0: number, x1: number) => {
+      let bMinX = x1, bMaxX = x0, bMinY = h, bMaxY = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = x0; x <= x1; x++) {
+          if (px[(y * w + x) * 4 + 3] > 10) {
+            if (x < bMinX) bMinX = x;
+            if (x > bMaxX) bMaxX = x;
+            if (y < bMinY) bMinY = y;
+            if (y > bMaxY) bMaxY = y;
+          }
+        }
+      }
+      return { x: bMinX, y: bMinY, w: bMaxX - bMinX + 1, h: bMaxY - bMinY + 1 };
+    };
+    const sym = bboxOf(minX, gapStart - 1);
+    const word = bboxOf(gapStart + gapLen, maxX);
+
+    // stack them: symbol centered over the wordmark, breathing room between
+    const gap = Math.round(word.h * 0.5);
+    const cw = Math.max(sym.w, word.w);
+    const pad = Math.round(cw * 0.06);
+    const stackW = cw + pad * 2;
+    const stackH = sym.h + gap + word.h + pad * 2;
     const out = document.createElement("canvas");
     out.width = 1024;
-    out.height = Math.max(2, Math.round((1024 * bh) / bw));
+    out.height = Math.max(2, Math.round((1024 * stackH) / stackW));
     const octx = out.getContext("2d");
     if (!octx) return null;
-    octx.drawImage(src, minX - pad, minY - pad, bw, bh, 0, 0, out.width, out.height);
+    const k = out.width / stackW;
+    octx.drawImage(
+      src, sym.x, sym.y, sym.w, sym.h,
+      Math.round((pad + (cw - sym.w) / 2) * k), Math.round(pad * k),
+      Math.round(sym.w * k), Math.round(sym.h * k),
+    );
+    octx.drawImage(
+      src, word.x, word.y, word.w, word.h,
+      Math.round((pad + (cw - word.w) / 2) * k), Math.round((pad + sym.h + gap) * k),
+      Math.round(word.w * k), Math.round(word.h * k),
+    );
     return out;
   } catch {
     return null;
@@ -463,15 +536,33 @@ type Refs = {
   hostRef: RefObject<HTMLDivElement | null>;
   rotateRef: RefObject<HTMLButtonElement | null>;
   fsRef: RefObject<HTMLButtonElement | null>;
+  coldRef: RefObject<HTMLAnchorElement | null>;
+  walkRef: RefObject<HTMLDivElement | null>;
 };
 
-export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fsRef }: Refs) {
+export default function HeroScene({
+  sectionRef,
+  stageRef,
+  hostRef,
+  rotateRef,
+  fsRef,
+  coldRef,
+  walkRef,
+}: Refs) {
   useEffect(() => {
     const section = sectionRef.current;
     const stage = stageRef.current;
     const host = hostRef.current;
     const rotateBtn = rotateRef.current;
     const fsBtn = fsRef.current;
+    const coldEl = coldRef.current;
+    // the margin notes carry their own scroll windows as data attributes
+    const walkCaps = Array.from(walkRef.current?.children ?? []).flatMap((el) => {
+      if (!(el instanceof HTMLElement)) return [];
+      const from = parseFloat(el.dataset.from ?? "");
+      const to = parseFloat(el.dataset.to ?? "");
+      return Number.isFinite(from) && Number.isFinite(to) ? [{ el, from, to }] : [];
+    });
     if (!section || !stage || !host) return;
 
     const still = reducedMotion();
@@ -504,6 +595,7 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
       uMirror: { value: 0 },
       uTime: { value: 0 },
       uCam: { value: new Vec3() },
+      uSceneGlow: { value: 0 },
     });
 
     const bodyProgram = new Program(gl, {
@@ -511,7 +603,7 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
       fragment: BODY_FRAG,
       transparent: true,
       cullFace: false,
-      uniforms: { ...mkUniforms(), uColor: { value: new Vec3(0.075, 0.185, 0.24) } },
+      uniforms: { ...mkUniforms(), uColor: { value: new Vec3(0.9, 0.93, 0.97) } },
     });
     const plateProgram = new Program(gl, {
       vertex: PLATE_VERT,
@@ -527,7 +619,12 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
       transparent: true,
       cullFace: false,
       depthWrite: false,
-      uniforms: { ...mkUniforms(), uGlow: { value: 0 }, uWake: { value: 0 } },
+      uniforms: {
+        ...mkUniforms(),
+        uGlow: { value: 0 },
+        uWake: { value: 0 },
+        uGaze: { value: new Vec2() },
+      },
     });
     const ledProgram = new Program(gl, {
       vertex: PLATE_VERT,
@@ -545,7 +642,12 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
       cullFace: false,
       depthTest: false,
       depthWrite: false,
-      uniforms: { ...mkUniforms(), uPool: { value: 0 }, uGlow: { value: 0 } },
+      uniforms: {
+        ...mkUniforms(),
+        uPool: { value: 0 },
+        uGlow: { value: 0 },
+        uFocus: { value: 0 },
+      },
     });
     poolProgram.setBlendFunc(gl.SRC_ALPHA, gl.ONE);
     const dotsProgram = new Program(gl, {
@@ -609,7 +711,7 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
       led.position.set(0, SCR_Y - SCR_H / 2 - 0.045, K_D / 2 + 0.003);
       led.setParent(head);
       const plate = new Mesh(gl, { geometry: plateGeo, program: plateProgram });
-      plate.position.set(0, 0.35, -K_D / 2 - 0.003);
+      plate.position.set(0, 0.3, -K_D / 2 - 0.003);
       plate.rotation.y = Math.PI;
       plate.scale.set(0, 0, 1); // invisible until the brand texture lands
       plate.setParent(head);
@@ -641,7 +743,7 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
       if (dead || !canvas) return;
       const tex = new Texture(gl, { image: canvas, generateMipmaps: true });
       plateProgram.uniforms.tMap.value = tex;
-      const w = 0.72;
+      const w = 0.7;
       const h = (w * canvas.height) / canvas.width;
       kiosk.plate.scale.set(w, h, 1);
       kioskM.plate.scale.set(w, h, 1);
@@ -725,6 +827,7 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
       glow: 0,
       wake: 0,
       pool: 0.55,
+      focus: 0,
     };
 
     /** The second act is not on the scroll: the rotate button drives it.
@@ -742,6 +845,8 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
       .to(state, { camY: -0.2, duration: 0.55, ease: "power2.out" }, 0)
       .to(state, { yaw: 0, duration: 0.47, ease: "power2.inOut" }, 0.08)
       .to(state, { pool: 1, duration: 0.5, ease: "none" }, 0.05)
+      // the one floor light learns its aim on the same span as the walk
+      .to(state, { focus: 1, duration: 0.55, ease: "power2.inOut" }, 0)
       .to(state, { wake: 1, duration: 0.06, ease: "power1.in" }, 0.5)
       .to(state, { assemble: 1, duration: 0.36, ease: "none" }, 0.55)
       .to(state, { glow: 1, duration: 0.3, ease: "power1.inOut" }, 0.6);
@@ -835,8 +940,13 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
     let raf = 0;
     let running = false;
     let last = performance.now();
+    const born = last; // the title card fades in against real time, not scroll
     const leanNow = { x: 0, y: 0 };
     const lookTarget = new Vec3();
+    const sstep = (a: number, b: number, x: number) => {
+      const s = Math.min(Math.max((x - a) / (b - a), 0), 1);
+      return s * s * (3 - 2 * s);
+    };
 
     const paint = (now: number) => {
       const dt = Math.min((now - last) / 1000, 0.05);
@@ -867,6 +977,10 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
       kioskM.head.rotation.copy(kiosk.head.rotation);
       kioskM.head.position.copy(kiosk.head.position);
       pool.position.z = z + 0.3;
+      // the wash is physically wide while the light is still lost, and pulls
+      // its footprint in as it learns its aim
+      const poolSpread = 1.9 - 0.9 * state.focus;
+      pool.scale.set(poolSpread, poolSpread, 1);
 
       // the controls belong to the settled kiosk: show them only once the face
       // has landed, and take the act back to portrait if the reader walks off
@@ -885,15 +999,44 @@ export default function HeroScene({ sectionRef, stageRef, hostRef, rotateRef, fs
 
       for (const p of programs) {
         p.uniforms.uTime.value = t;
+        // the floor's reflection firms up only as the machine wakes
+        p.uniforms.uSceneGlow.value = state.glow;
         if (p.uniforms.uCam) p.uniforms.uCam.value.copy(camera.position);
       }
       screenProgram.uniforms.uGlow.value = state.glow;
       screenProgram.uniforms.uWake.value = state.wake;
+      // the backlight glances toward the pointer while the face gathers,
+      // then provably re-centers so the settled frame stays symmetric
+      const gaze = sstep(0.55, 0.65, shown) * (1 - sstep(0.75, 0.85, shown));
+      screenProgram.uniforms.uGaze.value.set(leanNow.x * 0.8 * gaze, leanNow.y * 0.8 * gaze);
       ledProgram.uniforms.uWake.value = state.wake;
       poolProgram.uniforms.uPool.value = state.pool;
       poolProgram.uniforms.uGlow.value = state.glow;
+      poolProgram.uniforms.uFocus.value = state.focus;
       dotsProgram.uniforms.uAssemble.value = assembleShown;
       dotsProgram.uniforms.uMorph.value = act2.rot;
+
+      // the visit button holds over the opening frame and dissolves as the
+      // walk starts (reduced motion never shows it); its letters glide
+      // together as it arrives. It is clickable and tabbable only while
+      // actually visible.
+      if (coldEl) {
+        const intro = still ? 1 : Math.min(1, (now - born) / 900);
+        const cold = still ? 0 : intro * (1 - sstep(0.02, 0.055, shown));
+        coldEl.style.opacity = cold.toFixed(3);
+        coldEl.style.letterSpacing = `${(0.35 + (1 - intro) * 0.22).toFixed(3)}em`;
+        coldEl.style.pointerEvents = cold > 0.35 ? "auto" : "none";
+        coldEl.style.visibility = cold > 0.01 ? "visible" : "hidden";
+      }
+      // the margin notes each live in their own scroll window, rising a few
+      // pixels as they arrive; all of them are gone before the screen wakes
+      for (const cap of walkCaps) {
+        const o = still
+          ? 0
+          : sstep(cap.from, cap.from + 0.04, shown) * (1 - sstep(cap.to - 0.04, cap.to, shown));
+        cap.el.style.opacity = o.toFixed(3);
+        cap.el.style.transform = `translateY(${((1 - o) * 8).toFixed(2)}px)`;
+      }
 
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       setMirror(1);

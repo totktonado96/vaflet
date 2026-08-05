@@ -2,17 +2,23 @@
 
 import { useRef } from "react";
 import dynamic from "next/dynamic";
+import ArrowNE from "@/components/ArrowNE";
 
 /**
  * The walk-up. The page opens in the studio's black, and far away in it
  * stands the kiosk with its back turned — the wordmark on the back cover is
- * the only readable thing in the dark. Scrolling is walking: the totem
- * comes to meet you and turns on its heel, and once it faces you the screen
- * wakes the way the door downstairs does — the receptionist's face gathers
- * out of thrown halftone dots. Then it stands still, filling the frame.
+ * the only readable thing in the dark. Scrolling is walking: the one floor
+ * light narrows from a lost wash to a tight circle as the totem comes to
+ * meet you and turns on its heel, and once it faces you the screen wakes
+ * the way the door downstairs does — the receptionist's face gathers out
+ * of thrown halftone dots while the floor's reflection firms up with it.
+ * Then it stands still, filling the frame.
  *
- * No words anywhere: the machine is the whole hero. The only text is a
- * screen-reader h1, because the page still needs a name.
+ * Almost no words: a title card over the opening frame, and three deadpan
+ * margin notes that keep the walk company from the empty sides of the void
+ * — every one dissolved before the screen wakes, so the machine finishes
+ * the hero alone. The only other text is a screen-reader h1, because the
+ * page still needs a name.
  *
  * The scene itself (hero-scene.tsx) arrives as its own chunk and drives
  * these refs. Under prefers-reduced-motion the runway collapses to one
@@ -24,7 +30,7 @@ const Scene = dynamic(() => import("./hero-scene"), { ssr: false });
 const VOID_BG = "#060809";
 
 const BTN =
-  "group pointer-events-none flex h-12 w-12 items-center justify-center rounded-full border border-white/15 text-white/70 opacity-0 transition-[opacity,border-color,color] duration-500 hover:border-white/40 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60";
+  "group pointer-events-none flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white/80 opacity-0 backdrop-blur-sm transition-[opacity,border-color,color,background-color] duration-500 hover:border-white/50 hover:bg-black/45 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60";
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -32,6 +38,8 @@ export function Hero() {
   const glHostRef = useRef<HTMLDivElement>(null);
   const rotateRef = useRef<HTMLButtonElement>(null);
   const fsRef = useRef<HTMLButtonElement>(null);
+  const coldRef = useRef<HTMLAnchorElement>(null);
+  const walkRef = useRef<HTMLDivElement>(null);
 
   return (
     <section
@@ -52,7 +60,71 @@ export function Hero() {
           hostRef={glHostRef}
           rotateRef={rotateRef}
           fsRef={fsRef}
+          coldRef={coldRef}
+          walkRef={walkRef}
         />
+
+        {/* the door to the real thing, driven from the paint loop: it holds
+            over the opening frame and dissolves as the walk starts, and it is
+            clickable (and tabbable) only while actually on screen. Its
+            letters glide together as it arrives; on hover the studio's ink
+            move runs in the product's malachite — a fill rising from the
+            pill's floor, text flipping dark */}
+        <a
+          ref={coldRef}
+          href="https://face2.me"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-cursor-text="Say hi ↗"
+          className="group invisible absolute inset-x-0 top-[21%] z-10 mx-auto w-fit overflow-hidden rounded-full border border-white/25 px-7 py-3.5 text-center text-xs font-bold uppercase tracking-[0.35em] text-[#dfe7ee] opacity-0 transition-colors duration-500 hover:border-[#0bda51] hover:text-[#04140a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/60 md:text-sm"
+        >
+          <span
+            aria-hidden
+            className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-[#0bda51] transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
+          />
+          Visit face2.
+          <span className="text-[#0bda51] transition-colors duration-300 group-hover:text-[#04140a]">
+            me
+          </span>
+          <span
+            aria-hidden
+            className="ml-3 inline-block transition-transform duration-300 ease-out group-hover:-translate-y-0.5 group-hover:translate-x-1"
+          >
+            <ArrowNE />
+          </span>
+        </a>
+
+        {/* margin notes on the walk — three deadpan beats in the empty sides
+            of the void, each timed to what the machine is doing and each gone
+            before the screen wakes. Desktop only: the phone has no empty
+            sides to speak from. */}
+        <div ref={walkRef} aria-hidden className="hidden md:block">
+          <p
+            data-from="0.07"
+            data-to="0.19"
+            className="pointer-events-none absolute left-[9%] top-[42%] z-10 max-w-[24vw] text-left text-lg font-bold uppercase leading-[2.1] tracking-[0.3em] text-white/70 opacity-0"
+          >
+            An AI receptionist,
+            <br />
+            in a kiosk.
+          </p>
+          <p
+            data-from="0.21"
+            data-to="0.33"
+            className="pointer-events-none absolute right-[9%] top-[42%] z-10 max-w-[24vw] text-right text-lg font-bold uppercase leading-[2.1] tracking-[0.3em] text-white/70 opacity-0"
+          >
+            It doesn&apos;t know
+            <br />
+            you&apos;re here yet.
+          </p>
+          <p
+            data-from="0.38"
+            data-to="0.51"
+            className="pointer-events-none absolute left-[9%] top-[42%] z-10 max-w-[24vw] text-left text-lg font-bold uppercase leading-[2.1] tracking-[0.3em] text-white/70 opacity-0"
+          >
+            Now it does.
+          </p>
+        </div>
 
         {/* the kiosk's two controls — no words, they appear once it has woken */}
         <div className="absolute inset-x-0 bottom-8 z-10 flex items-center justify-center gap-4">

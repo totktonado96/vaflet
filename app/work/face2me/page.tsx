@@ -2,12 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import Magnetic from "@/components/Magnetic";
-import SplitReveal from "@/components/SplitReveal";
 import { Reveal } from "@/components/case/kit";
 import { PROJECTS } from "@/lib/projects";
 import { KioskAnatomy } from "./parts/anatomy";
 import { Hero } from "./parts/hero";
-import { VisitReceipt } from "./parts/visit";
 
 /**
  * Face2me gets a site inside the site. The case wears the product's own
@@ -19,9 +17,9 @@ import { VisitReceipt } from "./parts/visit";
  * transition.
  *
  * The case is told straight and short: the walk-up to the kiosk in the
- * dark, the box exploded into its seven systems, one visit from both
- * sides, and the question at the end. Nothing on this page is invented —
- * the only character is the one on the kiosk's own screen.
+ * dark, the box exploded into its seven systems, and the question at the
+ * end. Nothing on this page is invented — the only character is the one
+ * on the kiosk's own screen.
  */
 
 const p = PROJECTS.find((x) => x.slug === "face2me")!;
@@ -69,22 +67,6 @@ export default function Face2mePage() {
           <KioskAnatomy />
 
         </section>
-
-
-
-        {/* ONE VISIT — the receipt: one object, perforated down the middle,
-            visitor's copy left, the front desk's right; the staff ply tears
-            off at the end and lands on a phone */}
-        <section id="visit" className="shell scroll-mt-24 pb-24 md:pb-32">
-          <Chip>Same visit, two copies</Chip>
-          <SplitReveal className="f2m-display mt-7 text-4xl font-bold leading-[1.05] md:text-6xl">
-            One visit, both sides
-          </SplitReveal>
-          <div className="mt-14">
-            <VisitReceipt />
-          </div>
-        </section>
-
 
 
 
