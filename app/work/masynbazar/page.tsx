@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ArrowNE from "@/components/ArrowNE";
 import Footer from "@/components/Footer";
 import SplitReveal from "@/components/SplitReveal";
 import { DriftShot, Filmstrip, Moves, Reveal } from "@/components/case/kit";
@@ -185,7 +186,7 @@ export default function MasynbazarPage() {
                 className="mt-4 self-start border-b-2 pb-1 text-[11px] font-bold uppercase tracking-[0.25em]"
                 style={{ borderColor: ACCENT }}
               >
-                masynbazar.com ↗
+                masynbazar.com <ArrowNE />
               </a>
             </div>
           </div>

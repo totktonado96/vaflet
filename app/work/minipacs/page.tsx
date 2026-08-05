@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import ArrowNE from "@/components/ArrowNE";
 import Footer from "@/components/Footer";
 import Magnetic from "@/components/Magnetic";
 import SplitReveal from "@/components/SplitReveal";
@@ -154,8 +155,9 @@ function BannerDoor({ href, label, open }: { href: string; label: string; open: 
           <span className="flex h-[13px] items-center justify-center leading-none">
             {label}
           </span>
-          <span className="flex h-[13px] items-center justify-center leading-none text-black">
+          <span className="flex h-[13px] items-center justify-center gap-1.5 leading-none text-black">
             {open}
+            <ArrowNE className="block size-[11px]" />
           </span>
         </span>
       </span>
@@ -209,13 +211,13 @@ export default function MinipacsPage() {
               <ReadLight />
               <span className="absolute inset-x-0 bottom-6 z-10 flex flex-wrap justify-center gap-3 px-4 md:bottom-10">
                 <Magnetic strength={0.3}>
-                  <BannerDoor href="https://demo.minipacs.net/login" label="MiniPACS demo" open="read a study ↗" />
+                  <BannerDoor href="https://demo.minipacs.net/login" label="MiniPACS demo" open="read a study" />
                 </Magnetic>
                 <Magnetic strength={0.3}>
-                  <BannerDoor href="https://vendo.minipacs.net/login" label="Vendo demo" open="book a slot ↗" />
+                  <BannerDoor href="https://vendo.minipacs.net/login" label="Vendo demo" open="book a slot" />
                 </Magnetic>
                 <Magnetic strength={0.3}>
-                  <BannerDoor href="https://minipacs.net" label="minipacs.net" open="bring it home ↗" />
+                  <BannerDoor href="https://minipacs.net" label="minipacs.net" open="bring it home" />
                 </Magnetic>
               </span>
             </DriftShot>
@@ -538,7 +540,7 @@ export default function MinipacsPage() {
                   rel="noopener noreferrer"
                   className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
                 >
-                  MiniPACS demo ↗
+                  MiniPACS demo <ArrowNE />
                 </a>
               </Magnetic>
               <Magnetic strength={0.2}>
@@ -548,7 +550,7 @@ export default function MinipacsPage() {
                   rel="noopener noreferrer"
                   className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
                 >
-                  Vendo demo ↗
+                  Vendo demo <ArrowNE />
                 </a>
               </Magnetic>
             </div>
@@ -563,8 +565,7 @@ export default function MinipacsPage() {
                   rel="noopener noreferrer"
                   className="inline-block rounded-full border-2 border-current px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 hover:bg-black hover:text-white"
                 >
-                  minipacs.net ↗
-                </a>
+                  minipacs.net <ArrowNE />                </a>
               </Magnetic>
             </div>
           </figure>

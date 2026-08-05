@@ -1,3 +1,4 @@
+import ArrowNE from "@/components/ArrowNE";
 import Magnetic from "@/components/Magnetic";
 import SeoIndex from "@/components/SeoIndex";
 import SplitReveal from "@/components/SplitReveal";
@@ -96,7 +97,7 @@ export default function Footer({ compact = false }: { compact?: boolean }) {
           <div>
             <div className="flex flex-wrap gap-4">
               <Pill href="mailto:cuntact@vaflet.agency">cuntact@vaflet.agency</Pill>
-              <Pill href={TELEGRAM}>Telegram ↗</Pill>
+              <Pill href={TELEGRAM}>Telegram <ArrowNE /></Pill>
             </div>
             <div className="mt-10">
               <p className="text-xs font-bold uppercase tracking-[0.2em]">

@@ -1,3 +1,4 @@
+import ArrowNE from "@/components/ArrowNE";
 import InkField from "@/components/InkField";
 import LineReveal from "@/components/LineReveal";
 import Magnetic from "@/components/Magnetic";
@@ -74,13 +75,13 @@ export default function Hero() {
                 transform can't break how the colour resolves. */}
             <span className="relative z-10 block overflow-hidden">
               <span className="flex items-center gap-3 text-black transition-transform duration-300 ease-out group-hover:-translate-y-[140%]">
-                Start a project <span aria-hidden>↗</span>
+                Start a project <ArrowNE />
               </span>
               <span
                 aria-hidden
                 className="absolute inset-0 flex translate-y-[140%] items-center gap-3 text-white transition-transform duration-300 ease-out group-hover:translate-y-0"
               >
-                Start a project <span>↗</span>
+                Start a project <ArrowNE />
               </span>
             </span>
           </a>

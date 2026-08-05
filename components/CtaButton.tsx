@@ -1,3 +1,4 @@
+import ArrowNE from "@/components/ArrowNE";
 import Magnetic from "@/components/Magnetic";
 
 /**
@@ -56,10 +57,10 @@ export default function CtaButton({
           className="relative block size-6 overflow-hidden text-xl font-bold leading-none text-white mix-blend-difference"
         >
           <span className="block transition-transform duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:translate-x-full group-hover/cta:-translate-y-full">
-            ↗
+            <ArrowNE className="m-0.5 block size-5" />
           </span>
           <span className="absolute inset-0 block -translate-x-full translate-y-full transition-transform duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/cta:translate-x-0 group-hover/cta:translate-y-0">
-            ↗
+            <ArrowNE className="m-0.5 block size-5" />
           </span>
         </span>
       </a>

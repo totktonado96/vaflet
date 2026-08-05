@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import ArrowNE from "@/components/ArrowNE";
 import Footer from "@/components/Footer";
 import SplitReveal from "@/components/SplitReveal";
 import {
@@ -226,7 +227,7 @@ export default function AydymPage() {
                 className="mt-4 self-start border-b-2 pb-1 text-[11px] font-bold uppercase tracking-[0.25em]"
                 style={{ borderColor: VIOLET }}
               >
-                aydym.com ↗
+                aydym.com <ArrowNE />
               </a>
             </div>
           </div>
