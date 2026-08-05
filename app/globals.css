@@ -475,3 +475,83 @@ html.lenis body {
     inset -4px -4px 10px var(--f2m-hi);
   transform: scale(0.985);
 }
+/* her file opens smoothly — only on pages that wear her skin */
+html:has([data-f2m]) {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html:has([data-f2m]) {
+    scroll-behavior: auto;
+  }
+}
+/* the doorbell rings — one ripple off the rim */
+@keyframes f2m-ding {
+  from {
+    opacity: 0.8;
+    transform: scale(0.55);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+[data-f2m] .f2m-ding {
+  animation: f2m-ding 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-f2m] .f2m-ding {
+    animation: none;
+    opacity: 0;
+  }
+}
+/* the kiosk's layers breathe while nobody is touching them */
+@keyframes f2m-float {
+  0%,
+  100% {
+    transform: translateZ(0);
+  }
+  50% {
+    transform: translateZ(12px);
+  }
+}
+[data-f2m] .f2m-float {
+  animation: f2m-float 5.5s ease-in-out infinite;
+}
+/* the lifted layer's engraving flares once — scale only, so it composes
+   with the Tailwind translate that centers the well */
+@keyframes f2m-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+[data-f2m] .f2m-pop {
+  animation: f2m-pop 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-f2m] .f2m-float,
+  [data-f2m] .f2m-pop {
+    animation: none;
+  }
+}
+
+/* a fresh line lands in her duty log */
+@keyframes f2m-log {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+[data-f2m] .f2m-log-line {
+  animation: f2m-log 0.5s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-f2m] .f2m-log-line {
+    animation: none;
+  }
+}
