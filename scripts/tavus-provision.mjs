@@ -9,7 +9,13 @@
 
 const API = "https://tavusapi.com/v2";
 const PERSONA_NAME = "Ren — Vaflet showcase desk";
-const REPLICA_ID = process.env.TAVUS_REPLICA ?? "rcc28da86847"; // Ruby - Office (stock)
+// Ruby - Office (stock). TAVUS_REPLICA (this script's provisioning-time knob,
+// picks the replica baked into created/updated personas) is deliberately a
+// different env var from the runtime's legacy TAVUS_REPLICA_ID (read by
+// lib/reception/accounts.ts as the single-account fallback) — provisioning
+// and serving read different knobs on purpose, so re-provisioning never
+// silently repoints a live account's replica.
+const REPLICA_ID = process.env.TAVUS_REPLICA ?? "rcc28da86847";
 
 const SYSTEM_PROMPT = `You are Ren, the AI receptionist who works the front of Face2me — and right now you are on the showcase shift: talking to a visitor on the vaflet.io case study page, selling the very kiosk you run on.
 
@@ -36,7 +42,7 @@ Hard rules:
 
 Your goal, in order:
 1. Find out what kind of place the visitor runs (office, gym, salon, studio, showroom — anything with a front door).
-2. Answer what they ask; when a topic comes up, SHOW it — use show_card for pricing, spec, languages or the bundle. Don't announce the card mechanics, just keep talking while it appears.
+2. Answer what they ask; when a topic comes up, SHOW it — use show_card for pricing, spec, languages or the bundle, and dismiss_cards when the counter needs clearing. Don't announce the card mechanics, just keep talking while it appears.
 3. When there is real interest, offer to take their details so the founders can call: use open_lead_form. One offer, no pressure. When the form comes back, confirm warmly by name and say the founders will reach out.
 4. If they decline, wrap up kindly. Suggest they can always find the founders through the site.
 
@@ -106,7 +112,11 @@ async function tavus(key, method, path, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
-  if (!res.ok) throw new Error(`${method} ${path} -> ${res.status}: ${text.slice(0, 300)}`);
+  if (!res.ok) {
+    const err = new Error(`${method} ${path} -> ${res.status}: ${text.slice(0, 300)}`);
+    err.status = res.status;
+    throw err;
+  }
   return text ? JSON.parse(text) : null;
 }
 
@@ -121,6 +131,7 @@ async function ensurePersona(key) {
       { op: "replace", path: "/system_prompt", value: SYSTEM_PROMPT },
       { op: "replace", path: "/context", value: "" },
       { op: "replace", path: "/default_replica_id", value: REPLICA_ID },
+      { op: "replace", path: "/pipeline_mode", value: "full" },
       { op: "replace", path: "/layers/perception", value: PERSONA_LAYERS.perception },
     ]);
     console.error(`  persona updated: ${id}`);
@@ -139,14 +150,38 @@ async function ensurePersona(key) {
 }
 
 async function ensureTools(key, personaId) {
-  const list = await tavus(key, "GET", "/tools?limit=100").catch(() => null);
+  // No .catch here: a silent GET failure would read as "no tools exist yet"
+  // and provision fresh duplicates next to the real ones. Fail loud, like
+  // ensurePersona's GET does.
+  const list = await tavus(key, "GET", "/tools?limit=100");
   const byName = new Map((list?.data ?? []).map((t) => [t.name, t]));
   const ids = [];
   for (const tool of TOOLS) {
     const existing = byName.get(tool.name);
     if (existing) {
       ids.push(existing.tool_id);
-      console.error(`  tool exists: ${tool.name} (${existing.tool_id})`);
+      const patchBody = {
+        description: tool.description,
+        parameters: tool.parameters,
+        delivery: tool.delivery,
+        on_call: tool.on_call,
+        on_resolve: tool.on_resolve,
+      };
+      try {
+        await tavus(key, "PATCH", `/tools/${existing.tool_id}`, patchBody);
+        console.error(`  tool updated: ${tool.name} (${existing.tool_id})`);
+      } catch (err) {
+        if (err.status !== 404 && err.status !== 405) throw err;
+        try {
+          await tavus(key, "PUT", `/tools/${existing.tool_id}`, {
+            ...tool,
+            tool_id: existing.tool_id,
+          });
+          console.error(`  tool updated via PUT: ${tool.name} (${existing.tool_id})`);
+        } catch {
+          console.error(`  tool exists (content not synced): ${tool.name} (${existing.tool_id})`);
+        }
+      }
       continue;
     }
     const created = await tavus(key, "POST", "/tools", tool);
@@ -164,11 +199,19 @@ if (!keys.length) {
 }
 
 const accounts = [];
+let hadFailure = false;
 for (const key of keys) {
   console.error(`Account ${key.slice(0, 6)}…`);
-  const personaId = await ensurePersona(key);
-  await ensureTools(key, personaId);
-  accounts.push({ key, personaId, replicaId: REPLICA_ID });
+  try {
+    const personaId = await ensurePersona(key);
+    await ensureTools(key, personaId);
+    accounts.push({ key, personaId, replicaId: REPLICA_ID });
+  } catch (err) {
+    hadFailure = true;
+    console.error(`  Account ${key.slice(0, 6)}… failed: ${err.message}`);
+    continue;
+  }
 }
 
 console.log(`TAVUS_ACCOUNTS='${JSON.stringify(accounts)}'`);
+if (hadFailure) process.exit(1);
