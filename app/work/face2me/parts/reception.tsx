@@ -57,6 +57,15 @@ export function Reception({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonElem
       );
     };
 
+    if (process.env.NODE_ENV !== "production") {
+      // rehearsal-only remote: lets a script talk to the live agent by text
+      // and hang up, without a microphone (fake-media diagnostic calls)
+      (window as unknown as Record<string, unknown>).__renLive = {
+        say: (text: string) => send("conversation.respond", { text }),
+        hangup: () => emitReception({ type: "hangup-request" }),
+      };
+    }
+
     const hangUp = (phase: "over" | "closed" = "over", reason?: "minutes" | "denied") => {
       if (!call && !busy) return; // reentrant guard: absorbs destroy()'s own leave echo and idle no-ops
       callGen++;
@@ -71,6 +80,12 @@ export function Reception({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonElem
     };
 
     const onMessage = (msg: TavusMessage) => {
+      // dev wiretap: the protocol docs and the live account disagreed once
+      // already (closed captions) — log every frame so mismatches show
+      // themselves instead of being guessed at
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[tavus:in]", JSON.stringify(msg).slice(0, 600));
+      }
       const p = msg.properties ?? {};
       switch (msg.event_type) {
         case "conversation.tool_call": {
