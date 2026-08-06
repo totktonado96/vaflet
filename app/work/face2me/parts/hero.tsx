@@ -4,6 +4,7 @@ import { useRef } from "react";
 import dynamic from "next/dynamic";
 import ArrowNE from "@/components/ArrowNE";
 import { Reception } from "./reception";
+import { CardLayer } from "./cards";
 
 /**
  * The walk-up. The page opens in the studio's black, and far away in it
@@ -199,6 +200,7 @@ export function Hero() {
         </div>
 
         <Reception callBtnRef={callRef} />
+        <CardLayer />
       </div>
     </section>
   );
