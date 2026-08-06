@@ -21,9 +21,12 @@ export function tavusAccounts(): TavusAccount[] {
         const pool = parsed.filter(
           (a): a is TavusAccount =>
             !!a &&
-            typeof (a as TavusAccount).key === "string" &&
-            typeof (a as TavusAccount).personaId === "string" &&
-            typeof (a as TavusAccount).replicaId === "string",
+            typeof a.key === "string" &&
+            a.key.length > 0 &&
+            typeof a.personaId === "string" &&
+            a.personaId.length > 0 &&
+            typeof a.replicaId === "string" &&
+            a.replicaId.length > 0,
         );
         if (pool.length) return pool;
       }
