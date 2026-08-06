@@ -1453,11 +1453,24 @@ function TopicCard({ topic, onClose }: { topic: CardTopic; onClose: () => void }
   );
 }
 
-function LeadForm({ onDone }: { onDone: (name: string) => void }) {
+function LeadForm({ onDone, onClose }: { onDone: (name: string) => void; onClose: () => void }) {
   const [state, setState] = useState<"idle" | "sending" | "error">("idle");
+  const nameRef = useRef<HTMLInputElement>(null);
+  const alive = useRef(true);
+  useEffect(
+    () => () => {
+      alive.current = false;
+    },
+    [],
+  );
+  useEffect(() => {
+    // the scene is pinned — no autoFocus scroll-jump, just a plain ref
+    nameRef.current?.focus({ preventScroll: true });
+  }, []);
   const submit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      if (state === "sending") return;
       const fd = new FormData(e.currentTarget);
       const name = String(fd.get("name") ?? "").trim();
       const email = String(fd.get("email") ?? "").trim();
@@ -1471,22 +1484,33 @@ function LeadForm({ onDone }: { onDone: (name: string) => void }) {
           body: JSON.stringify({ name, email, note }),
         });
         if (!res.ok) throw new Error("lead-failed");
+        if (!alive.current) return;
         emitReception({ type: "lead-submitted", name, email, note: note || undefined });
         onDone(name);
       } catch {
+        if (!alive.current) return;
         setState("error");
       }
     },
-    [onDone],
+    [onDone, state],
   );
   const FIELD =
     "w-full rounded-lg border border-white/20 bg-black/40 px-3 py-2.5 text-sm font-medium text-white placeholder:text-white/35 focus:border-[#0bda51] focus:outline-none";
   return (
     <form onSubmit={submit} className={SHELL}>
-      <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/60">Leave a note</p>
+      <div className="flex items-baseline justify-between">
+        <p className="text-xs font-bold uppercase tracking-[0.3em] text-white/60">Leave a note</p>
+        <button
+          type="button"
+          aria-label="Close form"
+          onClick={onClose}
+          className="-mr-1 px-1 text-white/40 transition-colors hover:text-white"
+        >
+          ×
+        </button>
+      </div>
       <div className="mt-4 flex flex-col gap-2.5">
-        {/* eslint-disable-next-line jsx-a11y/no-autofocus -- the agent just opened this for the visitor */}
-        <input name="name" placeholder="Your name" autoFocus required maxLength={120} className={FIELD} />
+        <input ref={nameRef} name="name" placeholder="Your name" required maxLength={120} className={FIELD} />
         <input name="email" type="email" placeholder="Email" required maxLength={200} className={FIELD} />
         <input name="note" placeholder="What kind of place? (optional)" maxLength={500} className={FIELD} />
       </div>
@@ -1536,6 +1560,7 @@ export function CardLayer() {
           if (d.phase === "idle" || d.phase === "connecting") setReceipt(null);
         } else if (d.type === "card") {
           setFormOpen(false);
+          setReceipt(null); // a card takes the receipt's slot — don't stack them
           // a re-shown topic stays in its slot — no silent left/right teleport
           setCards((prev) => (prev.includes(d.card) ? prev : [...prev, d.card].slice(-2)));
         } else if (d.type === "lead-form") {
@@ -1570,7 +1595,9 @@ export function CardLayer() {
       selfRef.current.srcObject = selfview;
       void selfRef.current.play();
     }
-  }, [selfview]);
+    // selfview can land before "live" mounts the <video> — rerun the wiring
+    // once the element exists, not just once when the stream first arrives
+  }, [selfview, phase]);
 
   const sheetOpen = cards.length > 0 || formOpen || receipt !== null;
   const m = Math.floor(left / 60);
@@ -1596,6 +1623,7 @@ export function CardLayer() {
                   setFormOpen(false);
                   setReceipt(name);
                 }}
+                onClose={() => setFormOpen(false)}
               />
             </Rise>
           </div>
@@ -1671,17 +1699,17 @@ export function CardLayer() {
       </div>
 
       {/* captions — the conversation reads as a page, spec section 5. On the
-          phone with the sheet open they compress to one clamped line above it */}
-      {caption && caption.text && (
-        <p
-          aria-live="polite"
-          className={`display-2 pointer-events-none absolute inset-x-4 text-center font-extrabold leading-tight md:inset-x-[10%] md:bottom-24 md:text-4xl ${
-            sheetOpen ? "bottom-[calc(45vh+1rem)] truncate text-lg" : "bottom-24 text-2xl"
-          } ${caption.who === "user" ? "text-white/45" : "text-[#dfe7ee]"}`}
-        >
-          {caption.text}
-        </p>
-      )}
+          phone with the sheet open they compress to one clamped line above it.
+          The <p> itself stays mounted so the live region is stable — screen
+          readers catch text changes far more reliably than element mount */}
+      <p
+        aria-live="polite"
+        className={`display-2 pointer-events-none absolute inset-x-4 text-center font-extrabold leading-tight md:inset-x-[10%] md:bottom-24 md:text-4xl ${
+          sheetOpen ? "bottom-[calc(45vh+1rem)] truncate text-lg" : "bottom-24 text-2xl"
+        } ${caption?.who === "user" ? "text-white/45" : "text-[#dfe7ee]"}`}
+      >
+        {caption?.text ?? ""}
+      </p>
 
       {/* the product's own UI: status pill + hang up, over the kiosk's feet */}
       {(phase === "connecting" || phase === "live") && (
