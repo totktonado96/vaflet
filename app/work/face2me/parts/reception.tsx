@@ -58,6 +58,7 @@ export function Reception({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonElem
     };
 
     const hangUp = (phase: "over" | "closed" = "over", reason?: "minutes" | "denied") => {
+      if (!call && !busy) return; // reentrant guard: absorbs destroy()'s own leave echo and idle no-ops
       callGen++;
       const c = call;
       call = null;
@@ -151,8 +152,10 @@ export function Reception({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonElem
           dailyConfig: { userMediaVideoConstraints: { width: 640, height: 480 } },
         }) as unknown as DailyCall;
         call = frame;
+        let announced = false;
 
         frame.on("track-started", (ev) => {
+          if (frame !== call) return;
           if (!ev?.participant) return;
           if (ev.participant.local) {
             if (ev.track.kind === "video")
@@ -160,16 +163,27 @@ export function Reception({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonElem
             return;
           }
           if (ev.track.kind !== "video") return;
+          if (announced) return; // a mid-call video track restart must not re-announce live
+          announced = true;
           video.srcObject = new MediaStream([ev.track]);
           void video.play();
           emitReception({ type: "video", el: video });
           emitReception({ type: "phase", phase: "live", seconds: cap });
         });
-        frame.on("app-message", (ev) => onMessage(ev?.data ?? {}));
-        frame.on("left-meeting", () => hangUp("over"));
+        frame.on("app-message", (ev) => {
+          if (frame !== call) return;
+          onMessage(ev?.data ?? {});
+        });
+        frame.on("left-meeting", () => {
+          if (frame !== call) return;
+          hangUp("over");
+        });
         // a call that breaks mid-air ends like a call that ended (spec §8):
         // "over", with the form as the standing invitation — not "closed"
-        frame.on("error", () => hangUp("over"));
+        frame.on("error", () => {
+          if (frame !== call) return;
+          hangUp("over");
+        });
 
         await frame.join({ url });
         if (disposed || gen !== callGen) {
