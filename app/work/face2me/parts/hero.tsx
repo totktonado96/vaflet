@@ -40,6 +40,9 @@ export function Hero() {
   const fsRef = useRef<HTMLButtonElement>(null);
   const coldRef = useRef<HTMLAnchorElement>(null);
   const walkRef = useRef<HTMLDivElement>(null);
+  // the button itself is Task 11's; this stub only keeps Scene's Refs
+  // contract (and tsc) satisfied between the two commits
+  const callRef = useRef<HTMLButtonElement>(null);
 
   return (
     <section
@@ -62,6 +65,7 @@ export function Hero() {
           fsRef={fsRef}
           coldRef={coldRef}
           walkRef={walkRef}
+          callRef={callRef}
         />
 
         {/* the door to the real thing, driven from the paint loop: it holds

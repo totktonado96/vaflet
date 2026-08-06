@@ -15,6 +15,7 @@ import {
   Vec3,
 } from "ogl";
 import { reducedMotion } from "@/components/case/kit";
+import { emitReception, onReception } from "./reception-events";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -215,6 +216,10 @@ const SCREEN_FRAG = /* glsl */ `
   uniform float uMirror;
   uniform float uSceneGlow;
   uniform vec2 uGaze;
+  uniform sampler2D uLive;
+  uniform float uLiveMix;
+  uniform float uSpeak;
+  uniform float uLiveAspect;
   varying vec2 vUv;
   varying vec3 vWorld;
   varying vec3 vNormal;
@@ -236,6 +241,25 @@ const SCREEN_FRAG = /* glsl */ `
     float vig = 1.0 - smoothstep(0.12, 0.62, length(vUv - vec2(0.5 + uGaze.x, 0.52 + uGaze.y)));
     vec3 lit = vec3(0.024, 0.10, 0.062) * (0.35 + 0.65 * vig);
     vec3 col = glass + lit * uGlow + vec3(0.043, 0.855, 0.318) * 0.012 * uWake;
+    // the live face: greenscreen video keyed on the glass. Cover-fit the
+    // frame to the screen rect; where the key removes background the lit
+    // glass shows through, so she floats in the backlight, not in a box.
+    if (uLiveMix > 0.001) {
+      float screenAspect = ${(SCR_W / SCR_H).toFixed(4)};
+      vec2 vuv = vUv - 0.5;
+      float k = uLiveAspect / screenAspect;
+      if (k > 1.0) { vuv.x /= k; } else { vuv.y *= k; }
+      vuv += 0.5;
+      vec4 live = texture2D(uLive, vec2(vuv.x, 1.0 - vuv.y));
+      float dom = live.g - max(live.r, live.b);
+      float keep = 1.0 - smoothstep(0.04, 0.16, dom);
+      // spill: pull the green bounce off skin and hair near the key
+      live.g = mix(min(live.g, max(live.r, live.b) * 1.15), live.g, keep);
+      float grey = dot(live.rgb, vec3(0.299, 0.587, 0.114));
+      // silence is grayscale; her speech is the only colour on this page
+      vec3 face = mix(vec3(grey) * vec3(0.94, 1.0, 0.97), live.rgb, uSpeak);
+      col = mix(col, face, uLiveMix * keep * mask);
+    }
     float a = mask;
     if (uMirror > 0.5) {
       float drop = clamp((${FLOOR_Y.toFixed(2)} - vWorld.y) / 2.1, 0.0, 1.0);
@@ -325,6 +349,7 @@ const DOTS_FRAG = /* glsl */ `
   precision highp float;
   uniform float uMirror;
   uniform float uSceneGlow;
+  uniform float uFade;
   varying float vAlpha;
   varying float vLum;
   void main() {
@@ -333,7 +358,7 @@ const DOTS_FRAG = /* glsl */ `
     // paper dots; the brightest learn a little malachite from the backlight
     vec3 col = mix(vec3(0.875, 0.906, 0.933), vec3(0.36, 0.93, 0.55), smoothstep(0.55, 1.0, vLum) * 0.26);
     col *= 0.4 + 0.75 * vLum; // tone lives in brightness too, not just dot size
-    float a = m * vAlpha;
+    float a = m * vAlpha * (1.0 - uFade);
     if (uMirror > 0.5) a *= mix(0.05, 0.16, uSceneGlow);
     gl_FragColor = vec4(col, a);
   }
@@ -538,6 +563,7 @@ type Refs = {
   fsRef: RefObject<HTMLButtonElement | null>;
   coldRef: RefObject<HTMLAnchorElement | null>;
   walkRef: RefObject<HTMLDivElement | null>;
+  callRef: RefObject<HTMLButtonElement | null>;
 };
 
 export default function HeroScene({
@@ -548,6 +574,7 @@ export default function HeroScene({
   fsRef,
   coldRef,
   walkRef,
+  callRef,
 }: Refs) {
   useEffect(() => {
     const section = sectionRef.current;
@@ -555,6 +582,7 @@ export default function HeroScene({
     const host = hostRef.current;
     const rotateBtn = rotateRef.current;
     const fsBtn = fsRef.current;
+    const callBtn = callRef.current;
     const coldEl = coldRef.current;
     // the margin notes carry their own scroll windows as data attributes
     const walkCaps = Array.from(walkRef.current?.children ?? []).flatMap((el) => {
@@ -624,6 +652,10 @@ export default function HeroScene({
         uGlow: { value: 0 },
         uWake: { value: 0 },
         uGaze: { value: new Vec2() },
+        uLive: { value: new Texture(gl) },
+        uLiveMix: { value: 0 },
+        uSpeak: { value: 0 },
+        uLiveAspect: { value: 0.75 },
       },
     });
     const ledProgram = new Program(gl, {
@@ -660,6 +692,7 @@ export default function HeroScene({
         uAssemble: { value: 0 },
         uMorph: { value: 0 },
         uProjScale: { value: 1 },
+        uFade: { value: 0 },
       },
     });
     dotsProgram.setBlendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -835,6 +868,53 @@ export default function HeroScene({
     const act2 = { rot: 0, dz: 0, dy: 0 };
     let rotOn = false;
 
+    /** The call, as the scene sees it. mix fades the keyed video in over the
+        halftone; speak colours it; jolt is the flinch when she is cut off. */
+    const live = { mix: 0, speak: 0, jolt: 0 };
+    let liveVideo: HTMLVideoElement | null = null;
+    let liveOn = false;
+    let liveish = false; // connecting OR live: parks the rotate act early
+    let fed = 0; // ramps only once real frames flow — an unfed texture is black,
+    // and black reads as "face" to the keyer (no green to dominate), so mixing
+    // before the first frame would flash the glass dark
+    let leftStageSent = false;
+    const liveTex = new Texture(gl, {
+      generateMipmaps: false,
+      flipY: false, // video uploads skip the flip; the shader flips vUv instead
+      minFilter: gl.LINEAR,
+      magFilter: gl.LINEAR,
+    });
+    screenProgram.uniforms.uLive.value = liveTex;
+
+    const offBus = onReception((d) => {
+      if (d.type === "video") {
+        liveVideo = d.el;
+      } else if (d.type === "phase") {
+        const was = liveOn;
+        liveOn = d.phase === "live";
+        liveish = d.phase === "live" || d.phase === "connecting";
+        leftStageSent = false;
+        if (liveOn && !was) {
+          fed = 0; // every call re-earns its first frame
+          if (rotOn) setRotation(false); // portrait face on a landscape act reads sideways
+          gsap.killTweensOf(live);
+          if (still) { live.mix = 1; start(); } // the loop must run to feed the texture
+          else gsap.to(live, { mix: 1, duration: 1.8, ease: "power2.inOut" });
+        } else if (!liveOn && was) {
+          gsap.killTweensOf(live);
+          if (still) { live.mix = 0; live.speak = 0; stop(); renderOnce(); }
+          else gsap.to(live, { mix: 0, speak: 0, duration: 1.4, ease: "power2.inOut" });
+        }
+      } else if (d.type === "speaking" && d.who === "pal") {
+        if (!still) {
+          gsap.to(live, { speak: d.on ? 1 : 0, duration: 0.45, ease: "power1.inOut" });
+          if (d.interrupted) gsap.fromTo(live, { jolt: 1 }, { jolt: 0, duration: 0.6, ease: "power2.out" });
+        } else {
+          live.speak = d.on ? 1 : 0;
+        }
+      }
+    });
+
     // narrow viewports step closer for the portrait act, then well back for the
     // wide one — a landscape display doesn't fit a phone any other way
     let wide = false;
@@ -985,12 +1065,20 @@ export default function HeroScene({
       // the controls belong to the settled kiosk: show them only once the face
       // has landed, and take the act back to portrait if the reader walks off
       const ready = shown > 0.965 && faceReady;
-      for (const btn of [rotateBtn, fsBtn]) {
+      for (const btn of [rotateBtn, fsBtn, callBtn]) {
         if (!btn) continue;
-        btn.style.opacity = ready ? "1" : "0";
-        btn.style.pointerEvents = ready ? "auto" : "none";
+        // during the call (and already while it connects) the rotate act is
+        // parked: a portrait face on a landscape display would lie on its side
+        const parked = btn === rotateBtn && (liveish || live.mix > 0.5);
+        btn.style.opacity = ready ? (parked ? "0.3" : "1") : "0";
+        btn.style.pointerEvents = ready && !parked ? "auto" : "none";
       }
       if (rotOn && shown < 0.9) setRotation(false);
+      // walking away from the desk hangs up — once per call
+      if (liveOn && shown < 0.9 && !leftStageSent) {
+        leftStageSent = true;
+        emitReception({ type: "left-stage" });
+      }
 
       camera.position.set(leanNow.x, state.camY + act2.dy + leanNow.y, 0);
       // level gaze — the height offset does the framing
@@ -1003,18 +1091,34 @@ export default function HeroScene({
         p.uniforms.uSceneGlow.value = state.glow;
         if (p.uniforms.uCam) p.uniforms.uCam.value.copy(camera.position);
       }
-      screenProgram.uniforms.uGlow.value = state.glow;
+      if (liveVideo && live.mix > 0.001 && liveVideo.readyState >= 2) {
+        if (liveTex.image !== liveVideo) liveTex.image = liveVideo;
+        liveTex.needsUpdate = true;
+        screenProgram.uniforms.uLiveAspect.value =
+          liveVideo.videoWidth / Math.max(1, liveVideo.videoHeight);
+        fed = Math.min(1, fed + dt * 2.5);
+      }
+      const mixNow = live.mix * fed; // the key opens only once frames actually flow
+      // her speech warms the backlight and the pool, a breath, not a strobe
+      screenProgram.uniforms.uGlow.value = state.glow * (1 + live.speak * 0.22);
       screenProgram.uniforms.uWake.value = state.wake;
+      screenProgram.uniforms.uLiveMix.value = mixNow;
+      screenProgram.uniforms.uSpeak.value = live.speak;
       // the backlight glances toward the pointer while the face gathers,
-      // then provably re-centers so the settled frame stays symmetric
+      // then provably re-centers so the settled frame stays symmetric —
+      // and it kicks sideways for a beat when the visitor cuts her off
       const gaze = sstep(0.55, 0.65, shown) * (1 - sstep(0.75, 0.85, shown));
-      screenProgram.uniforms.uGaze.value.set(leanNow.x * 0.8 * gaze, leanNow.y * 0.8 * gaze);
+      screenProgram.uniforms.uGaze.value.set(
+        leanNow.x * 0.8 * gaze + live.jolt * 0.06 * Math.sin(now * 0.04),
+        leanNow.y * 0.8 * gaze,
+      );
       ledProgram.uniforms.uWake.value = state.wake;
       poolProgram.uniforms.uPool.value = state.pool;
-      poolProgram.uniforms.uGlow.value = state.glow;
+      poolProgram.uniforms.uGlow.value = state.glow * (1 + live.speak * 0.18);
       poolProgram.uniforms.uFocus.value = state.focus;
       dotsProgram.uniforms.uAssemble.value = assembleShown;
       dotsProgram.uniforms.uMorph.value = act2.rot;
+      dotsProgram.uniforms.uFade.value = mixNow;
 
       // the visit button holds over the opening frame and dissolves as the
       // walk starts (reduced motion never shows it); its letters glide
@@ -1106,6 +1210,8 @@ export default function HeroScene({
       st?.kill();
       tl.kill();
       fadeIn?.kill();
+      offBus();
+      gsap.killTweensOf(live);
       gsap.killTweensOf(act2);
       rotateBtn?.removeEventListener("click", onRotateClick);
       if (fsSupported) {
