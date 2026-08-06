@@ -311,14 +311,19 @@ export async function POST(req: Request) {
     .filter(Boolean)
     .join("\n");
 
-  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chat, text }),
-  });
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chat, text }),
+    });
 
-  if (!res.ok) {
-    console.error("[lead] telegram send failed", res.status, { name, email });
+    if (!res.ok) {
+      console.error("[lead] telegram send failed", res.status, { name, email, note });
+      return NextResponse.json({ error: "desk-closed" }, { status: 503 });
+    }
+  } catch {
+    console.error("[lead] telegram send failed (network)", { name, email, note });
     return NextResponse.json({ error: "desk-closed" }, { status: 503 });
   }
 
