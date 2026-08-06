@@ -1072,6 +1072,7 @@ export default function HeroScene({
         const parked = btn === rotateBtn && (liveish || live.mix > 0.5);
         btn.style.opacity = ready ? (parked ? "0.3" : "1") : "0";
         btn.style.pointerEvents = ready && !parked ? "auto" : "none";
+        btn.tabIndex = ready && !parked ? 0 : -1;
       }
       if (rotOn && shown < 0.9) setRotation(false);
       // walking away from the desk hangs up — once per call

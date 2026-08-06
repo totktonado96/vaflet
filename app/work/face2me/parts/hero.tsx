@@ -129,7 +129,7 @@ export function Hero() {
           </p>
         </div>
 
-        {/* the kiosk's two controls — no words, they appear once it has woken */}
+        {/* the kiosk's three controls — no words, they appear once it has woken */}
         <div className="absolute inset-x-0 bottom-8 z-10 flex items-center justify-center gap-4">
           <button
             ref={callRef}
