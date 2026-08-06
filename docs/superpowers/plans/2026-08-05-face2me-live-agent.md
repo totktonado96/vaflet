@@ -1138,8 +1138,8 @@ import { emitReception, onReception } from "./reception-events";
         const was = liveOn;
         liveOn = d.phase === "live";
         liveish = d.phase === "live" || d.phase === "connecting";
-        leftStageSent = false;
         if (liveOn && !was) {
+          leftStageSent = false; // new call, new ticket
           fed = 0; // every call re-earns its first frame
           if (rotOn) setRotation(false); // portrait face on a landscape act reads sideways
           gsap.killTweensOf(live);
@@ -1219,6 +1219,36 @@ import { emitReception, onReception } from "./reception-events";
         leftStageSent = true;
         emitReception({ type: "left-stage" });
       }
+```
+
+Уход вверх (мимо начала героя) не проходит через `paint()`: `IntersectionObserver` останавливает рендер-луп раньше, чем `shown` успевает упасть ниже 0.9. Тот же уход-со-сцены нужен и там — якорь `io = new IntersectionObserver`, заменить:
+
+```ts
+      io = new IntersectionObserver(
+        ([entry]) => (entry.isIntersecting ? start() : stop()),
+        { threshold: 0 },
+      );
+```
+
+на:
+
+```ts
+      io = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            start();
+            return;
+          }
+          // scrolled off the hero in either direction — walking away from
+          // the desk hangs up whichever way she left it
+          if (liveOn && !leftStageSent) {
+            leftStageSent = true;
+            emitReception({ type: "left-stage" });
+          }
+          stop();
+        },
+        { threshold: 0 },
+      );
 ```
 
 - [ ] **Step 8: Cleanup**

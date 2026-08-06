@@ -893,8 +893,8 @@ export default function HeroScene({
         const was = liveOn;
         liveOn = d.phase === "live";
         liveish = d.phase === "live" || d.phase === "connecting";
-        leftStageSent = false;
         if (liveOn && !was) {
+          leftStageSent = false; // new call, new ticket
           fed = 0; // every call re-earns its first frame
           if (rotOn) setRotation(false); // portrait face on a landscape act reads sideways
           gsap.killTweensOf(live);
@@ -1183,7 +1183,19 @@ export default function HeroScene({
         },
       });
       io = new IntersectionObserver(
-        ([entry]) => (entry.isIntersecting ? start() : stop()),
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            start();
+            return;
+          }
+          // scrolled off the hero in either direction — walking away from
+          // the desk hangs up whichever way she left it
+          if (liveOn && !leftStageSent) {
+            leftStageSent = true;
+            emitReception({ type: "left-stage" });
+          }
+          stop();
+        },
         { threshold: 0 },
       );
       io.observe(section);
