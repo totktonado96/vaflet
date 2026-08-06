@@ -267,7 +267,7 @@ const seen = new Map<string, number>(); // ip -> last accepted, best-effort
 const WINDOW_MS = 30_000;
 
 function clean(s: unknown, max: number): string {
-  return typeof s === "string" ? s.trim().slice(0, max) : "";
+  return typeof s === "string" ? s.replace(/[\r\n]+/g, " ").trim().slice(0, max) : "";
 }
 
 export async function POST(req: Request) {
@@ -289,6 +289,7 @@ export async function POST(req: Request) {
   const email = clean(body.email, 200);
   const note = clean(body.note, 500);
   const conversationId = clean(body.conversationId, 64);
+  const lead = { name, email, note, conversationId };
 
   if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "bad-request" }, { status: 400 });
@@ -297,7 +298,7 @@ export async function POST(req: Request) {
   const token = process.env.TG_BOT_TOKEN;
   const chat = process.env.TG_CHAT_ID;
   if (!token || !chat) {
-    console.error("[lead] TG env missing; lead only logged:", { name, email, note });
+    console.error("[lead] TG env missing; lead only logged:", lead);
     return NextResponse.json({ error: "desk-closed" }, { status: 503 });
   }
 
@@ -319,16 +320,16 @@ export async function POST(req: Request) {
     });
 
     if (!res.ok) {
-      console.error("[lead] telegram send failed", res.status, { name, email, note });
+      console.error("[lead] telegram send failed", res.status, lead);
       return NextResponse.json({ error: "desk-closed" }, { status: 503 });
     }
   } catch {
-    console.error("[lead] telegram send failed (network)", { name, email, note });
+    console.error("[lead] telegram send failed (network)", lead);
     return NextResponse.json({ error: "desk-closed" }, { status: 503 });
   }
 
   seen.set(ip, now);
-  console.log("[lead] delivered", { name, email, conversationId });
+  console.log("[lead] delivered", lead);
   return NextResponse.json({ ok: true });
 }
 ```
