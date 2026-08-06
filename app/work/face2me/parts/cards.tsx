@@ -173,8 +173,12 @@ function LeadForm({ onDone, onClose }: { onDone: (name: string) => void; onClose
       <button
         type="submit"
         disabled={state === "sending"}
-        className="mt-4 w-full rounded-full bg-[#0bda51] px-4 py-2.5 text-sm font-bold text-[#04140a] transition-transform hover:scale-[1.02] disabled:opacity-60"
+        className="group relative isolate mt-4 w-full overflow-hidden rounded-full border border-white/25 px-4 py-2.5 text-sm font-bold text-white transition-colors duration-300 hover:border-[#0bda51] hover:text-[#04140a] disabled:opacity-60"
       >
+        <span
+          aria-hidden
+          className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-[#0bda51] transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
+        />
         {state === "sending" ? "Passing it on…" : "The founders call back"}
       </button>
       {state === "error" && (
@@ -199,7 +203,6 @@ export function CardLayer() {
   const [selfview, setSelfview] = useState<MediaStream | null>(null);
   const [left, setLeft] = useState(0);
   const captionTimer = useRef(0);
-  const selfRef = useRef<HTMLVideoElement>(null);
 
   useEffect(
     () =>
@@ -245,15 +248,6 @@ export function CardLayer() {
     const id = window.setInterval(() => setLeft((v) => Math.max(0, v - 1)), 1000);
     return () => window.clearInterval(id);
   }, [phase]);
-
-  useEffect(() => {
-    if (selfRef.current && selfview) {
-      selfRef.current.srcObject = selfview;
-      void selfRef.current.play();
-    }
-    // selfview can land before "live" mounts the <video> — rerun the wiring
-    // once the element exists, not just once when the stream first arrives
-  }, [selfview, phase]);
 
   const sheetOpen = cards.length > 0 || formOpen || receipt !== null;
   const m = Math.floor(left / 60);
@@ -310,8 +304,12 @@ export function CardLayer() {
                   <button
                     type="button"
                     onClick={() => emitReception({ type: "call-request" })}
-                    className="w-full rounded-full bg-[#0bda51] px-4 py-2.5 text-sm font-bold text-[#04140a] transition-transform hover:scale-[1.02]"
+                    className="group relative isolate w-full overflow-hidden rounded-full border border-white/25 px-4 py-2.5 text-sm font-bold text-white transition-colors duration-300 hover:border-[#0bda51] hover:text-[#04140a]"
                   >
+                    <span
+                      aria-hidden
+                      className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-[#0bda51] transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
+                    />
                     Ring again
                   </button>
                   <button
@@ -395,7 +393,19 @@ export function CardLayer() {
       {/* what she sees — honest little window into the visitor's own camera */}
       {phase === "live" && selfview && (
         <div className="pointer-events-none absolute right-4 top-4 hidden w-28 overflow-hidden rounded-xl border border-white/20 md:block">
-          <video ref={selfRef} muted playsInline className="aspect-[3/4] w-full object-cover grayscale" />
+          <video
+            // a callback ref wires the stream the moment the element exists —
+            // an effect keyed on state can fire before the vignette mounts
+            ref={(el) => {
+              if (el && selfview && el.srcObject !== selfview) {
+                el.srcObject = selfview;
+                el.play().catch(() => {});
+              }
+            }}
+            muted
+            playsInline
+            className="aspect-[3/4] w-full object-cover"
+          />
           <p className="bg-black/70 px-2 py-1 text-center text-[9px] font-bold uppercase tracking-[0.2em] text-white/60">
             What she sees
           </p>

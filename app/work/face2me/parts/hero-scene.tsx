@@ -240,25 +240,36 @@ const SCREEN_FRAG = /* glsl */ `
     // re-centers so the settled frame is symmetric
     float vig = 1.0 - smoothstep(0.12, 0.62, length(vUv - vec2(0.5 + uGaze.x, 0.52 + uGaze.y)));
     vec3 lit = vec3(0.024, 0.10, 0.062) * (0.35 + 0.65 * vig);
-    vec3 col = glass + lit * uGlow + vec3(0.043, 0.855, 0.318) * 0.012 * uWake;
-    // the live face: greenscreen video keyed on the glass. Cover-fit the
-    // frame to the screen rect; where the key removes background the lit
-    // glass shows through, so she floats in the backlight, not in a box.
+    // during a live call the malachite pool dims almost out — she stands on
+    // near-black glass, not in a swamp of backlight
+    vec3 col = glass + lit * uGlow * (1.0 - 0.82 * uLiveMix) + vec3(0.043, 0.855, 0.318) * 0.012 * uWake;
+    // the live face: greenscreen video keyed onto the glass. Not wallpaper —
+    // a framed portrait: a square window spanning the screen's width, hung
+    // near the top, centre-cropped from whatever aspect the feed arrives in.
     if (uLiveMix > 0.001) {
-      float screenAspect = ${(SCR_W / SCR_H).toFixed(4)};
-      vec2 vuv = vUv - 0.5;
-      float k = uLiveAspect / screenAspect;
-      if (k > 1.0) { vuv.x /= k; } else { vuv.y *= k; }
-      vuv += 0.5;
-      vec4 live = texture2D(uLive, vec2(vuv.x, 1.0 - vuv.y));
-      float dom = live.g - max(live.r, live.b);
-      float keep = 1.0 - smoothstep(0.04, 0.16, dom);
-      // spill: pull the green bounce off skin and hair near the key
-      live.g = mix(min(live.g, max(live.r, live.b) * 1.15), live.g, keep);
-      float grey = dot(live.rgb, vec3(0.299, 0.587, 0.114));
-      // silence is grayscale; her speech is the only colour on this page
-      vec3 face = mix(vec3(grey) * vec3(0.94, 1.0, 0.97), live.rgb, uSpeak);
-      col = mix(col, face, uLiveMix * keep * mask);
+      float side = ${(SCR_W / SCR_H).toFixed(4)}; // uv height of a width-spanning square
+      float top = 0.035;
+      vec2 p = vec2(vUv.x, (1.0 - vUv.y - top) / side); // window-local, y down
+      if (p.y >= 0.0 && p.y <= 1.0) {
+        // centre-crop the source to a square regardless of its own aspect
+        vec2 s = vec2(
+          0.5 + (p.x - 0.5) * min(1.0, 1.0 / uLiveAspect),
+          0.5 + (p.y - 0.5) * min(1.0, uLiveAspect)
+        );
+        vec4 live = texture2D(uLive, s);
+        float dom = live.g - max(live.r, live.b);
+        float keep = 1.0 - smoothstep(0.02, 0.24, dom);
+        keep *= keep; // pull the ragged compression edge in tight
+        // despill: any green bounce collapses toward the neighbour channels
+        float spill = smoothstep(0.0, 0.12, dom);
+        live.rgb = mix(live.rgb, vec3(live.r, max(live.r, live.b), live.b), spill * 0.85);
+        // silence dims her a breath and loses a little colour — never a corpse
+        float grey = dot(live.rgb, vec3(0.299, 0.587, 0.114));
+        vec3 face = mix(mix(vec3(grey), live.rgb, 0.6) * 0.9, live.rgb, uSpeak);
+        // the window's floor: she dissolves into the glass, no hard cut
+        float fade = smoothstep(0.0, 0.03, p.y) * (1.0 - smoothstep(0.82, 1.0, p.y));
+        col = mix(col, face, uLiveMix * keep * mask * fade);
+      }
     }
     float a = mask;
     if (uMirror > 0.5) {

@@ -81,6 +81,9 @@ export async function POST(req: Request) {
             participant_absent_timeout: SILENCE_SECONDS,
             enable_recording: false,
             apply_greenscreen: true,
+            // the live smoke showed no utterance app-messages without this
+            // flag — our captions read conversation.utterance.streaming
+            enable_closed_captions: true,
             language: "multilingual",
           },
         }),
