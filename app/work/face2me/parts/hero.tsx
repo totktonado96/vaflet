@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import dynamic from "next/dynamic";
 import ArrowNE from "@/components/ArrowNE";
+import { Reception } from "./reception";
 
 /**
  * The walk-up. The page opens in the studio's black, and far away in it
@@ -40,8 +41,6 @@ export function Hero() {
   const fsRef = useRef<HTMLButtonElement>(null);
   const coldRef = useRef<HTMLAnchorElement>(null);
   const walkRef = useRef<HTMLDivElement>(null);
-  // the button itself is Task 11's; this stub only keeps Scene's Refs
-  // contract (and tsc) satisfied between the two commits
   const callRef = useRef<HTMLButtonElement>(null);
 
   return (
@@ -133,6 +132,30 @@ export function Hero() {
         {/* the kiosk's two controls — no words, they appear once it has woken */}
         <div className="absolute inset-x-0 bottom-8 z-10 flex items-center justify-center gap-4">
           <button
+            ref={callRef}
+            type="button"
+            aria-label="Talk to the receptionist"
+            data-hero-call
+            data-cursor-text="Say hi"
+            className={`${BTN} hover:border-[#0bda51]! hover:text-[#0bda51]!`}
+          >
+            <svg
+              viewBox="0 0 32 32"
+              className="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {/* a headset outline: the desk, not a phone booth */}
+              <path d="M6 18v-3a10 10 0 0 1 20 0v3" />
+              <rect x="4" y="17" width="5" height="7" rx="2" />
+              <rect x="23" y="17" width="5" height="7" rx="2" />
+              <path d="M26 24v1.5a3 3 0 0 1-3 3h-4" />
+            </svg>
+          </button>
+          <button
             ref={rotateRef}
             type="button"
             aria-pressed="false"
@@ -174,6 +197,8 @@ export function Hero() {
             </svg>
           </button>
         </div>
+
+        <Reception callBtnRef={callRef} />
       </div>
     </section>
   );
