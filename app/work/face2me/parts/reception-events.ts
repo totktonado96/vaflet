@@ -45,9 +45,20 @@ export function onReception(fn: (d: ReceptionDetail) => void): () => void {
 
 /* ------------------------------------------------------------- dev hook */
 
+interface DevHook {
+  card(card: CardTopic): void;
+  form(): void;
+  dismiss(): void;
+  caption(text: string, who?: "pal" | "user"): void;
+  speaking(on: boolean, who?: "pal" | "user"): void;
+  phase(phase: Phase): void;
+  live(): void;
+  over(): void;
+}
+
 declare global {
   interface Window {
-    __ren?: Record<string, (...args: never[]) => void>;
+    __ren?: DevHook;
   }
 }
 
@@ -59,6 +70,16 @@ declare global {
 export function installDevHook() {
   if (process.env.NODE_ENV === "production") return;
   let fakeRaf = 0;
+  let fakeVideo: HTMLVideoElement | null = null;
+  const stopFake = () => {
+    cancelAnimationFrame(fakeRaf);
+    if (fakeVideo) {
+      const stream = fakeVideo.srcObject as MediaStream | null;
+      stream?.getTracks().forEach((t) => t.stop());
+      fakeVideo.srcObject = null;
+      fakeVideo = null;
+    }
+  };
   window.__ren = {
     card: (card: CardTopic) => emitReception({ type: "card", card }),
     form: () => emitReception({ type: "lead-form" }),
@@ -69,6 +90,7 @@ export function installDevHook() {
       emitReception({ type: "speaking", who, on }),
     phase: (phase: Phase) => emitReception({ type: "phase", phase, seconds: 180 }),
     live: () => {
+      stopFake();
       const c = document.createElement("canvas");
       c.width = 480;
       c.height = 854;
@@ -88,12 +110,13 @@ export function installDevHook() {
       const video = document.createElement("video");
       video.muted = true;
       video.srcObject = c.captureStream(24);
-      void video.play();
+      video.play().catch(() => {});
+      fakeVideo = video;
       emitReception({ type: "video", el: video });
       emitReception({ type: "phase", phase: "live", seconds: 180 });
     },
     over: () => {
-      cancelAnimationFrame(fakeRaf);
+      stopFake();
       emitReception({ type: "phase", phase: "over" });
     },
   };
