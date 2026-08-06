@@ -361,7 +361,9 @@ export function CardLayer() {
       <p
         aria-live="polite"
         className={`display-2 pointer-events-none absolute inset-x-4 text-center font-extrabold leading-tight md:inset-x-[10%] md:bottom-24 md:text-4xl ${
-          sheetOpen ? "bottom-[calc(45vh+1rem)] truncate text-lg" : "bottom-24 text-2xl"
+          sheetOpen
+            ? "bottom-[calc(45vh+1rem)] truncate text-lg md:overflow-visible md:whitespace-normal md:text-clip"
+            : "bottom-24 text-2xl"
         } ${caption?.who === "user" ? "text-white/45" : "text-[#dfe7ee]"}`}
       >
         {caption?.text ?? ""}
@@ -369,7 +371,7 @@ export function CardLayer() {
 
       {/* the product's own UI: status pill + hang up, over the kiosk's feet */}
       {(phase === "connecting" || phase === "live") && (
-        <div className="pointer-events-auto absolute inset-x-0 bottom-24 z-10 flex items-center justify-center gap-3 md:bottom-8 md:left-auto md:right-8 md:inset-x-auto">
+        <div className="pointer-events-auto absolute inset-x-0 top-16 bottom-auto z-10 flex items-center justify-center gap-3 md:top-auto md:bottom-8 md:left-auto md:right-8 md:inset-x-auto">
           <div className="flex items-center gap-2.5 rounded-full border border-white/20 bg-black/55 px-4 py-2 text-xs font-bold text-white backdrop-blur-sm">
             <span
               aria-hidden
