@@ -369,6 +369,12 @@ export function Filmstrip({
             onUpdate: recede,
           },
         });
+        // This pin exists only above 768px, so a window that opens narrow and
+        // widens creates it after every trigger below it. ScrollTrigger
+        // refreshes in creation order, and a pin below would measure itself
+        // before this spacer exists — starting a whole strip too early.
+        ScrollTrigger.sort();
+        ScrollTrigger.refresh();
       });
     },
     { scope: root },
