@@ -121,6 +121,40 @@ export const PROJECTS: Project[] = [
     pattern: 1,
   },
   {
+    slug: "beletfilm",
+    title: "Belet Film",
+    desc: "App design for Turkmenistan’s main streaming service — from the first launch to a locked player",
+    services: "Product design · UX · Mobile app",
+    stack: "Figma · Inter · Microsoft Fluent System Icons",
+    brief:
+      "Belet Film is Turkmenistan’s main streaming service: series from all over the world, in translation and in the original language. We designed its app — the research, the flows between the screens and the interface itself, from the first launch to the account, including the moments nobody puts in a pitch.",
+    did: [
+      "Started from desk research into how streaming apps are used and built",
+      "Designed the flows: first launch, sign-in by phone number, the feed, the catalog and its filters, a title, the player, the account",
+      "Drew the player’s states — settings, speed, series, a lock, a complaint — and what the app says when the connection drops",
+      "Built one visual language for every service: Inter, Microsoft Fluent System Icons on three grids, near-black and one blue",
+      "Crafted a prototype that puts simplicity and clarity first, so the key features are found without being explained",
+    ],
+    outcome: [
+      "Every main flow designed end to end — first launch, sign-in, the feed, the catalog, a title, the player and the account",
+      "The awkward moments drawn too: a locked screen, a complaint about quality, a dropped connection",
+      "One visual language — Inter, Fluent icons and one blue — across the whole platform",
+    ],
+    facts: [
+      { value: "14", label: "screens shown in this case" },
+      { value: "5", label: "states of the player, from playing to offline" },
+      { value: "3", label: "icon grids — 24, 20 and 16 px" },
+    ],
+    custom: true,
+    tags: ["Streaming", "App design", "UX/UI"],
+    disciplines: ["Design", "Mobile"],
+    ratio: "wide",
+    photo: "/photos/beletfilm/player.jpg",
+    // the brand on its own gradient — the grid card reads as the service, like
+    // MiniPACS and Face2me; the screens carry the case page
+    cover: "/photos/beletfilm/cover.jpg",
+  },
+  {
     slug: "sadasuw",
     title: "Sada Suw",
     desc: "A website for a juice plant in Turkmenistan — eleven flavours in glass, three languages, and not one file from anybody else’s server",
@@ -219,6 +253,37 @@ export const PROJECTS: Project[] = [
     photo: "/photos/tmcars/main.jpg",
     cover: "/photos/tmcars/cover-white.jpg",
   },
+  // MashynBazar before Aydym on purpose: with ten cases the first column takes
+  // four cards, so it gets only wide frames, and the square and the portrait
+  // go to the columns that would otherwise end first
+  {
+    slug: "masynbazar",
+    title: "MashynBazar",
+    desc: "Turnkey e-commerce for a Dubai car dealer — a dark showroom landing and a daylight catalogue",
+    services: "Product design · Web · Turnkey build",
+    stack: "Landing · Catalogue · Search & filters · Multilingual",
+    brief:
+      "A Dubai dealer sells premium cars abroad, where the buyer never walks the lot. The site has to do both jobs at once: make the car wanted, and make the paperwork side of it feel safe.",
+    did: [
+      "Designed and built the whole thing turnkey — landing, catalogue, content, launch",
+      "Put the showroom in the dark: one car under red light, two ways in",
+      "Built the catalogue as a pale grid where the spec sheet leads — engine, drive, power, 0–100, price",
+      "Wired finding: search by name or tag, a brand picker and filters across the showroom",
+      "Embedded the dealer's YouTube reviews on the page instead of linking away",
+      "Shipped it multilingual, with the language toggle in the header",
+    ],
+    outcome: [
+      "One shop with two surfaces that never look like two different companies",
+      "Every car carries its own spec sheet, so the buyer compares without asking",
+      "Live at masynbazar.com",
+    ],
+    custom: true,
+    tags: ["E-commerce", "Web", "Turnkey"],
+    disciplines: ["Web", "Design"],
+    ratio: "wide",
+    photo: "/photos/masynbazar/hero-v2.jpg",
+    cover: "/photos/masynbazar/hero-v2.jpg",
+  },
   {
     slug: "aydym",
     title: "Aydym",
@@ -251,34 +316,6 @@ export const PROJECTS: Project[] = [
     ratio: "square",
     photo: "/photos/aydym/hero-photo.jpg",
     cover: "/photos/aydym/cover-square.jpg",
-  },
-  {
-    slug: "masynbazar",
-    title: "MashynBazar",
-    desc: "Turnkey e-commerce for a Dubai car dealer — a dark showroom landing and a daylight catalogue",
-    services: "Product design · Web · Turnkey build",
-    stack: "Landing · Catalogue · Search & filters · Multilingual",
-    brief:
-      "A Dubai dealer sells premium cars abroad, where the buyer never walks the lot. The site has to do both jobs at once: make the car wanted, and make the paperwork side of it feel safe.",
-    did: [
-      "Designed and built the whole thing turnkey — landing, catalogue, content, launch",
-      "Put the showroom in the dark: one car under red light, two ways in",
-      "Built the catalogue as a pale grid where the spec sheet leads — engine, drive, power, 0–100, price",
-      "Wired finding: search by name or tag, a brand picker and filters across the showroom",
-      "Embedded the dealer's YouTube reviews on the page instead of linking away",
-      "Shipped it multilingual, with the language toggle in the header",
-    ],
-    outcome: [
-      "One shop with two surfaces that never look like two different companies",
-      "Every car carries its own spec sheet, so the buyer compares without asking",
-      "Live at masynbazar.com",
-    ],
-    custom: true,
-    tags: ["E-commerce", "Web", "Turnkey"],
-    disciplines: ["Web", "Design"],
-    ratio: "wide",
-    photo: "/photos/masynbazar/hero-v2.jpg",
-    cover: "/photos/masynbazar/hero-v2.jpg",
   },
   {
     slug: "mirai",

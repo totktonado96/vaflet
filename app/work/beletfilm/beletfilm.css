@@ -1,0 +1,58 @@
+/* Sections only: the site footer at the bottom of the case keeps its own voice */
+.bf-case > section {
+  font-family: var(--bf-sans), system-ui, sans-serif;
+}
+
+/* The kit sets display type heavy and uppercase; the app titles its screens
+   in sentence case, semibold and tight, so the case does too */
+.bf-case > section :is(.display-1, .display-2, .display-3) {
+  font-family: var(--bf-sans), system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: -0.035em;
+}
+
+/* "Belet Film" is two short words; on a phone it must not fall below the
+   section heads, which display-1 would let it */
+.bf-case > section .bf-title {
+  font-size: clamp(3.2rem, 14vw, 9rem);
+}
+
+/* SplitText clips each line to its line box and Inter's descenders hang below
+   a tight leading. The clip grows downward by less than the 15% a hidden line
+   waits below it, from the bottom only, so nothing moves after the split. */
+.bf-case > section .pre-reveal > div {
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+/* The app's own section label: small, semibold, spaced, quiet */
+.bf-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* The scrubber shows up once the episode starts and leaves before the credits */
+.bf-scrubber {
+  font-family: var(--bf-sans), system-ui, sans-serif;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+.bf-scrubber.is-on {
+  opacity: 1;
+}
+
+/* Without motion the player states cannot take turns in one frame, so every
+   state stands in a column instead, on any screen */
+@media (prefers-reduced-motion: reduce) {
+  .bf-states-stack {
+    display: none;
+  }
+  .bf-states-list {
+    display: grid;
+  }
+}
