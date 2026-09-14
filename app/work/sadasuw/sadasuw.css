@@ -1,0 +1,99 @@
+/* Sada Suw's type, served from this site: Prata for what is said, Manrope for
+   what explains it, IBM Plex Mono for labels. Latin and latin-ext only —
+   Turkmen needs ý, ş, ň and ž, which live in the second file. */
+
+@font-face {
+  font-family: "SadaSuw Prata";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/sadasuw/prata-400-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "SadaSuw Prata";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/sadasuw/prata-400-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "SadaSuw Manrope";
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url("/fonts/sadasuw/manrope-300-600-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "SadaSuw Manrope";
+  font-style: normal;
+  font-weight: 300 600;
+  font-display: swap;
+  src: url("/fonts/sadasuw/manrope-300-600-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "SadaSuw Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/sadasuw/ibm-plex-mono-500-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "SadaSuw Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/sadasuw/ibm-plex-mono-500-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Sections only: the site footer at the bottom of the case keeps its own voice */
+.sada-case > section {
+  font-family: "SadaSuw Manrope", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-weight: 300;
+}
+
+/* The kit sets its display type heavy and uppercase; inside this case the same
+   slots speak Prata, the way the plant's own headings do */
+.sada-serif,
+.sada-case > section :is(.display-1, .display-2, .display-3) {
+  font-family: "SadaSuw Prata", Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: -0.005em;
+}
+
+/* SplitText clips each line to its line box, and Prata's descenders hang below
+   it. The clip grows downward without moving the layout — by less than the
+   15% a line waits below its mask, so an unrevealed line never peeks through.
+   Bottom only: a top margin would collapse into the line above's and every
+   heading would grow after the split, shifting the pins measured before it. */
+.sada-case > section .pre-reveal > div {
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+/* display-1 is sized for long uppercase names; two short words in Prata can
+   stand much larger, and on a phone must not fall below the section heads */
+.sada-case > section .sada-title {
+  font-size: clamp(3.2rem, 15vw, 9.5rem);
+}
+
+.sada-mono {
+  font-family: "SadaSuw Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+/* Prata has no italic; the plant's site lets the browser slant it too */
+.sada-case em {
+  font-style: italic;
+  color: #f2e0b0;
+}
