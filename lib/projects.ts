@@ -219,7 +219,7 @@ export const PROJECTS: Project[] = [
     disciplines: ["Web", "Design"],
     ratio: "wide",
     photo: "/photos/asartech/home.jpg",
-    cover: "/photos/asartech/cover.jpg",
+    cover: "/photos/asartech/cover-logo.jpg",
   },
   {
     slug: "tmcars",
