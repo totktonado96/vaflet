@@ -186,7 +186,7 @@ export const PROJECTS: Project[] = [
     disciplines: ["Web", "Design"],
     ratio: "wide",
     photo: "/photos/sadasuw/hero.jpg",
-    cover: "/photos/sadasuw/hero.jpg",
+    cover: "/photos/sadasuw/cover.jpg",
   },
   {
     slug: "asartech",
@@ -219,7 +219,7 @@ export const PROJECTS: Project[] = [
     disciplines: ["Web", "Design"],
     ratio: "wide",
     photo: "/photos/asartech/home.jpg",
-    cover: "/photos/asartech/home.jpg",
+    cover: "/photos/asartech/cover.jpg",
   },
   {
     slug: "tmcars",
@@ -287,7 +287,7 @@ export const PROJECTS: Project[] = [
     disciplines: ["Web", "Design"],
     ratio: "wide",
     photo: "/photos/masynbazar/hero.jpg",
-    cover: "/photos/masynbazar/hero.jpg",
+    cover: "/photos/masynbazar/cover.jpg",
   },
   {
     slug: "aydym",
