@@ -627,8 +627,10 @@ export function CardLayer() {
             setStub(null);
           }
         } else if (d.type === "card") {
-          setFormOpen(false);
-          setReceipt(null); // a card takes the counter's slot — don't stack
+          if (d.card !== null) {
+            setFormOpen(false);
+            setReceipt(null); // a card takes the counter's slot — don't stack
+          }
           setCard(d.card);
         } else if (d.type === "chips") {
           setChips(d.items);
@@ -884,7 +886,9 @@ export function CardLayer() {
 
       {/* the visitor's tap, echoed on the RIGHT — the other voice of the
           conversation gets the other margin (desktop only; the phone's
-          chips already show what was pressed) */}
+          chips already show what was pressed). Deliberately aria-hidden:
+          the button the user just activated has already told AT what was
+          picked — re-announcing their own words would be noise. */}
       <p
         aria-hidden
         className="display-2 pointer-events-none absolute right-[5%] top-[20%] hidden w-[22vw] text-right text-2xl font-extrabold leading-tight text-white/35 md:block"

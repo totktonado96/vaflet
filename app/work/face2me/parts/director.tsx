@@ -308,19 +308,27 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
 
     const scr = (slides: ScreenLine[][] | null, interval?: number) =>
       emitReception({ type: "screen", slides, interval });
-    const card = (c: CardTopic) => emitReception({ type: "card", card: c });
+    const card = (c: CardTopic | null) => emitReception({ type: "card", card: c });
     const popup = (v: PopupView | null) => emitReception({ type: "popup", view: v });
+
+    /** the counter is swept the instant a pick is accepted — the glass,
+        the fact card and the pop-ups must never lag behind the playbill's
+        highlight, even by the little pause before she answers */
+    const sweep = () => {
+      scr(null);
+      card(null);
+      emitReception({ type: "trick-clear" });
+      popup(null);
+    };
 
     const topic = (id: ChipId) => {
       const again = (visits.get(id) ?? 0) > 0;
       visits.set(id, (visits.get(id) ?? 0) + 1);
       if (PRIMARY.includes(id)) opened.add(id);
 
-      // the counter is swept before the next act: the glass gives the face
-      // back, the trick and pop-ups clear; the topic's own slides follow
-      scr(null);
-      emitReception({ type: "trick-clear" });
-      if (id !== "names" && id !== "staff") popup(null);
+      // the sweep already ran at pick time; repeating it here is free and
+      // keeps direct topic() calls honest
+      sweep();
 
       switch (id) {
         case "names":
@@ -494,6 +502,9 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
         } else {
           cut();
         }
+        // the counter clears the moment the tap lands — highlight, glass
+        // and cards must agree on "current" with no 650ms of disagreement
+        sweep();
         emitReception({ type: "caption", who: "user", text: CHIPS.find((c) => c.id === d.id)?.label ?? "" });
         const id = d.id;
         activeTopic = id;

@@ -47,7 +47,7 @@ export type ReceptionDetail =
   | { type: "caption"; who: "pal" | "user"; text: string; lang?: "es" | "ru" }
   /* the language ripple: a second, smaller line under the caption */
   | { type: "subtitle"; text: string | null }
-  | { type: "card"; card: CardTopic }
+  | { type: "card"; card: CardTopic | null }
   | { type: "chips"; items: Chip[] | null }
   /* visitor/checkedIn ride along so the pop-ups can carry the journey's
      state: the staff queue shows YOUR check-in, the actions card knows
