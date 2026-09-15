@@ -4,7 +4,6 @@ import { useEffect, type RefObject } from "react";
 import {
   emitReception,
   onReception,
-  type CardTopic,
   type Chip,
   type ChipId,
   type GlassIntent,
@@ -310,7 +309,6 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
 
     const scr = (slides: ScreenLine[][] | null, interval?: number) =>
       emitReception({ type: "screen", slides, interval });
-    const card = (c: CardTopic | null) => emitReception({ type: "card", card: c });
     const popup = (v: PopupView | null) => emitReception({ type: "popup", view: v });
 
     /** a menu ON the glass: the dot matrix draws the options, the layer
@@ -330,7 +328,6 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
     const sweep = () => {
       menuOff();
       scr(null);
-      card(null);
       emitReception({ type: "trick-clear" });
       popup(null);
     };
@@ -371,24 +368,21 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
             if (again) {
               s.say("Same three numbers. They don't move.");
               s.cue(() => scr(PRICE_SLIDES, 900));
-              s.cue(() => card("pricing"));
               s.wait(2400);
               s.cue(() => scr(null));
             } else {
-              // the voice stays short — the glass carries the numbers,
-              // one price per line she says
+              // the glass and the voice carry the same beat: one price on
+              // the dots for exactly the line she says it in
               s.say("Fair. The numbers first.");
               s.cue(() => scr([PRICE_SLIDES[0]]));
-              s.cue(() => card("pricing"));
               s.say("Starter — five-ninety-nine a month.");
               s.cue(() => scr([PRICE_SLIDES[1]]));
               s.say("Standard — nine-ninety-nine.");
               s.cue(() => scr([PRICE_SLIDES[2]]));
               s.say("Custom builds, fifteen-hundred and up.");
+              s.cue(() => scr(null));
               s.say("One bill: hardware, install, everything.");
               s.say("No per-minute meter. Month-to-month.");
-              s.wait(600);
-              s.cue(() => scr(null));
             }
           }, maybeWrap);
           break;
@@ -397,21 +391,19 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
             if (again) {
               s.say("Still one box. Still zero of your problems.");
               s.cue(() => scr(SYSTEM_SLIDES, 560));
-              s.cue(() => card("bundle"));
               s.wait(3600);
               s.cue(() => scr(null));
             } else {
               s.say("One box. Zero of your problems.");
               s.cue(() => scr([[{ text: "7" }, { text: "SYSTEMS", em: 0.36 }]]));
-              s.cue(() => card("bundle"));
               s.say("Plugs into whatever runs your business.");
               // the seven layers deal themselves across the glass while
-              // she keeps talking — a flipbook in her own dots
+              // she names what they do — and the face is back before she
+              // moves on, so the screen never trails the conversation
               s.cue(() => scr(SYSTEM_SLIDES, 560));
               s.say("Check-ins land live. Bookings too.");
-              s.say("First-timers sign up mid-conversation. No forms.");
-              s.wait(400);
               s.cue(() => scr(null));
+              s.say("First-timers sign up by talking. No forms.");
             }
           }, maybeWrap);
           break;
@@ -420,7 +412,6 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
             if (again) {
               s.say("Still three. Fluent in every one.");
               s.cue(() => scr([[{ text: "HOLA." }], [{ text: "ПРИВЕТ." }]], 900));
-              s.cue(() => card("languages"));
               s.wait(1600);
               s.cue(() => scr(null));
             } else {
@@ -431,7 +422,6 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
               s.say("—и обратно, без остановки.", "—and back, without stopping.", "ru");
               s.cue(() => scr(null));
               s.say("Your visitors just talk. I keep up.", null);
-              s.cue(() => card("languages"));
             }
           }, maybeWrap);
           break;
@@ -453,7 +443,6 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
             if (again) {
               s.say("Still AI. Still New York. Still on shift.");
               s.cue(() => scr([[{ text: "AI." }], [{ text: "NYC" }], [{ text: "24/7" }]], 900));
-              s.cue(() => card("spec"));
               s.wait(2400);
               s.cue(() => scr(null));
             } else {
@@ -464,11 +453,8 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
               s.say("I take the shifts nobody wants.");
               s.cue(() => scr([[{ text: "24/7" }]]));
               s.say("Six a.m. Holidays. Every hour there is.");
-              s.say("I don't replace your people — I cover them.");
-              s.cue(() => card("spec"));
-              s.say("There's my whole file, since you asked.");
-              s.wait(500);
               s.cue(() => scr(null));
+              s.say("I don't replace your people — I cover them.");
             }
           }, maybeWrap);
           break;

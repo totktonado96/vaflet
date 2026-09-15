@@ -6,7 +6,6 @@ import { reducedMotion } from "@/components/case/kit";
 import {
   emitReception,
   onReception,
-  type CardTopic,
   type Chip,
   type ChipId,
   type GlassIntent,
@@ -24,48 +23,6 @@ import {
  * real lead form, the status pill and the printout. It reads the reception
  * bus and writes back only UI intent.
  */
-
-const CARD_DATA: Record<CardTopic, { title: string; rows: [string, string][]; foot?: string }> = {
-  pricing: {
-    title: "The bill",
-    rows: [
-      ["Starter", "$599/mo"],
-      ["Standard", "$999/mo"],
-      ["Custom", "$1500+/mo"],
-    ],
-    foot: "Per location, month-to-month. Hardware, software and install included.",
-  },
-  spec: {
-    title: "The spec",
-    rows: [
-      ["Job", "Front desk, on its feet"],
-      ["Hours", "On duty — no breaks so far"],
-      ["Languages", "EN · ES · RU"],
-      ["Price", "from $599/mo"],
-      ["Built in", "New York"],
-      ["Contract", "Month-to-month"],
-    ],
-  },
-  languages: {
-    title: "Languages",
-    rows: [
-      ["English", "native shift"],
-      ["Español", "switches mid-sentence"],
-      ["Русский", "тоже дома"],
-    ],
-    foot: "It hears which one you speak and follows.",
-  },
-  bundle: {
-    title: "What's in the box",
-    rows: [
-      ["Hardware", "the kiosk itself"],
-      ["Software", "the receptionist on shift"],
-      ["Integrations", "wired into whatever runs your business"],
-      ["Install", "part of the same monthly payment"],
-    ],
-    foot: "One monthly payment. The hardware stays Face2me's problem.",
-  },
-};
 
 const MALACHITE = "#0bda51";
 
@@ -120,11 +77,16 @@ function Words({ text, from = 18 }: { text: string; from?: number }) {
   }, [text, from]);
   return (
     <span ref={el}>
-      {text.split(" ").map((w, i) => (
-        <span key={`${i}-${w}`} className="inline-block whitespace-pre will-change-transform">
-          {w}{" "}
-        </span>
-      ))}
+      {/* hyphenated words split into their own segments — an inline-block
+          is atomic, and "five-ninety-nine" must still be able to wrap */}
+      {text
+        .split(" ")
+        .flatMap((w, i) => w.split(/(?<=-)/).map((seg, j, arr) => ({ seg: j === arr.length - 1 ? seg + " " : seg, k: `${i}-${j}` })))
+        .map(({ seg, k }) => (
+          <span key={k} className="inline-block whitespace-pre will-change-transform">
+            {seg}
+          </span>
+        ))}
     </span>
   );
 }
@@ -134,38 +96,6 @@ function Words({ text, from = 18 }: { text: string; from?: number }) {
 const SHELL =
   "w-[19rem] max-w-[86vw] rounded-xl bg-[#0b1114]/90 p-5 text-[#dfe7ee] backdrop-blur-md " +
   "shadow-[inset_0_1px_0_0_rgba(11,218,81,0.4),0_0_0_1px_rgba(255,255,255,0.06),0_24px_70px_rgba(0,0,0,0.65)]";
-
-function TopicCard({ topic, onClose }: { topic: CardTopic; onClose: () => void }) {
-  const d = CARD_DATA[topic];
-  return (
-    <div className={SHELL}>
-      <div className="flex items-baseline justify-between">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">{d.title}</p>
-        <button
-          type="button"
-          aria-label="Close card"
-          onClick={onClose}
-          className="-mr-1 px-1 text-white/40 transition-colors hover:text-white"
-        >
-          ×
-        </button>
-      </div>
-      <dl className="mt-4 flex flex-col gap-2.5">
-        {d.rows.map(([k, v]) => (
-          <div key={k} data-row className="flex items-baseline justify-between gap-4">
-            <dt className="text-xs font-bold uppercase tracking-[0.14em] text-white/50">{k}</dt>
-            <dd className="text-right text-sm font-bold">{v}</dd>
-          </div>
-        ))}
-      </dl>
-      {d.foot && (
-        <p data-row className="mt-4 text-xs leading-relaxed text-white/55">
-          {d.foot}
-        </p>
-      )}
-    </div>
-  );
-}
 
 /* ---------------------------------------------------------- the playbill */
 
@@ -538,7 +468,6 @@ function LeadForm({ onDone, onClose }: { onDone: (name: string) => void; onClose
 export function CardLayer() {
   const [phase, setPhase] = useState<Phase>("idle");
   const [closedReason, setClosedReason] = useState<"minutes" | "denied" | undefined>(undefined);
-  const [card, setCard] = useState<CardTopic | null>(null);
   const [chips, setChips] = useState<Chip[] | null>(null);
   const [activeChip, setActiveChip] = useState<ChipId | null>(null);
   const [popup, setPopup] = useState<{ view: PopupView; visitor?: string; checkedIn?: boolean } | null>(null);
@@ -563,7 +492,6 @@ export function CardLayer() {
           setPhase(d.phase);
           setClosedReason(d.phase === "closed" ? d.reason : undefined);
           if (d.phase !== "live") {
-            setCard(null);
             setFormOpen(false);
             setChips(null);
             setActiveChip(null);
@@ -579,12 +507,6 @@ export function CardLayer() {
             setReceipt(null);
             setStub(null);
           }
-        } else if (d.type === "card") {
-          if (d.card !== null) {
-            setFormOpen(false);
-            setReceipt(null); // a card takes the counter's slot — don't stack
-          }
-          setCard(d.card);
         } else if (d.type === "chips") {
           setChips(d.items);
           if (d.items === null) setActiveChip(null);
@@ -607,12 +529,10 @@ export function CardLayer() {
         } else if (d.type === "subtitle") {
           setSubtitle(d.text);
         } else if (d.type === "lead-form") {
-          setCard(null);
           setReceipt(null);
           setPopup(null); // the form takes the counter — one thing at a time
           setFormOpen(true);
         } else if (d.type === "dismiss") {
-          setCard(null);
           setFormOpen(false);
           setReceipt(null); // "clear every card" includes the receipt
           setPopup(null);
@@ -634,7 +554,7 @@ export function CardLayer() {
 
   useEffect(() => () => window.clearTimeout(captionTimer.current), []);
 
-  const sheetOpen = card !== null || formOpen || receipt !== null || popup !== null;
+  const sheetOpen = formOpen || receipt !== null || popup !== null;
   const railUp = chips !== null && phase === "live";
 
   return (
@@ -655,15 +575,6 @@ export function CardLayer() {
             <div className={POP_SLOT}>
               <Rise k="popup-staff">
                 <StaffCard visitor={popup.visitor} />
-              </Rise>
-            </div>
-          )}
-          {/* one fact card at a time — a reference sheet beside the show,
-              never a gallery of panels */}
-          {card && !popup && (
-            <div className={POP_SLOT}>
-              <Rise k={card}>
-                <TopicCard topic={card} onClose={() => setCard(null)} />
               </Rise>
             </div>
           )}
@@ -764,7 +675,7 @@ export function CardLayer() {
           phone they drop back to a centered line above the stack. The <p>
           stays mounted so the live region is stable. */}
       <div
-        className={`pointer-events-none absolute inset-x-4 flex flex-col items-center gap-2 text-center md:inset-x-auto md:left-[5%] md:top-[30%] md:w-[29vw] md:items-start md:text-left ${
+        className={`pointer-events-none absolute inset-x-4 flex flex-col items-center gap-2 text-center md:inset-x-auto md:left-[5%] md:top-[30%] md:w-[27vw] md:items-start md:text-left ${
           sheetOpen ? "bottom-[calc(45vh+6rem)]" : railUp ? "bottom-[8.5rem]" : "bottom-24"
         } md:bottom-auto`}
       >
@@ -789,16 +700,17 @@ export function CardLayer() {
           ))}
         </span>
         <style>{`@keyframes f2m-eq { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }`}</style>
-        {/* the ! suffixes matter: .display-2 sets its own clamp size from
-            outside the utility layers and quietly wins otherwise — the
-            grabli this page has hit before */}
+        {/* no display-2 here on purpose: its clamp size fought every size
+            utility (the grabli this page keeps hitting) — the look is
+            rebuilt from explicit utilities, and the width lives ON the
+            paragraph so a flex column can never let it grow past the kiosk */}
         <p
           aria-live="polite"
           lang={caption?.lang}
-          className={`display-2 font-extrabold text-[#dfe7ee] md:text-[2.6rem]! md:leading-[1.1]! ${
+          className={`w-full max-w-full font-extrabold tracking-[-0.02em] text-[#dfe7ee] md:text-[2.5rem] md:leading-[1.1] ${
             sheetOpen
-              ? "w-full truncate text-lg! leading-tight! md:w-auto md:overflow-visible md:whitespace-normal md:text-clip"
-              : "text-[1.6rem]! leading-tight!"
+              ? "truncate text-lg leading-tight md:overflow-visible md:whitespace-normal md:text-clip"
+              : "text-[1.6rem] leading-tight"
           }`}
         >
           {/* the animated words are decoration; the live region reads whole lines */}

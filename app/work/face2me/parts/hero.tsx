@@ -32,8 +32,13 @@ const Scene = dynamic(() => import("./hero-scene"), { ssr: false });
 
 const VOID_BG = "#060809";
 
+/* the two quiet toys: small, tucked in the corner */
 const BTN =
-  "group pointer-events-none relative flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white/80 opacity-0 backdrop-blur-sm transition-[opacity,border-color,color,background-color] duration-500 hover:border-white/50 hover:bg-black/45 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60";
+  "group pointer-events-none relative flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/60 opacity-0 backdrop-blur-sm transition-[opacity,color,background-color] duration-500 hover:bg-white/20 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60";
+
+/* the bell: a labeled pill, the one thing the idle kiosk asks you to press */
+const CALL_BTN =
+  "group pointer-events-none relative isolate flex items-center gap-2.5 overflow-hidden rounded-full bg-[#0b1114]/90 px-6 py-3 text-sm font-bold text-white opacity-0 shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_12px_32px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-[opacity,color,box-shadow] duration-500 hover:text-[#04140a] hover:shadow-[0_0_0_1px_rgba(11,218,81,0.6),0_12px_32px_rgba(0,0,0,0.5)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/60";
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -151,22 +156,26 @@ export function Hero() {
             100% { transform: scale(1.6); opacity: 0; }
           }
         `}</style>
-        <div className="absolute inset-x-0 bottom-8 z-10 flex items-center justify-center gap-4">
-          <Magnetic strength={0.35}>
+        <div className="absolute inset-x-0 bottom-8 z-10 flex items-center justify-center">
+          <Magnetic strength={0.3}>
           <button
             ref={callRef}
             type="button"
             aria-label="Start the kiosk demo"
             data-hero-call
-            data-cursor-text="Say hi"
-            className={`${BTN} hover:border-[#0bda51]! hover:text-[#0bda51]!`}
+            className={CALL_BTN}
           >
+            {/* the studio's rising-fill move, in the product's malachite */}
+            <span
+              aria-hidden
+              className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-[#0bda51] transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
+            />
             <svg
               viewBox="0 0 32 32"
-              className="h-6 w-6"
+              className="h-4.5 w-4.5"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.4"
               strokeLinecap="round"
               strokeLinejoin="round"
             >
@@ -176,8 +185,13 @@ export function Hero() {
               <rect x="23" y="17" width="5" height="7" rx="2" />
               <path d="M26 24v1.5a3 3 0 0 1-3 3h-4" />
             </svg>
+            Say hi
           </button>
           </Magnetic>
+        </div>
+
+        {/* secondary toys, off in the corner — the bell is the only star */}
+        <div className="absolute bottom-8 left-8 z-10 flex items-center gap-3">
           <Magnetic strength={0.35}>
           <button
             ref={rotateRef}
@@ -189,7 +203,7 @@ export function Hero() {
           >
             <svg
               viewBox="0 0 32 32"
-              className="h-6 w-6 transition-transform duration-700 ease-out group-aria-pressed:rotate-90"
+              className="h-4.5 w-4.5 transition-transform duration-700 ease-out group-aria-pressed:rotate-90"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -212,7 +226,7 @@ export function Hero() {
           >
             <svg
               viewBox="0 0 32 32"
-              className="h-6 w-6 transition-transform duration-500 ease-out group-aria-pressed:scale-90"
+              className="h-4.5 w-4.5 transition-transform duration-500 ease-out group-aria-pressed:scale-90"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"

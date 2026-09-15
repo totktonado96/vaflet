@@ -16,7 +16,6 @@
 export const F2M_EVENT = "vaflet:f2m-reception";
 
 export type Phase = "idle" | "connecting" | "live" | "over" | "closed";
-export type CardTopic = "pricing" | "spec" | "languages" | "bundle";
 
 /** the six chips of the rail — five features and one quieter honest one */
 export type ChipId = "names" | "bill" | "box" | "lang" | "staff" | "real";
@@ -54,7 +53,6 @@ export type ReceptionDetail =
   | { type: "caption"; who: "pal" | "user"; text: string; lang?: "es" | "ru" }
   /* the language ripple: a second, smaller line under the caption */
   | { type: "subtitle"; text: string | null }
-  | { type: "card"; card: CardTopic | null }
   | { type: "chips"; items: Chip[] | null }
   /* visitor/checkedIn ride along so the pop-ups can carry the journey's
      state: the staff queue shows YOUR check-in, the actions card knows
