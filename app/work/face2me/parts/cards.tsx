@@ -267,9 +267,9 @@ function StaffCard() {
       <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Staff only</p>
       {!unlocked ? (
         <>
-          {/* diegetic machine text — the prop says so itself */}
+          {/* diegetic machine text — PIN-locked on the shipped desk */}
           <p className="mt-2 font-mono text-[10px] font-bold uppercase tracking-[0.18em] leading-relaxed text-white/45">
-            Any four digits. This part&apos;s rehearsed too.
+            Enter any four digits.
           </p>
           <div className="mx-auto mt-4 grid w-40 grid-cols-2 gap-2.5">
             {[0, 1, 2, 3].map((i) => (
@@ -513,6 +513,7 @@ export function CardLayer() {
         } else if (d.type === "lead-form") {
           setCard(null);
           setReceipt(null);
+          setPopup(null); // the form takes the counter — one thing at a time
           setFormOpen(true);
         } else if (d.type === "dismiss") {
           setCard(null);
@@ -622,7 +623,7 @@ export function CardLayer() {
                     Back to work
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-white/80">
-                    Recording&apos;s back at the top. Ring again, or leave a note.
+                    She&apos;s on shift whenever you are. Ring again, or leave a note — the founders call back.
                   </p>
                   <div className="mt-4 flex flex-col gap-2">
                     <button
@@ -726,7 +727,7 @@ export function CardLayer() {
               aria-hidden
               className={`size-2 rounded-full ${phase === "live" ? "bg-[#0bda51]" : "animate-pulse bg-white/50"}`}
             />
-            <span>{phase === "live" ? "On the record" : "She heard the bell…"}</span>
+            <span>{phase === "live" ? "On shift" : "She heard the bell…"}</span>
           </div>
           {phase === "live" && (
             <button

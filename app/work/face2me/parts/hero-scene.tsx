@@ -335,9 +335,13 @@ const DOTS_VERT = /* glsl */ `
     pos.z += settled * sin(uTime * (1.7 + uTalk * 2.1) + aDelay * 40.0) * 0.0035 * (1.0 + uTalk * ${TALK_WOBBLE.toFixed(2)});
     vec4 mv = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = mix(sizeP, aSize2, me) * uProjScale / max(-mv.z, 0.1);
+    // an active slide always wins the tone channels — a morph tween still
+    // in flight (rotate act unwinding into a fresh visit) must not bleed
+    // the landscape lum/size over the words
+    float meEff = me * (1.0 - se);
+    gl_PointSize = mix(sizeP, aSize2, meEff) * uProjScale / max(-mv.z, 0.1);
     vAlpha = smoothstep(0.0, 0.25, t);
-    vLum = mix(lumP, aLum2, me);
+    vLum = mix(lumP, aLum2, meEff);
   }
 `;
 
@@ -880,6 +884,8 @@ export default function HeroScene({
     const slide = { v: 0 };
     let slideGen = 0;
     let stepCall: gsap.core.Tween | null = null;
+    let stillTimer = 0; // reduced-motion flipbook stepper
+    let lastLines: ScreenLine[] | null = null;
     const slideCanvas = document.createElement("canvas");
     slideCanvas.width = DOT_COLS * 8;
     slideCanvas.height = DOT_ROWS * 8;
@@ -888,6 +894,7 @@ export default function HeroScene({
     slideTiny.height = DOT_ROWS;
 
     const writeSlide = (lines: ScreenLine[]) => {
+      lastLines = lines;
       const ctx = slideCanvas.getContext("2d");
       const tctx = slideTiny.getContext("2d", { willReadFrequently: true });
       if (!ctx || !tctx) return;
@@ -935,12 +942,25 @@ export default function HeroScene({
       gsap.killTweensOf(slide);
       stepCall?.kill();
       stepCall = null;
+      window.clearTimeout(stillTimer);
       if (still) {
+        // no motion, but every slide of a flipbook still gets its turn —
+        // discrete repaints on the same clock the tweens would have kept
         if (slides?.length) {
-          writeSlide(slides[slides.length - 1]);
-          slide.v = 1;
-        } else slide.v = 0;
-        renderOnce();
+          let idx = 0;
+          const step = () => {
+            if (my !== slideGen) return;
+            writeSlide(slides[idx]);
+            slide.v = 1;
+            renderOnce();
+            idx++;
+            if (idx < slides.length) stillTimer = window.setTimeout(step, interval);
+          };
+          step();
+        } else {
+          slide.v = 0;
+          renderOnce();
+        }
         return;
       }
       if (!slides || slides.length === 0) {
@@ -975,6 +995,14 @@ export default function HeroScene({
       if (slide.v > 0.04) gsap.to(slide, { v: 0, duration: 0.3, ease: "power2.in", onComplete: show });
       else show();
     };
+
+    // canvas text measured before the webfont lands would rasterize the
+    // fallback face — once fonts settle, whatever is on the glass redraws
+    document.fonts?.ready.then(() => {
+      if (dead || !lastLines || slide.v < 0.05) return;
+      writeSlide(lastLines);
+      if (still) renderOnce();
+    });
 
     const offBus = onReception((d) => {
       if (d.type === "phase") {
@@ -1325,6 +1353,7 @@ export default function HeroScene({
       gsap.killTweensOf(slide);
       slideGen++;
       stepCall?.kill();
+      window.clearTimeout(stillTimer);
       rotateBtn?.removeEventListener("click", onRotateClick);
       if (fsSupported) {
         fsBtn?.removeEventListener("click", onFsClick);
