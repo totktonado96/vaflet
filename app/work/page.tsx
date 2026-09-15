@@ -25,23 +25,6 @@ export const metadata: Metadata = {
 };
 
 /** Counts read as words on this site, not digits. */
-const SPELLED = [
-  "zero",
-  "one",
-  "two",
-  "three",
-  "four",
-  "five",
-  "six",
-  "seven",
-  "eight",
-  "nine",
-  "ten",
-  "eleven",
-  "twelve",
-];
-const spell = (n: number) => SPELLED[n] ?? String(n);
-
 export default function WorkIndexPage() {
   return (
     <main>
@@ -60,8 +43,7 @@ export default function WorkIndexPage() {
           All work
         </SplitReveal>
         <p className="mt-8 max-w-lg text-[17px] font-light leading-relaxed md:text-[19px]">
-          {spell(PROJECTS.length)[0].toUpperCase() + spell(PROJECTS.length).slice(1)}{" "}
-          we can show. Newest first.
+          The recent work, newest first.
         </p>
       </section>
 
@@ -72,8 +54,8 @@ export default function WorkIndexPage() {
       <section className="shell pb-28 md:pb-40">
         <div className="flex flex-col items-center border-t-2 border-black pt-16 text-center md:pt-24">
           <p className="max-w-lg text-[17px] font-light leading-relaxed md:text-[19px]">
-            The rest are under NDA, half-built, or still an argument in a group
-            chat.
+            The rest is shipped — NDA keeps it off the page. What&apos;s in the
+            works lands here the day it goes live.
           </p>
           <CtaButton
             href="/contact"
