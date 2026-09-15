@@ -312,12 +312,14 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
     const popup = (v: PopupView | null) => emitReception({ type: "popup", view: v });
 
     /** a menu ON the glass: the dot matrix draws the options, the layer
-        lays invisible buttons over each line. You tap the kiosk itself. */
-    const menu = (title: string, opts: { label: string; intent: GlassIntent }[]) => {
-      scr([[{ text: title, em: 0.34 }, ...opts.map((o) => ({ text: o.label }))]]);
+        lays invisible buttons over each line. You tap the kiosk itself.
+        No title line — at LED resolution a small line is mush, and she
+        already says the prompt out loud. */
+    const menu = (opts: { label: string; intent: GlassIntent }[]) => {
+      scr([opts.map((o) => ({ text: o.label }))]);
       emitReception({
         type: "screen-menu",
-        items: opts.map((o, i) => ({ line: i + 1, label: o.label, intent: o.intent })),
+        items: opts.map((o, i) => ({ line: i, label: o.label, intent: o.intent })),
       });
     };
     const menuOff = () => emitReception({ type: "screen-menu", items: null });
@@ -337,7 +339,7 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
       const opts: { label: string; intent: GlassIntent }[] = [];
       if (!checkedIn) opts.push({ label: "CHECK ME IN", intent: { kind: "action", id: "checkin" } });
       opts.push({ label: "BOOK A VISIT", intent: { kind: "action", id: "book" } });
-      menu("WHILE YOU'RE HERE", opts);
+      menu(opts);
     };
 
     const topic = (id: ChipId) => {
@@ -355,7 +357,7 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
             s.say(again ? "Roster's warm. Go ahead." : "Say a name. Any of these — any accent.");
             // the options land on her own glass — tap the kiosk, not a widget
             s.cue(() =>
-              menu("SAY A NAME", [
+              menu([
                 { label: "MARIA LOPEZ", intent: { kind: "name", id: "maria" } },
                 { label: "MIKHAEL", intent: { kind: "name", id: "mikhael" } },
                 { label: "ZEYNEP", intent: { kind: "name", id: "zeynep" } },
@@ -585,7 +587,7 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           play((s) => {
             s.say("Pick a slot. These are open right now.");
             s.cue(() =>
-              menu("OPEN SLOTS", [
+              menu([
                 { label: "TODAY 4:30", intent: { kind: "slot", slot: "Today 4:30" } },
                 { label: "TOMORROW 11:00", intent: { kind: "slot", slot: "Tomorrow 11:00" } },
                 { label: "SATURDAY 2:15", intent: { kind: "slot", slot: "Saturday 2:15" } },
@@ -648,7 +650,19 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
       }
     });
 
-    const onClick = () => wake();
+    // one bell, two shifts: it rings the desk when idle and hangs up when on
+    const onClick = () => {
+      if (phase === "live") {
+        end("manual");
+      } else if (phase === "connecting") {
+        cut();
+        phase = "over";
+        emitReception({ type: "dismiss" });
+        emitReception({ type: "phase", phase: "over" });
+      } else {
+        wake();
+      }
+    };
     btn?.addEventListener("click", onClick);
 
     return () => {

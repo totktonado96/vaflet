@@ -103,7 +103,15 @@ const SHELL =
     — bare set text, a malachite dot sliding in on the one you're on — and
     a soft horizontal strip above the sheet on the phone. Real buttons,
     real tab order; the honesty chip is dimmer but never hidden. */
-function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) {
+function ChipsRail({
+  chips,
+  active,
+  horizontal = false,
+}: {
+  chips: Chip[];
+  active: ChipId | null;
+  horizontal?: boolean;
+}) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (reducedMotion() || !host.current) return;
@@ -118,7 +126,9 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
   return (
     <div
       ref={host}
-      className="pointer-events-auto flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:flex-col md:items-end md:gap-2.5 md:overflow-visible md:pb-0"
+      className={`pointer-events-auto flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:overflow-visible md:pb-0 ${
+        horizontal ? "md:flex-row md:flex-wrap md:justify-center md:gap-2.5" : "md:flex-col md:items-end md:gap-2.5"
+      }`}
     >
       {/* the same button species as the bell on the pedestal: dark pills
           with a ring and a malachite fill rising on hover — everything
@@ -131,7 +141,7 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
             type="button"
             onClick={() => emitReception({ type: "chip-pick", id: c.id })}
             className={`group relative isolate flex shrink-0 snap-start items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-full bg-[#0b1114]/85 px-4 py-2 text-xs font-bold backdrop-blur-sm transition-all duration-300 hover:text-[#04140a] active:scale-[0.97] md:px-5 md:py-2.5 md:text-sm ${
-              c.quiet ? "md:mt-3" : ""
+              c.quiet ? (horizontal ? "md:ml-2" : "md:mt-3") : ""
             } ${
               on
                 ? "text-white shadow-[0_0_0_1px_rgba(11,218,81,0.6)]"
@@ -475,6 +485,7 @@ export function CardLayer() {
   const [receipt, setReceipt] = useState<string | null>(null);
   const [caption, setCaption] = useState<{ text: string; lang?: "es" | "ru" } | null>(null);
   const [subtitle, setSubtitle] = useState<string | null>(null);
+  const [rotated, setRotated] = useState(false);
   const captionTimer = useRef(0);
 
   useEffect(
@@ -508,6 +519,8 @@ export function CardLayer() {
           setPopup(d.view === null ? null : { view: d.view, visitor: d.visitor, checkedIn: d.checkedIn });
         } else if (d.type === "screen-menu") {
           setGlassMenu(d.items);
+        } else if (d.type === "rotated") {
+          setRotated(d.on);
         } else if (d.type === "screen-geom") {
           setGlassGeom({ rect: d.rect, bands: d.bands });
         } else if (d.type === "speaking" && d.who === "pal") {
@@ -558,8 +571,14 @@ export function CardLayer() {
           the right edge, cards the slot under her caption. */}
       <div className="absolute inset-x-3 bottom-20 flex flex-col gap-3 md:static md:contents">
         {railUp && (
-          <div className="md:absolute md:right-[5%] md:top-[24%] md:z-10">
-            <ChipsRail chips={chips!} active={activeChip} />
+          <div
+            className={
+              rotated
+                ? "md:absolute md:inset-x-0 md:bottom-24 md:z-10 md:flex md:justify-center md:px-6"
+                : "md:absolute md:right-[5%] md:top-[24%] md:z-10"
+            }
+          >
+            <ChipsRail chips={chips!} active={activeChip} horizontal={rotated} />
           </div>
         )}
         <div className="flex max-h-[45vh] flex-col-reverse gap-3 overflow-y-auto md:static md:max-h-none md:overflow-visible">
@@ -667,9 +686,11 @@ export function CardLayer() {
           phone they drop back to a centered line above the stack. The <p>
           stays mounted so the live region is stable. */}
       <div
-        className={`pointer-events-none absolute inset-x-4 flex flex-col items-center gap-2 text-center md:inset-x-auto md:left-[5%] md:top-[30%] md:w-[27vw] md:items-start md:text-left ${
-          sheetOpen ? "bottom-[calc(45vh+6rem)]" : railUp ? "bottom-[8.5rem]" : "bottom-24"
-        } md:bottom-auto`}
+        className={`pointer-events-none absolute inset-x-4 flex flex-col items-center gap-2 text-center ${
+          rotated
+            ? "md:inset-x-0 md:bottom-40 md:top-auto md:w-auto"
+            : "md:inset-x-auto md:left-[5%] md:top-[30%] md:w-[27vw] md:items-start md:text-left md:bottom-auto"
+        } ${sheetOpen ? "bottom-[calc(45vh+6rem)]" : railUp ? "bottom-[8.5rem]" : "bottom-24"}`}
       >
         {/* she's mid-sentence: a small malachite pulse keeps time with her
             voice — pure CSS, gone under reduced motion with everything else */}
@@ -727,33 +748,6 @@ export function CardLayer() {
       {glassMenu && glassGeom && phase === "live" && (
         <div className="pointer-events-none absolute inset-0">
           <GlassMenu items={glassMenu} geom={glassGeom} />
-        </div>
-      )}
-
-      {/* the kiosk's own status: a pill with a dot and a word — no meter,
-          nothing here is being charged for */}
-      {(phase === "connecting" || phase === "live") && (
-        <div className="absolute inset-x-0 top-16 bottom-auto z-10 flex items-center justify-center md:top-auto md:bottom-8 md:left-auto md:right-8 md:inset-x-auto">
-          <Rise k={`pill-${phase}`}>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5 rounded-full bg-black/55 px-4 py-2 text-xs font-bold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.12)] backdrop-blur-sm">
-                <span
-                  aria-hidden
-                  className={`size-2 rounded-full ${phase === "live" ? "bg-[#0bda51]" : "animate-pulse bg-white/50"}`}
-                />
-                <span>{phase === "live" ? "On shift" : "She heard the bell…"}</span>
-              </div>
-              {phase === "live" && (
-                <button
-                  type="button"
-                  onClick={() => emitReception({ type: "hangup-request" })}
-                  className="rounded-full bg-black/55 px-4 py-2 text-xs font-bold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.12)] backdrop-blur-sm transition-all hover:text-[#0bda51] active:scale-95"
-                >
-                  End the visit
-                </button>
-              )}
-            </div>
-          </Rise>
         </div>
       )}
 

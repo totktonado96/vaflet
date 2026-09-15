@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import ArrowNE from "@/components/ArrowNE";
 import Magnetic from "@/components/Magnetic";
+import { onReception } from "./reception-events";
 import { Director } from "./director";
 import { CardLayer } from "./cards";
 
@@ -36,9 +37,51 @@ const VOID_BG = "#060809";
 const BTN =
   "group pointer-events-none relative flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/60 opacity-0 backdrop-blur-sm transition-[opacity,color,background-color] duration-500 hover:bg-white/20 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60";
 
-/* the bell: a labeled pill, the one thing the idle kiosk asks you to press */
+/* the bell: a labeled pill, the one thing the idle kiosk asks you to press.
+   It is also the hang-up — one button, two shifts. */
 const CALL_BTN =
   "group pointer-events-none relative isolate flex items-center gap-2.5 overflow-hidden rounded-full bg-[#0b1114]/90 px-6 py-3 text-sm font-bold text-white opacity-0 shadow-[0_0_0_1px_rgba(255,255,255,0.16),0_12px_32px_rgba(0,0,0,0.5)] backdrop-blur-sm transition-[opacity,color,box-shadow] duration-500 hover:text-[#04140a] hover:shadow-[0_0_0_1px_rgba(11,218,81,0.6),0_12px_32px_rgba(0,0,0,0.5)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white/60";
+
+/** The bell's face follows the visit: Say hi while the kiosk waits, End
+    the visit while it's on. The director interprets the click by phase. */
+function CallLabel() {
+  const [on, setOn] = useState(false);
+  useEffect(
+    () =>
+      onReception((d) => {
+        if (d.type === "phase") setOn(d.phase === "live" || d.phase === "connecting");
+      }),
+    [],
+  );
+  return on ? (
+    <>
+      <svg viewBox="0 0 32 32" className="h-4 w-4" fill="currentColor" aria-hidden>
+        <rect x="8" y="8" width="16" height="16" rx="3" />
+      </svg>
+      End the visit
+    </>
+  ) : (
+    <>
+      <svg
+        viewBox="0 0 32 32"
+        className="h-4.5 w-4.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        {/* a headset outline: the desk, not a phone booth */}
+        <path d="M6 18v-3a10 10 0 0 1 20 0v3" />
+        <rect x="4" y="17" width="5" height="7" rx="2" />
+        <rect x="23" y="17" width="5" height="7" rx="2" />
+        <path d="M26 24v1.5a3 3 0 0 1-3 3h-4" />
+      </svg>
+      Say hi
+    </>
+  );
+}
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -170,28 +213,13 @@ export function Hero() {
               aria-hidden
               className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-[#0bda51] transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
             />
-            <svg
-              viewBox="0 0 32 32"
-              className="h-4.5 w-4.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {/* a headset outline: the desk, not a phone booth */}
-              <path d="M6 18v-3a10 10 0 0 1 20 0v3" />
-              <rect x="4" y="17" width="5" height="7" rx="2" />
-              <rect x="23" y="17" width="5" height="7" rx="2" />
-              <path d="M26 24v1.5a3 3 0 0 1-3 3h-4" />
-            </svg>
-            Say hi
+            <CallLabel />
           </button>
           </Magnetic>
         </div>
 
-        {/* secondary toys, off in the corner — the bell is the only star */}
-        <div className="absolute bottom-8 left-8 z-10 flex items-center gap-3">
+        {/* secondary toys, off in the right corner — the bell is the only star */}
+        <div className="absolute bottom-8 right-8 z-10 flex items-center gap-3">
           <Magnetic strength={0.35}>
           <button
             ref={rotateRef}

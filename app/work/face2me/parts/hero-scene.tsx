@@ -322,13 +322,16 @@ const DOTS_VERT = /* glsl */ `
     vec3 tgt = mix(aTarget, aTarget2, me);
     tgt.z += sin(me * 3.14159) * 0.14;
     vec3 pos = mix(aStart, tgt, e + over);
-    // the screen speaks: the same dots trade the face for a slide (aLumB /
-    // aSizeB), centre-out on the same delay grain — and every dot leaps off
-    // the glass while its job changes, brightest ones highest
+    // the screen speaks: whatever face the dots are wearing (portrait or
+    // landscape — the slide buffer is always written for the current
+    // orientation), a slide replaces it centre-out on the same delay
+    // grain, and every dot leaps off the glass while its job changes
     float st = clamp(uSlide * 1.45 - aDelay * 0.45, 0.0, 1.0);
     float se = st * st * (3.0 - 2.0 * st);
-    float lumP = mix(aLum, aLumB, se);
-    float sizeP = mix(aSize, aSizeB, se);
+    float baseLum = mix(aLum, aLum2, me);
+    float baseSize = mix(aSize, aSize2, me);
+    float lumP = mix(baseLum, aLumB, se);
+    float sizeP = mix(baseSize, aSizeB, se);
     pos.z += sin(se * 3.14159) * (0.05 + aLumB * 0.09);
     // a fingertip hovering a glass menu row: that line's dots burn hotter,
     // swell a touch and lift off the glass toward the hand
@@ -344,13 +347,9 @@ const DOTS_VERT = /* glsl */ `
     pos.z += settled * sin(uTime * (1.7 + uTalk * 2.1) + aDelay * 40.0) * 0.0035 * (1.0 + uTalk * ${TALK_WOBBLE.toFixed(2)});
     vec4 mv = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mv;
-    // an active slide always wins the tone channels — a morph tween still
-    // in flight (rotate act unwinding into a fresh visit) must not bleed
-    // the landscape lum/size over the words
-    float meEff = me * (1.0 - se);
-    gl_PointSize = mix(sizeP, aSize2, meEff) * uProjScale / max(-mv.z, 0.1);
+    gl_PointSize = sizeP * uProjScale / max(-mv.z, 0.1);
     vAlpha = smoothstep(0.0, 0.25, t);
-    vLum = mix(lumP, aLum2, meEff);
+    vLum = lumP;
   }
 `;
 
@@ -914,8 +913,25 @@ export default function HeroScene({
     slideTiny.width = DOT_COLS;
     slideTiny.height = DOT_ROWS;
 
+    /** The glass is an LED board, and it renders like one: text is drawn
+        supersampled, sampled down to the dot grid, then THRESHOLDED — a
+        dot is on, half-on (diagonal edges) or part of the faint grid.
+        Uniform dot sizes, no analog blobs. The buffer is written for
+        whichever way the display is currently turned. */
     const writeSlide = (lines: ScreenLine[]) => {
       lastLines = lines;
+      const wide = rotOn;
+      const cols = wide ? DOT_ROWS : DOT_COLS;
+      const rows = wide ? DOT_COLS : DOT_ROWS;
+      const S = 6; // supersample factor
+      if (slideCanvas.width !== cols * S || slideCanvas.height !== rows * S) {
+        slideCanvas.width = cols * S;
+        slideCanvas.height = rows * S;
+      }
+      if (slideTiny.width !== cols || slideTiny.height !== rows) {
+        slideTiny.width = cols;
+        slideTiny.height = rows;
+      }
       const ctx = slideCanvas.getContext("2d");
       const tctx = slideTiny.getContext("2d", { willReadFrequently: true });
       if (!ctx || !tctx) return;
@@ -929,41 +945,47 @@ export default function HeroScene({
       // one global scale so every line fits the glass at its own em
       let unit = Infinity;
       for (const l of lines) {
-        ctx.font = `800 100px ${family}`;
+        ctx.font = `700 100px ${family}`;
         const w = ctx.measureText(l.text).width * (l.em ?? 1);
-        unit = Math.min(unit, ((W * 0.88) / Math.max(w, 1)) * 100);
+        unit = Math.min(unit, ((W * 0.92) / Math.max(w, 1)) * 100);
       }
-      const rows = lines.reduce((a, l) => a + (l.em ?? 1) * 1.24, 0);
-      unit = Math.min(unit, (H * 0.72) / rows);
-      let y = (H - rows * unit) / 2;
+      const rowsEm = lines.reduce((a, l) => a + (l.em ?? 1) * 1.3, 0);
+      unit = Math.min(unit, (H * 0.78) / rowsEm);
+      let y = (H - rowsEm * unit) / 2;
       const bands: { a: number; b: number }[] = [];
       for (const l of lines) {
         const p = (l.em ?? 1) * unit;
-        ctx.font = `800 ${p}px ${family}`;
+        ctx.font = `700 ${p}px ${family}`;
         y += p;
         ctx.fillText(l.text, W / 2, y);
         // the line's touch band, with a little air around the glyphs
-        bands.push({ a: Math.max(0, (y - p * 1.06) / H), b: Math.min(1, (y + p * 0.3) / H) });
-        y += p * 0.24;
+        bands.push({ a: Math.max(0, (y - p * 1.04) / H), b: Math.min(1, (y + p * 0.3) / H) });
+        y += p * 0.3;
       }
       lastBands = bands;
-      tctx.drawImage(slideCanvas, 0, 0, DOT_COLS, DOT_ROWS);
-      const px = tctx.getImageData(0, 0, DOT_COLS, DOT_ROWS).data;
+      tctx.clearRect(0, 0, cols, rows);
+      tctx.drawImage(slideCanvas, 0, 0, cols, rows);
+      const px = tctx.getImageData(0, 0, cols, rows).data;
       const lumB = dotsGeo.attributes.aLumB.data as Float32Array;
       const sizeB = dotsGeo.attributes.aSizeB.data as Float32Array;
       const lineB = dotsGeo.attributes.aLineB.data as Float32Array;
       const cell = SCR_W / DOT_COLS;
+      // NB: the buffer index happens to be row-major for BOTH layouts —
+      // the landscape targets (aTarget2) were built with j = row*145+col
       for (let i = 0; i < DOT_N; i++) {
-        const lum = Math.pow(px[i * 4] / 255, 0.85);
-        lumB[i] = lum;
-        // dark dots shrink to a faint grid; the words burn bolder than skin
-        sizeB[i] = cell * (0.2 + Math.pow(lum, 1.15) * 1.62);
-        const fy = (Math.floor(i / DOT_COLS) + 0.5) / DOT_ROWS;
+        const raw = px[i * 4] / 255;
+        const on = raw > 0.42;
+        const half = !on && raw > 0.24; // softens diagonals, stays stepped
+        lumB[i] = on ? 1 : half ? 0.42 : 0.05;
+        sizeB[i] = cell * (on ? 0.82 : half ? 0.5 : 0.22);
         let li = -5;
-        for (let b = 0; b < bands.length; b++) {
-          if (fy >= bands[b].a && fy <= bands[b].b) {
-            li = b;
-            break;
+        if (on || half) {
+          const fy = (Math.floor(i / cols) + 0.5) / rows;
+          for (let b = 0; b < bands.length; b++) {
+            if (fy >= bands[b].a && fy <= bands[b].b) {
+              li = b;
+              break;
+            }
           }
         }
         lineB[i] = li;
@@ -1049,7 +1071,6 @@ export default function HeroScene({
         liveish = d.phase === "live" || d.phase === "connecting";
         if (liveish && !wasIsh) {
           leftStageSent = false; // new visit, new ticket — from the first ring
-          if (rotOn) setRotation(false); // the show is staged for the portrait face
         }
         if (!liveOn && was) {
           gsap.killTweensOf(live);
@@ -1113,6 +1134,10 @@ export default function HeroScene({
     const setRotation = (on: boolean) => {
       rotOn = on;
       rotateBtn?.setAttribute("aria-pressed", String(on));
+      // the whole show follows the display: whatever the glass is saying
+      // re-rasterizes for the new orientation and rides the turn
+      emitReception({ type: "rotated", on });
+      if (lastLines && slide.v > 0.04) writeSlide(lastLines);
       gsap.killTweensOf(act2);
       if (still) {
         gsap.set(act2, {
@@ -1201,7 +1226,6 @@ export default function HeroScene({
     const leanNow = { x: 0, y: 0 };
     const lookTarget = new Vec3();
     const projTL = new Vec3();
-    const projBR = new Vec3();
     const sstep = (a: number, b: number, x: number) => {
       const s = Math.min(Math.max((x - a) / (b - a), 0), 1);
       return s * s * (3 - 2 * s);
@@ -1251,18 +1275,16 @@ export default function HeroScene({
       }
       for (const btn of [rotateBtn, fsBtn, callBtn]) {
         if (!btn) continue;
-        // during the visit (and already while it connects) the rotate act is
-        // parked: the show is choreographed around the portrait face
-        const parked = btn === rotateBtn && liveish;
-        const usable = ready && !parked;
-        btn.style.opacity = ready ? (parked ? "0.3" : "1") : "0";
-        btn.style.pointerEvents = usable ? "auto" : "none";
-        btn.tabIndex = usable ? 0 : -1;
+        // every control works in every act now — the landscape display
+        // carries the whole show too
+        btn.style.opacity = ready ? "1" : "0";
+        btn.style.pointerEvents = ready ? "auto" : "none";
+        btn.tabIndex = ready ? 0 : -1;
         // opacity/tabIndex don't hide a button from a screen reader's
         // virtual cursor — aria-hidden does (guarded: attribute churn is
         // pointless at 60fps)
         const hiddenNow = btn.getAttribute("aria-hidden") === "true";
-        if (hiddenNow === usable) btn.setAttribute("aria-hidden", String(!usable));
+        if (hiddenNow === ready) btn.setAttribute("aria-hidden", String(!ready));
       }
       // the idle bell beckons: a malachite ring breathes on the call button
       // while the kiosk waits — and stops the moment a visit starts
@@ -1345,19 +1367,35 @@ export default function HeroScene({
       renderer.render({ scene: world, camera, sort: false, frustumCull: false, clear: false });
 
       // a glass menu needs the layer to know where the glass is: project
-      // the screen's corners and hand the rect (plus each line's band)
-      // over the bus — re-announced only when it actually moves
+      // the screen's corners — through the head's turn and drop, so the
+      // landscape act keeps its touch targets — and hand the rect (plus
+      // each line's band) over the bus, re-announced only when it moves
       if (menuUp && slide.v > 0.35 && lastBands.length) {
         const zScreen = z + K_D / 2 + 0.003;
-        projTL.set(-SCR_W / 2, SCR_Y + SCR_H / 2, zScreen).applyMatrix4(camera.projectionViewMatrix);
-        projBR.set(SCR_W / 2, SCR_Y - SCR_H / 2, zScreen).applyMatrix4(camera.projectionViewMatrix);
+        const th = kiosk.head.rotation.z;
+        const hy = kiosk.head.position.y;
+        const cosT = Math.cos(th);
+        const sinT = Math.sin(th);
         const cw = stage.clientWidth;
         const ch = stage.clientHeight;
-        const x0 = ((projTL.x + 1) / 2) * cw;
-        const y0 = ((1 - projTL.y) / 2) * ch;
-        const x1 = ((projBR.x + 1) / 2) * cw;
-        const y1 = ((1 - projBR.y) / 2) * ch;
-        const rect = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const [lx, ly] of [
+          [-SCR_W / 2, SCR_Y + SCR_H / 2],
+          [SCR_W / 2, SCR_Y + SCR_H / 2],
+          [-SCR_W / 2, SCR_Y - SCR_H / 2],
+          [SCR_W / 2, SCR_Y - SCR_H / 2],
+        ] as const) {
+          projTL
+            .set(lx * cosT - ly * sinT, lx * sinT + ly * cosT + hy, zScreen)
+            .applyMatrix4(camera.projectionViewMatrix);
+          const sx = ((projTL.x + 1) / 2) * cw;
+          const sy = ((1 - projTL.y) / 2) * ch;
+          if (sx < minX) minX = sx;
+          if (sx > maxX) maxX = sx;
+          if (sy < minY) minY = sy;
+          if (sy > maxY) maxY = sy;
+        }
+        const rect = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
         const key = `${Math.round(rect.x)},${Math.round(rect.y)},${Math.round(rect.w)},${Math.round(rect.h)},${lastBands.length}`;
         if (key !== geomKey) {
           geomKey = key;

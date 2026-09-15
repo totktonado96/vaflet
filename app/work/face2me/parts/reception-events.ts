@@ -87,7 +87,9 @@ export type ReceptionDetail =
   | { type: "left-stage" }
   | { type: "lead-submitted"; name: string; email: string; note?: string }
   /* scene -> director: the kiosk is settled in frame (controls shown) */
-  | { type: "settled"; on: boolean };
+  | { type: "settled"; on: boolean }
+  /* scene -> layer: the display has turned landscape (or back) */
+  | { type: "rotated"; on: boolean };
 
 export function emitReception(detail: ReceptionDetail) {
   window.dispatchEvent(new CustomEvent<ReceptionDetail>(F2M_EVENT, { detail }));
