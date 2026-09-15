@@ -118,11 +118,11 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
   return (
     <div
       ref={host}
-      className="pointer-events-auto flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:flex-col md:items-end md:gap-4 md:overflow-visible md:pb-0"
+      className="pointer-events-auto flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:flex-col md:items-end md:gap-2.5 md:overflow-visible md:pb-0"
     >
-      {/* the menu speaks the page's own type: your possible lines, set as
-          large as hers — her words own the left margin, these own the
-          right. Small caps was a whisper; this is a voice. */}
+      {/* the same button species as the bell on the pedestal: dark pills
+          with a ring and a malachite fill rising on hover — everything
+          pressable on this stage looks equally pressable */}
       {chips.map((c) => {
         const on = active === c.id;
         return (
@@ -130,37 +130,29 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
             key={c.id}
             type="button"
             onClick={() => emitReception({ type: "chip-pick", id: c.id })}
-            className={`group flex shrink-0 snap-start items-center gap-2.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 py-2 text-xs font-bold backdrop-blur-sm transition-all duration-300 active:text-[#0bda51] md:justify-end md:gap-3.5 md:rounded-none md:bg-transparent md:px-0 md:py-0 md:font-extrabold md:leading-none md:tracking-[-0.01em] md:backdrop-blur-none ${
-              c.quiet ? "md:mt-4 md:text-base" : "md:text-[1.4rem]"
+            className={`group relative isolate flex shrink-0 snap-start items-center gap-2.5 overflow-hidden whitespace-nowrap rounded-full bg-[#0b1114]/85 px-4 py-2 text-xs font-bold backdrop-blur-sm transition-all duration-300 hover:text-[#04140a] active:scale-[0.97] md:px-5 md:py-2.5 md:text-sm ${
+              c.quiet ? "md:mt-3" : ""
             } ${
-              c.quiet
-                ? on
-                  ? "text-white/80"
-                  : "text-white/35 hover:text-white/70"
-                : on
-                  ? "text-white md:translate-x-[-6px]"
-                  : "text-white/45 hover:text-white md:hover:translate-x-[-6px]"
+              on
+                ? "text-white shadow-[0_0_0_1px_rgba(11,218,81,0.6)]"
+                : c.quiet
+                  ? "text-white/45 shadow-[0_0_0_1px_rgba(255,255,255,0.1)] hover:text-[#04140a]"
+                  : "text-white/85 shadow-[0_0_0_1px_rgba(255,255,255,0.16)]"
             }`}
           >
-            <span className="relative">
-              {c.label}
-              {/* a malachite rule draws itself under the line you're on */}
-              <span
-                aria-hidden
-                className={`absolute -bottom-1.5 left-0 right-0 hidden h-[2px] origin-right bg-[#0bda51] transition-transform duration-300 ease-out md:block ${
-                  on ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                }`}
-              />
-            </span>
             <span
               aria-hidden
-              className="hidden size-2 rounded-full transition-all duration-300 md:inline-block"
+              className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-[#0bda51] transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
+            />
+            <span
+              aria-hidden
+              className="size-1.5 rounded-full transition-all duration-300"
               style={{
-                background: MALACHITE,
-                opacity: on ? 1 : 0,
-                transform: on ? "scale(1)" : "scale(0)",
+                background: on ? MALACHITE : "rgba(255,255,255,0.25)",
+                transform: on ? "scale(1.25)" : "scale(1)",
               }}
             />
+            {c.label}
           </button>
         );
       })}
