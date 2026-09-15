@@ -1,0 +1,66 @@
+/* Sections only: the site footer at the bottom of the case keeps its own voice */
+.mb-case > section {
+  font-family: var(--mb-body), -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+/* The kit sets its display type heavy and uppercase; the dealer's headings are
+   Unbounded at a medium weight, in sentence case, pulled tight */
+.mb-display,
+.mb-case > section :is(.display-1, .display-2, .display-3) {
+  font-family: var(--mb-display), var(--mb-body), sans-serif;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: -0.03em;
+}
+
+/* SplitText clips each line to its line box, and the tail of the y in the
+   name hangs below it. The clip grows downward without moving the layout. */
+.mb-case > section .pre-reveal > div {
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+/* One word, eleven wide letters: sized to the name, not to the kit's scale */
+.mb-case > section .mb-title {
+  font-size: clamp(2.3rem, 10.4vw, 9.5rem);
+  line-height: 1.02;
+}
+
+/* The dealer's eyebrow: a short signal-red bar before a spaced label */
+.mb-eyebrow {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.mb-eyebrow::before {
+  content: "";
+  flex: none;
+  width: 1.5rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #cc3238;
+}
+
+/* The grain the dealer lays over its dark ground — under the content here, so
+   it never lands on a screenshot */
+.mb-grain {
+  position: relative;
+  isolation: isolate;
+}
+.mb-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
