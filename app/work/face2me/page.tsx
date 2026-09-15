@@ -79,6 +79,11 @@ export default function Face2mePage() {
             <p className="f2m-display mt-7 max-w-4xl text-4xl font-extrabold leading-[1.05] md:text-6xl">
               So — want one in your lobby?
             </p>
+            {/* ink at reduced opacity, not the muted grey — the grey misses
+                AA contrast at this size on the pale material */}
+            <p className="mt-6 max-w-xl text-[15px] font-medium leading-relaxed text-[color:var(--f2m-ink)] opacity-75">
+              Built by two engineers in New York. Installed wherever your lobby is.
+            </p>
             <div className="mt-12 flex flex-wrap items-center gap-6">
               <Magnetic>
                 <Link

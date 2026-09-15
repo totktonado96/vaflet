@@ -227,10 +227,16 @@ export default function MinipacsPage() {
 
       {/* ---- the brief: rent, fax, and the way out ------------------------ */}
       <section className="shell py-24 md:py-36">
-        <Decode
-          text="For independent imaging centers"
-          className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60"
-        />
+        <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-2">
+          <Decode
+            text="For independent imaging centers"
+            className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60"
+          />
+          <Decode
+            text="Made in New York"
+            className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] opacity-60"
+          />
+        </div>
         <SplitReveal className="display-2 mt-8 max-w-[16ch] font-extrabold uppercase leading-[1.0]">
           Own the archive. Retire the fax.
         </SplitReveal>

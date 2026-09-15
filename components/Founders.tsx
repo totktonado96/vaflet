@@ -171,7 +171,7 @@ export default function Founders() {
             Front desk — nights, weekends, whenever you show up
           </p>
           <p className="mt-4 max-w-md font-medium leading-relaxed">
-            Our own product, working our own lobby. Answers in thirty
+            Our own product, working our own lobby. Answers in three
             languages, never claims to be human, and hands you to one of us the
             moment it matters.
           </p>

@@ -51,7 +51,7 @@ export const PROJECTS: Project[] = [
     slug: "minipacs",
     title: "MiniPACS + Vendo",
     desc: "A self-hosted PACS and the referral portal beside it — an imaging center's whole stack, owned outright on one mini PC",
-    services: "Product design · Full-stack build · Health tech",
+    services: "Product design · Full-stack build · Health tech · New York",
     stack: "FastAPI · React PWA · Orthanc · Medplum FHIR · Next.js 15 · PostgreSQL",
     brief:
       "Independent imaging centers rent their own archive from cloud PACS vendors at $150–$2,000 a month, and take referrals by fax. We built the way out twice: a PACS the clinic owns on one mini PC, and a portal that finally gives a referral a status. This time the client was us — it is our own product.",
@@ -86,28 +86,29 @@ export const PROJECTS: Project[] = [
   {
     slug: "face2me",
     title: "Face2me",
-    desc: "An AI receptionist that stands in the lobby — a kiosk with a face that greets, checks people in and takes the payment, in their own language",
-    services: "Product design · Full-stack build · Voice AI",
-    stack:
-      "Pipecat · GPT-4o · Realtime STT · WebRTC · FastAPI · React PWA · Stripe · Twilio",
+    desc: "An AI receptionist that stands in the lobby — a New York-built kiosk with a face that greets you, finds you by name and checks you in, in your own language",
+    services: "Product design · Full-stack build · Voice AI · New York",
+    // the client's rule for this case: no tech stack anywhere in lead-facing
+    // copy — the field stays honest but vendor-free (custom page never shows it)
+    stack: "Kiosk hardware · Real-time voice · A face on the screen",
     brief:
       "A front desk costs three to four and a half thousand a month and goes home at five. The phone AIs are a voice with nobody behind it, and the lobby kiosks the enterprises sell start at fifty thousand to install. We built the third answer, and again the client was us: a face on a screen that talks back, hears the language you walked in speaking, and arrives as one monthly bill with the hardware inside it.",
     did: [
-      "Built the voice pipeline: Pipecat orchestrating GPT-4o, realtime speech-to-text, and a text-to-speech that runs on the machine itself",
-      "Put a face on it — a lip-synced avatar streamed over WebRTC, so the visitor watches a mouth move instead of a waveform",
-      "Taught it to find people: exact lookup, then SOUNDEX, then fuzzy — a name said with an accent is still that name",
-      "Wired it into the practice's own database, so a check-in lands live instead of in a batch after closing",
-      "Took the copay at the kiosk through a Stripe terminal, and sent the reminders and follow-ups over Twilio",
-      "Left the staff a way back in — an override panel that picks the session up mid-sentence, without restarting it",
-      "Held it together when the line drops: local speech models as the fallback, a hard session cap, and a timestamped audit log of every interaction",
+      "Put a real face on the front desk — it speaks, lip-syncs and looks at you; voice and touch in the same flow",
+      "Taught it to find people: exact lookup, then sounds-like, then fuzzy — a name said with an accent is still that name",
+      "Wired it into whatever runs the business, so a check-in lands in the schedule while the visitor is still standing there",
+      "Let it book the next visit and sign up first-timers by conversation — service, time, details, done",
+      "Gave it three languages — English, Spanish, Russian — and the ear to follow whichever one walks in",
+      "Left the staff a way back in: a PIN-locked panel with the live queue, search, and a manual override for anything",
+      "Made it lobby-proof: it reconnects on bad wifi, nudges the silent, hangs up after goodbye, and logs every move",
     ],
     outcome: [
       "One monthly bill carries the hardware, the software, the integration and the install — there is no per-minute meter anywhere",
       "Month to month, no annual contract: the day it stops earning its place, it goes back",
-      "Twenty-three industries have a flow written for them, from dental intake to a hotel key handover",
+      "Built by two engineers in New York — the same two who install it",
     ],
     facts: [
-      { value: "30+", label: "languages, picked up from the first sentence" },
+      { value: "3", label: "languages — English, Spanish, Russian — followed mid-sentence" },
       { value: "3", label: "tiers of name matching before it asks again" },
       { value: "0", label: "per-minute fees — the meter runs monthly" },
     ],

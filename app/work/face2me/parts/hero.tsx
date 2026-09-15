@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import dynamic from "next/dynamic";
 import ArrowNE from "@/components/ArrowNE";
-import { Reception } from "./reception";
+import { Director } from "./director";
 import { CardLayer } from "./cards";
 
 /**
@@ -135,7 +135,7 @@ export function Hero() {
           <button
             ref={callRef}
             type="button"
-            aria-label="Talk to the receptionist"
+            aria-label="Start the kiosk demo"
             data-hero-call
             data-cursor-text="Say hi"
             className={`${BTN} hover:border-[#0bda51]! hover:text-[#0bda51]!`}
@@ -199,7 +199,7 @@ export function Hero() {
           </button>
         </div>
 
-        <Reception callBtnRef={callRef} />
+        <Director callBtnRef={callRef} />
         <CardLayer />
       </div>
     </section>
