@@ -410,7 +410,7 @@ export const PROJECTS: Project[] = [
     disciplines: ["Web", "Design"],
     ratio: "wide",
     photo: "/photos/gotrack/monitoring.jpg",
-    cover: "/photos/gotrack/cover.jpg",
+    cover: "/photos/gotrack/cover-logo.jpg",
     // concentric rings — a radar ping, which is what this product is
     pattern: 7,
   },
