@@ -26,24 +26,13 @@ export type Chip = { id: ChipId; label: string; quiet?: boolean };
 export type PopupView = "names" | "staff";
 
 /**
- * A conjured element — the genie half of the show. When Ren answers, she
- * doesn't hand over one card: glass tags materialize in the void around
- * the kiosk, each at its own spot, tilt and depth. Desktop only — the
- * phone has no void to conjure into, so there the topic card carries it.
- * x/y are percentages of the stage, tilt is degrees of rotateY, z is the
- * starting translateZ the tag flies in from (negative = out of the deep).
+ * What the kiosk's own screen shows. The dot matrix that draws Ren's face
+ * can draw anything: the director hands it slides (each a stack of text
+ * lines), the scene rasterizes them and the 7656 dots leap from her face
+ * into the words and back. `em` scales a line relative to the biggest one;
+ * several slides with an `interval` play as a flipbook.
  */
-export type ConjureItem = {
-  text: string;
-  sub?: string;
-  x: number;
-  y: number;
-  tilt: number;
-  z: number;
-  accent?: boolean;
-  /** "lg" for standalone words with no sub line — they carry the frame alone */
-  size?: "lg";
-};
+export type ScreenLine = { text: string; em?: number };
 
 export type MatchTier = "exact" | "sounds-like" | "fuzzy";
 export type NameId = "maria" | "mikhael" | "zeynep";
@@ -59,7 +48,7 @@ export type ReceptionDetail =
   | { type: "card"; card: CardTopic }
   | { type: "chips"; items: Chip[] | null }
   | { type: "popup"; view: PopupView | null }
-  | { type: "conjure"; items: ConjureItem[] | null }
+  | { type: "screen"; slides: ScreenLine[][] | null; interval?: number }
   /* the name trick: what was said, what was found, and by which pass */
   | { type: "trick"; said: string; found: string; tier: MatchTier }
   | { type: "trick-clear" }

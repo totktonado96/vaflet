@@ -7,9 +7,9 @@ import {
   type CardTopic,
   type Chip,
   type ChipId,
-  type ConjureItem,
   type NameId,
   type PopupView,
+  type ScreenLine,
 } from "./reception-events";
 
 /**
@@ -59,54 +59,50 @@ const GREETING = [
 ];
 
 /** the roster the name trick plays against: said → found, and by which pass */
-const ROSTER: Record<NameId, { said: string; found: string; tier: "exact" | "sounds-like" | "fuzzy"; line: string }> = {
-  maria: { said: "Maria Lopez", found: "Maria Lopez", tier: "exact", line: "First try. Easy." },
+const ROSTER: Record<
+  NameId,
+  { said: string; found: string; lines: string[]; tier: "exact" | "sounds-like" | "fuzzy"; line: string }
+> = {
+  maria: {
+    said: "Maria Lopez",
+    found: "Maria Lopez",
+    lines: ["MARIA", "LOPEZ"],
+    tier: "exact",
+    line: "First try. Easy.",
+  },
   mikhael: {
     said: "Mikhael",
     found: "Mikhail Volkov",
+    lines: ["MIKHAIL", "VOLKOV"],
     tier: "sounds-like",
     line: "Didn't need the spelling. Just the sound of it.",
   },
   zeynep: {
     said: "Zeynep",
     found: "Zeynab Karim",
+    lines: ["ZEYNAB", "KARIM"],
     tier: "fuzzy",
     line: "Mangled that one. Found you anyway.",
   },
 };
 
-/* conjure arrangements — glass tags thrown into the void around the kiosk.
-   The kiosk holds the center third; captions own the bottom; chips sit
-   above the controls. Everything here lands in the empty sides. */
+/* what the glass says, topic by topic — every slide is drawn by the same
+   7656 dots that draw her face. Short, huge, LED-board words. */
 
-const PRICES: ConjureItem[] = [
-  { text: "$599", sub: "Starter — monthly", x: 15, y: 30, tilt: 14, z: -170 },
-  { text: "$999", sub: "Standard — monthly", x: 83, y: 25, tilt: -16, z: -220 },
-  { text: "$1500+", sub: "Custom — monthly", x: 79, y: 53, tilt: -10, z: -140 },
+const PRICE_SLIDES: ScreenLine[][] = [
+  [{ text: "$599" }, { text: "STARTER", em: 0.3 }],
+  [{ text: "$999" }, { text: "STANDARD", em: 0.3 }],
+  [{ text: "$1500+" }, { text: "CUSTOM", em: 0.3 }],
 ];
 
-const SYSTEMS: ConjureItem[] = [
-  { text: "Face", x: 14, y: 20, tilt: 13, z: -190 },
-  { text: "Hands", x: 85, y: 17, tilt: -14, z: -150 },
-  { text: "Names", x: 11, y: 38, tilt: 11, z: -230 },
-  { text: "Booking", x: 88, y: 36, tilt: -12, z: -180 },
-  { text: "Records", x: 14, y: 56, tilt: 12, z: -140 },
-  { text: "Staff", x: 86, y: 55, tilt: -11, z: -210 },
-  { text: "Armor", x: 50, y: 12, tilt: 0, z: -260 },
-];
-
-const HELLOS: ConjureItem[] = [
-  { text: "Hello.", x: 15, y: 26, tilt: 12, z: -180, size: "lg" },
-  { text: "Hola.", x: 84, y: 30, tilt: -14, z: -200, size: "lg" },
-  { text: "Привет.", x: 17, y: 54, tilt: 10, z: -160, size: "lg" },
-];
-
-const FILE_TAGS: ConjureItem[] = [
-  { text: "Job", sub: "front desk, on its feet", x: 14, y: 24, tilt: 13, z: -180 },
-  { text: "Hours", sub: "no breaks so far", x: 85, y: 21, tilt: -14, z: -220 },
-  { text: "Languages", sub: "EN · ES · RU", x: 12, y: 44, tilt: 11, z: -150 },
-  { text: "Contract", sub: "month-to-month", x: 87, y: 42, tilt: -12, z: -190 },
-  { text: "Built in", sub: "New York", x: 15, y: 62, tilt: 10, z: -160, accent: true },
+const SYSTEM_SLIDES: ScreenLine[][] = [
+  [{ text: "FACE" }],
+  [{ text: "HANDS" }],
+  [{ text: "NAMES" }],
+  [{ text: "BOOKING" }],
+  [{ text: "RECORDS" }],
+  [{ text: "STAFF" }],
+  [{ text: "ARMOR" }],
 ];
 
 /* ------------------------------------------------------------ component */
@@ -260,9 +256,10 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
         emitReception({ type: "speaking", who: "pal", on: false });
       }
       emitReception({ type: "subtitle", text: null });
-      // the counter is cleared for the goodbye: conjures dissolve, pop-ups
-      // and the rail go — only the farewell (and its printout) remain
-      emitReception({ type: "conjure", items: null });
+      // the counter is cleared for the goodbye: the glass gives the face
+      // back, pop-ups and the rail go — only the farewell (and its
+      // printout) remain
+      emitReception({ type: "screen", slides: null });
       emitReception({ type: "popup", view: null });
       emitReception({ type: "trick-clear" });
       emitReception({ type: "chips", items: null });
@@ -298,7 +295,8 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
 
     /* -- topics -- */
 
-    const conjure = (items: ConjureItem[] | null) => emitReception({ type: "conjure", items });
+    const scr = (slides: ScreenLine[][] | null, interval?: number) =>
+      emitReception({ type: "screen", slides, interval });
     const card = (c: CardTopic) => emitReception({ type: "card", card: c });
     const popup = (v: PopupView | null) => emitReception({ type: "popup", view: v });
 
@@ -307,9 +305,9 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
       visits.set(id, (visits.get(id) ?? 0) + 1);
       if (PRIMARY.includes(id)) opened.add(id);
 
-      // the counter is swept before the next act: conjures dissolve, the
-      // trick and pop-ups clear; topic cards keep the existing slot rules
-      conjure(null);
+      // the counter is swept before the next act: the glass gives the face
+      // back, the trick and pop-ups clear; the topic's own slides follow
+      scr(null);
       emitReception({ type: "trick-clear" });
       if (id !== "names" && id !== "staff") popup(null);
 
@@ -324,16 +322,23 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           play((s) => {
             if (again) {
               s.say("Same three numbers as before. They hold still.");
-              s.cue(() => conjure(PRICES));
+              s.cue(() => scr(PRICE_SLIDES, 900));
               s.cue(() => card("pricing"));
+              s.wait(2400);
+              s.cue(() => scr(null));
             } else {
-              // the voice stays short — the conjured tags carry the numbers
+              // the voice stays short — the glass carries the numbers,
+              // one price per line she says
               s.say("Fair. Let's do the boring part first.");
-              s.cue(() => conjure(PRICES));
+              s.cue(() => scr([PRICE_SLIDES[0]]));
               s.cue(() => card("pricing"));
               s.say("Three sizes. One monthly bill.");
+              s.cue(() => scr([PRICE_SLIDES[1]]));
               s.say("Hardware and install ride inside it.");
+              s.cue(() => scr([PRICE_SLIDES[2]]));
               s.say("No meter. I don't charge you to think.");
+              s.wait(700);
+              s.cue(() => scr(null));
             }
           }, maybeWrap);
           break;
@@ -341,15 +346,22 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           play((s) => {
             if (again) {
               s.say("Still one box. Still not your problem.");
-              s.cue(() => conjure(SYSTEMS));
+              s.cue(() => scr(SYSTEM_SLIDES, 560));
               s.cue(() => card("bundle"));
+              s.wait(3600);
+              s.cue(() => scr(null));
             } else {
               s.say("Not yours to fix. Ever.");
-              s.say("Plugs into whatever your business already runs.");
-              s.cue(() => conjure(SYSTEMS));
+              s.cue(() => scr([[{ text: "7" }, { text: "SYSTEMS", em: 0.36 }]]));
               s.cue(() => card("bundle"));
+              s.say("Plugs into whatever your business already runs.");
+              // the seven layers deal themselves across the glass while
+              // she keeps talking — a flipbook in her own dots
+              s.cue(() => scr(SYSTEM_SLIDES, 560));
               s.say("It checks people in live and books what's next.");
               s.say("First-timers sign up mid-conversation. No form.");
+              s.wait(400);
+              s.cue(() => scr(null));
             }
           }, maybeWrap);
           break;
@@ -357,15 +369,17 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           play((s) => {
             if (again) {
               s.say("Still three. Still no fourth.");
-              s.cue(() => conjure(HELLOS));
+              s.cue(() => scr([[{ text: "HOLA." }], [{ text: "ПРИВЕТ." }]], 900));
               s.cue(() => card("languages"));
+              s.wait(1600);
+              s.cue(() => scr(null));
             } else {
-              s.cue(() => conjure([HELLOS[0]]));
               s.say("I do three languages. Watch the switch—");
-              s.cue(() => conjure(HELLOS.slice(0, 2)));
+              s.cue(() => scr([[{ text: "HOLA." }]]));
               s.say("—justo así, a mitad de frase—", "—just like that, mid-sentence—", "es");
-              s.cue(() => conjure(HELLOS));
+              s.cue(() => scr([[{ text: "ПРИВЕТ." }]]));
               s.say("—и обратно, без остановки.", "—and back, without stopping.", "ru");
+              s.cue(() => scr(null));
               s.say("No fourth language. I looked. There isn't one.", null);
               s.cue(() => card("languages"));
             }
@@ -374,6 +388,7 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
         case "staff":
           play((s) => {
             s.say(again ? "Back for the queue? Can't blame you." : "That one's not really for you.");
+            s.cue(() => scr([[{ text: "STAFF" }, { text: "ONLY", em: 0.62 }]]));
             s.cue(() => popup("staff"));
           }, armIdle);
           break;
@@ -381,19 +396,25 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           play((s) => {
             if (again) {
               s.say("Still AI. Still New York. Still rehearsed.");
-              s.cue(() => conjure(FILE_TAGS));
+              s.cue(() => scr([[{ text: "AI." }], [{ text: "NYC" }], [{ text: "REC" }, { text: "REHEARSED", em: 0.3 }]], 900));
               s.cue(() => card("spec"));
+              s.wait(2400);
+              s.cue(() => scr(null));
             } else {
               s.say("Honestly? Yes and no.");
+              s.cue(() => scr([[{ text: "AI." }]]));
               s.say("I'm AI. No ghostwriter, no guy in a back room.");
+              s.cue(() => scr([[{ text: "NYC" }]]));
               s.say("Two engineers built me — in New York.");
               s.say("I don't replace anybody. I take the shifts nobody wants.");
               s.say("Six a.m., holidays, the third wrong building of the hour.");
+              s.cue(() => scr([[{ text: "REC" }, { text: "REHEARSED", em: 0.3 }]]));
               s.say("This run, right here? Rehearsed.");
               s.say("The one in a real lobby isn't.");
-              s.cue(() => conjure(FILE_TAGS));
               s.cue(() => card("spec"));
               s.say("There's my whole file, since you asked.");
+              s.wait(500);
+              s.cue(() => scr(null));
             }
           }, maybeWrap);
           break;
@@ -417,9 +438,15 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           emitReception({ type: "phase", phase: "live" });
         });
         s.wait(400);
+        // she says hi with her own pixels first — the face re-deals itself
+        // into the word and back, so the first thing the visit teaches you
+        // is that this screen can say anything
+        s.cue(() => scr([[{ text: "HI." }]]));
+        s.say(GREETING[0]);
+        s.cue(() => scr(null));
+        GREETING.slice(1, 3).forEach((line) => s.say(line));
         // the rail rises once the honesty is out (beat three) — the last two
         // beats finish over it, and a tap may well cut them off. Her problem.
-        GREETING.slice(0, 3).forEach((line) => s.say(line));
         s.cue(() => emitReception({ type: "chips", items: CHIPS }));
         GREETING.slice(3).forEach((line) => s.say(line));
       }, armIdle);
@@ -460,8 +487,18 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
         play((s) => {
           s.cue(() => emitReception({ type: "caption", who: "user", text: r.said }));
           s.wait(500);
-          s.cue(() => emitReception({ type: "trick", said: r.said, found: r.found, tier: r.tier }));
-          s.wait(r.tier === "exact" ? 400 : 950);
+          // the glass answers: the face re-deals into the found name and
+          // the pass that caught it — the sr-only live region says the same
+          s.cue(() => {
+            emitReception({ type: "trick", said: r.said, found: r.found, tier: r.tier });
+            scr([
+              [
+                ...r.lines.map((text) => ({ text })),
+                { text: r.tier.toUpperCase(), em: 0.48 },
+              ],
+            ]);
+          });
+          s.wait(r.tier === "exact" ? 500 : 1000);
           s.say(r.line);
           if (!namesCloserSaid) {
             namesCloserSaid = true;
@@ -473,6 +510,7 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
         disarmIdle();
         cut();
         play((s) => {
+          s.cue(() => scr(null)); // the badge leaves the glass — the queue took over
           s.wait(400);
           s.say("Fine — this is what staff sees.");
           s.say("Real PIN, real queue, on the real one.");

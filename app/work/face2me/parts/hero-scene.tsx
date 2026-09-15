@@ -15,7 +15,7 @@ import {
   Vec3,
 } from "ogl";
 import { reducedMotion } from "@/components/case/kit";
-import { emitReception, onReception } from "./reception-events";
+import { emitReception, onReception, type ScreenLine } from "./reception-events";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -296,9 +296,12 @@ const DOTS_VERT = /* glsl */ `
   attribute float aSize2;
   attribute float aLum;
   attribute float aLum2;
+  attribute float aLumB;
+  attribute float aSizeB;
   uniform mat4 modelViewMatrix, projectionMatrix;
   uniform float uAssemble;
   uniform float uMorph;
+  uniform float uSlide;
   uniform float uTime;
   uniform float uProjScale;
   uniform float uTalk;
@@ -316,6 +319,14 @@ const DOTS_VERT = /* glsl */ `
     vec3 tgt = mix(aTarget, aTarget2, me);
     tgt.z += sin(me * 3.14159) * 0.14;
     vec3 pos = mix(aStart, tgt, e + over);
+    // the screen speaks: the same dots trade the face for a slide (aLumB /
+    // aSizeB), centre-out on the same delay grain — and every dot leaps off
+    // the glass while its job changes, brightest ones highest
+    float st = clamp(uSlide * 1.45 - aDelay * 0.45, 0.0, 1.0);
+    float se = st * st * (3.0 - 2.0 * st);
+    float lumP = mix(aLum, aLumB, se);
+    float sizeP = mix(aSize, aSizeB, se);
+    pos.z += sin(se * 3.14159) * (0.05 + aLumB * 0.09);
     // settled dots shimmer in place — but not while they are mid-flight.
     // While she speaks (uTalk) the shimmer deepens and quickens: the same
     // motion the face already breathes with, louder — never a new one.
@@ -324,9 +335,9 @@ const DOTS_VERT = /* glsl */ `
     pos.z += settled * sin(uTime * (1.7 + uTalk * 2.1) + aDelay * 40.0) * 0.0035 * (1.0 + uTalk * ${TALK_WOBBLE.toFixed(2)});
     vec4 mv = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = mix(aSize, aSize2, me) * uProjScale / max(-mv.z, 0.1);
+    gl_PointSize = mix(sizeP, aSize2, me) * uProjScale / max(-mv.z, 0.1);
     vAlpha = smoothstep(0.0, 0.25, t);
-    vLum = mix(aLum, aLum2, me);
+    vLum = mix(lumP, aLum2, me);
   }
 `;
 
@@ -673,6 +684,7 @@ export default function HeroScene({
         ...mkUniforms(),
         uAssemble: { value: 0 },
         uMorph: { value: 0 },
+        uSlide: { value: 0 },
         uProjScale: { value: 1 },
         uTalk: { value: 0 },
       },
@@ -702,6 +714,9 @@ export default function HeroScene({
       aSize2: { size: 1, data: new Float32Array(DOT_N) },
       aLum: { size: 1, data: new Float32Array(DOT_N) },
       aLum2: { size: 1, data: new Float32Array(DOT_N) },
+      // the slide buffer: what the screen is saying instead of the face
+      aLumB: { size: 1, data: new Float32Array(DOT_N) },
+      aSizeB: { size: 1, data: new Float32Array(DOT_N) },
     });
 
     /** One kiosk = one parent with the same children; built twice, world + mirror.
@@ -858,6 +873,109 @@ export default function HeroScene({
     let liveish = false; // connecting OR live: parks the rotate act early
     let leftStageSent = false;
 
+    /* -- the screen speaks: slides rasterized into the dot matrix. The
+          director sends text; it is drawn at 8x, sampled down to the dot
+          grid, and uSlide walks every dot from the face into the words —
+          same grid, new job, with a leap off the glass on the way. -- */
+    const slide = { v: 0 };
+    let slideGen = 0;
+    let stepCall: gsap.core.Tween | null = null;
+    const slideCanvas = document.createElement("canvas");
+    slideCanvas.width = DOT_COLS * 8;
+    slideCanvas.height = DOT_ROWS * 8;
+    const slideTiny = document.createElement("canvas");
+    slideTiny.width = DOT_COLS;
+    slideTiny.height = DOT_ROWS;
+
+    const writeSlide = (lines: ScreenLine[]) => {
+      const ctx = slideCanvas.getContext("2d");
+      const tctx = slideTiny.getContext("2d", { willReadFrequently: true });
+      if (!ctx || !tctx) return;
+      const W = slideCanvas.width;
+      const H = slideCanvas.height;
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#fff";
+      ctx.textAlign = "center";
+      const family = getComputedStyle(document.body).fontFamily || "sans-serif";
+      // one global scale so every line fits the glass at its own em
+      let unit = Infinity;
+      for (const l of lines) {
+        ctx.font = `800 100px ${family}`;
+        const w = ctx.measureText(l.text).width * (l.em ?? 1);
+        unit = Math.min(unit, ((W * 0.88) / Math.max(w, 1)) * 100);
+      }
+      const rows = lines.reduce((a, l) => a + (l.em ?? 1) * 1.24, 0);
+      unit = Math.min(unit, (H * 0.72) / rows);
+      let y = (H - rows * unit) / 2;
+      for (const l of lines) {
+        const p = (l.em ?? 1) * unit;
+        ctx.font = `800 ${p}px ${family}`;
+        y += p;
+        ctx.fillText(l.text, W / 2, y);
+        y += p * 0.24;
+      }
+      tctx.drawImage(slideCanvas, 0, 0, DOT_COLS, DOT_ROWS);
+      const px = tctx.getImageData(0, 0, DOT_COLS, DOT_ROWS).data;
+      const lumB = dotsGeo.attributes.aLumB.data as Float32Array;
+      const sizeB = dotsGeo.attributes.aSizeB.data as Float32Array;
+      const cell = SCR_W / DOT_COLS;
+      for (let i = 0; i < DOT_N; i++) {
+        const lum = Math.pow(px[i * 4] / 255, 0.85);
+        lumB[i] = lum;
+        // dark dots shrink to a faint grid; the words burn bolder than skin
+        sizeB[i] = cell * (0.2 + Math.pow(lum, 1.15) * 1.62);
+      }
+      dotsGeo.attributes.aLumB.needsUpdate = true;
+      dotsGeo.attributes.aSizeB.needsUpdate = true;
+    };
+
+    const setScreen = (slides: ScreenLine[][] | null, interval = 640) => {
+      const my = ++slideGen;
+      gsap.killTweensOf(slide);
+      stepCall?.kill();
+      stepCall = null;
+      if (still) {
+        if (slides?.length) {
+          writeSlide(slides[slides.length - 1]);
+          slide.v = 1;
+        } else slide.v = 0;
+        renderOnce();
+        return;
+      }
+      if (!slides || slides.length === 0) {
+        gsap.to(slide, { v: 0, duration: 0.55, ease: "power2.inOut" });
+        return;
+      }
+      let idx = 0;
+      const arm = () => {
+        if (my !== slideGen || idx >= slides.length - 1) return;
+        stepCall = gsap.delayedCall(Math.max(0.05, interval / 1000 - 0.34), tick);
+      };
+      const show = () => {
+        if (my !== slideGen) return;
+        writeSlide(slides[idx]);
+        gsap.to(slide, { v: 1, duration: 0.55, ease: "power2.out", onComplete: arm });
+      };
+      const tick = () => {
+        if (my !== slideGen) return;
+        idx++;
+        // the flip: a half-dip so the dots visibly re-deal the next word
+        gsap.to(slide, {
+          v: 0.45,
+          duration: 0.14,
+          ease: "power2.in",
+          onComplete: () => {
+            if (my !== slideGen) return;
+            writeSlide(slides[idx]);
+            gsap.to(slide, { v: 1, duration: 0.22, ease: "power2.out", onComplete: arm });
+          },
+        });
+      };
+      if (slide.v > 0.04) gsap.to(slide, { v: 0, duration: 0.3, ease: "power2.in", onComplete: show });
+      else show();
+    };
+
     const offBus = onReception((d) => {
       if (d.type === "phase") {
         const was = liveOn;
@@ -870,10 +988,13 @@ export default function HeroScene({
         }
         if (!liveOn && was) {
           gsap.killTweensOf(live);
+          setScreen(null); // whatever the glass was saying, the face returns
           if (still) { live.speak = 0; renderOnce(); }
           else gsap.to(live, { speak: 0, duration: 0.8, ease: "power1.inOut" });
         }
         if (still) renderOnce();
+      } else if (d.type === "screen") {
+        setScreen(d.slides, d.interval);
       } else if (d.type === "speaking" && d.who === "pal") {
         if (!still) {
           gsap.to(live, { speak: d.on ? 1 : 0, duration: 0.45, ease: "power1.inOut" });
@@ -1093,6 +1214,7 @@ export default function HeroScene({
       poolProgram.uniforms.uFocus.value = state.focus;
       dotsProgram.uniforms.uAssemble.value = assembleShown;
       dotsProgram.uniforms.uMorph.value = act2.rot;
+      dotsProgram.uniforms.uSlide.value = slide.v;
       dotsProgram.uniforms.uTalk.value = live.speak;
 
       // the visit button holds over the opening frame and dissolves as the
@@ -1200,6 +1322,9 @@ export default function HeroScene({
       offBus();
       gsap.killTweensOf(live);
       gsap.killTweensOf(act2);
+      gsap.killTweensOf(slide);
+      slideGen++;
+      stepCall?.kill();
       rotateBtn?.removeEventListener("click", onRotateClick);
       if (fsSupported) {
         fsBtn?.removeEventListener("click", onFsClick);
