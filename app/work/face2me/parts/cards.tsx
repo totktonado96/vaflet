@@ -71,7 +71,7 @@ const MALACHITE = "#0bda51";
 
 /** the one slot beside the machine where physical UI lands on desktop —
     under the playbill on the right, clear of her caption column */
-const POP_SLOT = "md:absolute md:right-[5%] md:left-auto md:top-[57%]";
+const POP_SLOT = "md:absolute md:right-[5%] md:left-auto md:top-[56%]";
 
 function Rise({ children, k }: { children: React.ReactNode; k: string }) {
   const el = useRef<HTMLDivElement>(null);
@@ -190,6 +190,9 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
       ref={host}
       className="pointer-events-auto flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] md:flex-col md:items-end md:gap-4 md:overflow-visible md:pb-0"
     >
+      {/* the menu speaks the page's own type: your possible lines, set as
+          large as hers — her words own the left margin, these own the
+          right. Small caps was a whisper; this is a voice. */}
       {chips.map((c) => {
         const on = active === c.id;
         return (
@@ -197,14 +200,16 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
             key={c.id}
             type="button"
             onClick={() => emitReception({ type: "chip-pick", id: c.id })}
-            className={`group flex shrink-0 snap-start items-center gap-2.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 py-2 text-xs font-bold backdrop-blur-sm transition-all duration-300 active:text-[#0bda51] md:justify-end md:rounded-none md:bg-transparent md:px-0 md:py-0 md:text-[13px] md:uppercase md:tracking-[0.18em] md:backdrop-blur-none ${
+            className={`group flex shrink-0 snap-start items-center gap-2.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 py-2 text-xs font-bold backdrop-blur-sm transition-all duration-300 active:text-[#0bda51] md:justify-end md:gap-3.5 md:rounded-none md:bg-transparent md:px-0 md:py-0 md:font-extrabold md:leading-none md:tracking-[-0.01em] md:backdrop-blur-none ${
+              c.quiet ? "md:mt-4 md:text-base" : "md:text-[1.4rem]"
+            } ${
               c.quiet
                 ? on
                   ? "text-white/80"
-                  : "text-white/35 hover:text-white/70 md:mt-3"
+                  : "text-white/35 hover:text-white/70"
                 : on
-                  ? "text-white md:translate-x-[-3px]"
-                  : "text-white/60 hover:text-white md:hover:translate-x-[-3px]"
+                  ? "text-white md:translate-x-[-6px]"
+                  : "text-white/45 hover:text-white md:hover:translate-x-[-6px]"
             }`}
           >
             <span className="relative">
@@ -212,14 +217,14 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
               {/* a malachite rule draws itself under the line you're on */}
               <span
                 aria-hidden
-                className={`absolute -bottom-1 left-0 right-0 hidden h-px origin-right bg-[#0bda51] transition-transform duration-300 ease-out md:block ${
+                className={`absolute -bottom-1.5 left-0 right-0 hidden h-[2px] origin-right bg-[#0bda51] transition-transform duration-300 ease-out md:block ${
                   on ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                 }`}
               />
             </span>
             <span
               aria-hidden
-              className="hidden size-1.5 rounded-full transition-all duration-300 md:inline-block"
+              className="hidden size-2 rounded-full transition-all duration-300 md:inline-block"
               style={{
                 background: MALACHITE,
                 opacity: on ? 1 : 0,
@@ -697,7 +702,7 @@ export function CardLayer() {
           the right edge, cards the slot under her caption. */}
       <div className="absolute inset-x-3 bottom-20 flex flex-col gap-3 md:static md:contents">
         {railUp && (
-          <div className="md:absolute md:right-[5%] md:top-[31%] md:z-10">
+          <div className="md:absolute md:right-[5%] md:top-[24%] md:z-10">
             <ChipsRail chips={chips!} active={activeChip} />
           </div>
         )}
@@ -891,7 +896,7 @@ export function CardLayer() {
           picked — re-announcing their own words would be noise. */}
       <p
         aria-hidden
-        className="display-2 pointer-events-none absolute right-[5%] top-[20%] hidden w-[22vw] text-right text-2xl font-extrabold leading-tight text-white/35 md:block"
+        className="display-2 pointer-events-none absolute right-[5%] top-[11%] hidden w-[22vw] text-right text-2xl font-extrabold leading-tight text-white/35 md:block"
       >
         {echo && <Words key={echo} text={echo} from={-14} />}
       </p>
