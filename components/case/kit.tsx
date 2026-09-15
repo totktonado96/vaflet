@@ -60,8 +60,15 @@ export function Counters({
 
   useGSAP(
     () => {
-      if (reducedMotion()) return;
-      gsap.utils.toArray<HTMLElement>("[data-count]").forEach((el) => {
+      const figures = gsap.utils.toArray<HTMLElement>("[data-count]");
+      // without motion there is nothing to count up from — show the figures
+      if (reducedMotion()) {
+        figures.forEach((el) => {
+          el.textContent = Number(el.dataset.count).toLocaleString("en-US") + (el.dataset.suffix ?? "");
+        });
+        return;
+      }
+      figures.forEach((el) => {
         const target = Number(el.dataset.count);
         const suffix = el.dataset.suffix ?? "";
         const box = { n: 0 };
