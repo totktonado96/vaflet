@@ -298,6 +298,7 @@ const DOTS_VERT = /* glsl */ `
   attribute float aLum2;
   attribute float aLumB;
   attribute float aSizeB;
+  attribute float aLineB;
   uniform mat4 modelViewMatrix, projectionMatrix;
   uniform float uAssemble;
   uniform float uMorph;
@@ -305,6 +306,8 @@ const DOTS_VERT = /* glsl */ `
   uniform float uTime;
   uniform float uProjScale;
   uniform float uTalk;
+  uniform float uHot;
+  uniform float uHotAmt;
   varying float vAlpha;
   varying float vLum;
   void main() {
@@ -327,6 +330,12 @@ const DOTS_VERT = /* glsl */ `
     float lumP = mix(aLum, aLumB, se);
     float sizeP = mix(aSize, aSizeB, se);
     pos.z += sin(se * 3.14159) * (0.05 + aLumB * 0.09);
+    // a fingertip hovering a glass menu row: that line's dots burn hotter,
+    // swell a touch and lift off the glass toward the hand
+    float hotHit = (1.0 - min(abs(aLineB - uHot), 1.0)) * uHotAmt * se;
+    lumP = min(lumP * (1.0 + hotHit * 0.8), 1.15);
+    sizeP *= 1.0 + hotHit * 0.1;
+    pos.z += hotHit * 0.03;
     // settled dots shimmer in place — but not while they are mid-flight.
     // While she speaks (uTalk) the shimmer deepens and quickens: the same
     // motion the face already breathes with, louder — never a new one.
@@ -691,6 +700,8 @@ export default function HeroScene({
         uSlide: { value: 0 },
         uProjScale: { value: 1 },
         uTalk: { value: 0 },
+        uHot: { value: -5 },
+        uHotAmt: { value: 0 },
       },
     });
     dotsProgram.setBlendFunc(gl.SRC_ALPHA, gl.ONE);
@@ -718,9 +729,11 @@ export default function HeroScene({
       aSize2: { size: 1, data: new Float32Array(DOT_N) },
       aLum: { size: 1, data: new Float32Array(DOT_N) },
       aLum2: { size: 1, data: new Float32Array(DOT_N) },
-      // the slide buffer: what the screen is saying instead of the face
+      // the slide buffer: what the screen is saying instead of the face,
+      // and which text line each dot belongs to (-1 = none)
       aLumB: { size: 1, data: new Float32Array(DOT_N) },
       aSizeB: { size: 1, data: new Float32Array(DOT_N) },
+      aLineB: { size: 1, data: new Float32Array(DOT_N).fill(-5) },
     });
 
     /** One kiosk = one parent with the same children; built twice, world + mirror.
@@ -886,6 +899,14 @@ export default function HeroScene({
     let stepCall: gsap.core.Tween | null = null;
     let stillTimer = 0; // reduced-motion flipbook stepper
     let lastLines: ScreenLine[] | null = null;
+    // glass-menu machinery: per-line bands of the current slide (fractions
+    // of screen height), whether a menu is up, and the hover glow state
+    let lastBands: { a: number; b: number }[] = [];
+    let menuUp = false;
+    const hot = { line: -5, amt: 0 };
+    let hotTargetLine = -5;
+    let hotTargetAmt = 0;
+    let geomKey = "";
     const slideCanvas = document.createElement("canvas");
     slideCanvas.width = DOT_COLS * 8;
     slideCanvas.height = DOT_ROWS * 8;
@@ -915,26 +936,42 @@ export default function HeroScene({
       const rows = lines.reduce((a, l) => a + (l.em ?? 1) * 1.24, 0);
       unit = Math.min(unit, (H * 0.72) / rows);
       let y = (H - rows * unit) / 2;
+      const bands: { a: number; b: number }[] = [];
       for (const l of lines) {
         const p = (l.em ?? 1) * unit;
         ctx.font = `800 ${p}px ${family}`;
         y += p;
         ctx.fillText(l.text, W / 2, y);
+        // the line's touch band, with a little air around the glyphs
+        bands.push({ a: Math.max(0, (y - p * 1.06) / H), b: Math.min(1, (y + p * 0.3) / H) });
         y += p * 0.24;
       }
+      lastBands = bands;
       tctx.drawImage(slideCanvas, 0, 0, DOT_COLS, DOT_ROWS);
       const px = tctx.getImageData(0, 0, DOT_COLS, DOT_ROWS).data;
       const lumB = dotsGeo.attributes.aLumB.data as Float32Array;
       const sizeB = dotsGeo.attributes.aSizeB.data as Float32Array;
+      const lineB = dotsGeo.attributes.aLineB.data as Float32Array;
       const cell = SCR_W / DOT_COLS;
       for (let i = 0; i < DOT_N; i++) {
         const lum = Math.pow(px[i * 4] / 255, 0.85);
         lumB[i] = lum;
         // dark dots shrink to a faint grid; the words burn bolder than skin
         sizeB[i] = cell * (0.2 + Math.pow(lum, 1.15) * 1.62);
+        const fy = (Math.floor(i / DOT_COLS) + 0.5) / DOT_ROWS;
+        let li = -5;
+        for (let b = 0; b < bands.length; b++) {
+          if (fy >= bands[b].a && fy <= bands[b].b) {
+            li = b;
+            break;
+          }
+        }
+        lineB[i] = li;
       }
       dotsGeo.attributes.aLumB.needsUpdate = true;
       dotsGeo.attributes.aSizeB.needsUpdate = true;
+      dotsGeo.attributes.aLineB.needsUpdate = true;
+      geomKey = ""; // fresh bands -> the layer needs fresh geometry
     };
 
     const setScreen = (slides: ScreenLine[][] | null, interval = 640) => {
@@ -1023,6 +1060,25 @@ export default function HeroScene({
         if (still) renderOnce();
       } else if (d.type === "screen") {
         setScreen(d.slides, d.interval);
+      } else if (d.type === "screen-menu") {
+        menuUp = d.items !== null && d.items.length > 0;
+        geomKey = ""; // re-announce geometry for the new menu
+        if (!menuUp) {
+          hotTargetAmt = 0;
+        }
+        if (still) renderOnce();
+      } else if (d.type === "screen-hot") {
+        if (d.line === null) {
+          hotTargetAmt = 0;
+        } else {
+          hot.line = d.line; // snap the line, ease only the glow
+          hotTargetLine = d.line;
+          hotTargetAmt = 1;
+        }
+        if (still) {
+          hot.amt = hotTargetAmt;
+          renderOnce();
+        }
       } else if (d.type === "speaking" && d.who === "pal") {
         if (!still) {
           gsap.to(live, { speak: d.on ? 1 : 0, duration: 0.45, ease: "power1.inOut" });
@@ -1144,6 +1200,8 @@ export default function HeroScene({
     const born = last; // the title card fades in against real time, not scroll
     const leanNow = { x: 0, y: 0 };
     const lookTarget = new Vec3();
+    const projTL = new Vec3();
+    const projBR = new Vec3();
     const sstep = (a: number, b: number, x: number) => {
       const s = Math.min(Math.max((x - a) / (b - a), 0), 1);
       return s * s * (3 - 2 * s);
@@ -1252,6 +1310,11 @@ export default function HeroScene({
       dotsProgram.uniforms.uMorph.value = act2.rot;
       dotsProgram.uniforms.uSlide.value = slide.v;
       dotsProgram.uniforms.uTalk.value = live.speak;
+      // hover glow eases in and out; the line itself snaps (two rows never
+      // half-glow at once)
+      hot.amt += (hotTargetAmt - hot.amt) * (still ? 1 : 1 - Math.exp(-dt * 14));
+      dotsProgram.uniforms.uHot.value = hot.line;
+      dotsProgram.uniforms.uHotAmt.value = hot.amt;
 
       // the visit button holds over the opening frame and dissolves as the
       // walk starts (reduced motion never shows it); its letters glide
@@ -1280,6 +1343,27 @@ export default function HeroScene({
       renderer.render({ scene: mirrorWorld, camera, sort: false, frustumCull: false, clear: false });
       setMirror(0);
       renderer.render({ scene: world, camera, sort: false, frustumCull: false, clear: false });
+
+      // a glass menu needs the layer to know where the glass is: project
+      // the screen's corners and hand the rect (plus each line's band)
+      // over the bus — re-announced only when it actually moves
+      if (menuUp && slide.v > 0.35 && lastBands.length) {
+        const zScreen = z + K_D / 2 + 0.003;
+        projTL.set(-SCR_W / 2, SCR_Y + SCR_H / 2, zScreen).applyMatrix4(camera.projectionViewMatrix);
+        projBR.set(SCR_W / 2, SCR_Y - SCR_H / 2, zScreen).applyMatrix4(camera.projectionViewMatrix);
+        const cw = stage.clientWidth;
+        const ch = stage.clientHeight;
+        const x0 = ((projTL.x + 1) / 2) * cw;
+        const y0 = ((1 - projTL.y) / 2) * ch;
+        const x1 = ((projBR.x + 1) / 2) * cw;
+        const y1 = ((1 - projBR.y) / 2) * ch;
+        const rect = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+        const key = `${Math.round(rect.x)},${Math.round(rect.y)},${Math.round(rect.w)},${Math.round(rect.h)},${lastBands.length}`;
+        if (key !== geomKey) {
+          geomKey = key;
+          emitReception({ type: "screen-geom", rect, bands: lastBands });
+        }
+      }
     };
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);

@@ -9,8 +9,8 @@ import {
   type CardTopic,
   type Chip,
   type ChipId,
+  type GlassIntent,
   type MatchTier,
-  type NameId,
   type Phase,
   type PopupView,
 } from "./reception-events";
@@ -240,100 +240,46 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
 
 /* --------------------------------------------------------- the pop-ups */
 
-const ROW_BTN =
-  "group flex w-full items-center justify-between rounded-lg bg-white/8 px-4 py-2.5 text-left text-sm font-bold text-white transition-all duration-300 hover:bg-[#0bda51] hover:text-[#04140a] active:scale-[0.98]";
-
-function NamesCard() {
-  const NAMES: { id: NameId; label: string }[] = [
-    { id: "maria", label: "Maria Lopez" },
-    { id: "mikhael", label: "Mikhael" },
-    { id: "zeynep", label: "Zeynep" },
-  ];
+/** The glass is the interface: invisible buttons laid exactly over the
+    dot-matrix menu lines the scene draws. Hovering one tells the scene to
+    burn that line hotter; tapping one is tapping the kiosk itself. */
+function GlassMenu({
+  items,
+  geom,
+}: {
+  items: { line: number; label: string; intent: GlassIntent }[];
+  geom: { rect: { x: number; y: number; w: number; h: number }; bands: { a: number; b: number }[] };
+}) {
+  const hot = (line: number | null) => emitReception({ type: "screen-hot", line });
+  const pick = (intent: GlassIntent) => {
+    hot(null);
+    if (intent.kind === "name") emitReception({ type: "name-pick", id: intent.id });
+    else if (intent.kind === "action") emitReception({ type: "action-pick", id: intent.id });
+    else emitReception({ type: "slot-pick", slot: intent.slot });
+  };
   return (
-    <div className={SHELL}>
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Say a name</p>
-      <p data-row className="mt-2 text-xs leading-relaxed text-white/55">
-        Pretend one of these is yours.
-      </p>
-      <div className="mt-4 flex flex-col gap-2">
-        {NAMES.map((n) => (
+    <div
+      className="pointer-events-none absolute"
+      style={{ left: geom.rect.x, top: geom.rect.y, width: geom.rect.w, height: geom.rect.h }}
+    >
+      {items.map((it) => {
+        const b = geom.bands[it.line];
+        if (!b) return null;
+        return (
           <button
-            key={n.id}
-            data-row
+            key={it.line}
             type="button"
-            onClick={() => emitReception({ type: "name-pick", id: n.id })}
-            className={ROW_BTN}
-          >
-            {n.label}
-            <span aria-hidden className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              →
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** Found in the roster — now the visit actually happens: check in, book.
-    The journey is the demo; the buttons are the kiosk's own two verbs. */
-function ActionsCard({ checkedIn }: { checkedIn: boolean }) {
-  return (
-    <div className={SHELL}>
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">
-        While you&apos;re here
-      </p>
-      <div className="mt-4 flex flex-col gap-2">
-        <button
-          data-row
-          type="button"
-          disabled={checkedIn}
-          onClick={() => emitReception({ type: "action-pick", id: "checkin" })}
-          className={`${ROW_BTN} disabled:pointer-events-none disabled:bg-transparent disabled:text-[#0bda51] disabled:shadow-[inset_0_0_0_1px_rgba(11,218,81,0.4)]`}
-        >
-          {checkedIn ? "Checked in" : "Check me in"}
-          <span aria-hidden className={checkedIn ? "" : "opacity-0 transition-opacity duration-300 group-hover:opacity-100"}>
-            {checkedIn ? "✓" : "→"}
-          </span>
-        </button>
-        <button
-          data-row
-          type="button"
-          onClick={() => emitReception({ type: "action-pick", id: "book" })}
-          className={ROW_BTN}
-        >
-          Book a visit
-          <span aria-hidden className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            →
-          </span>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/** Real open slots, the kiosk's way: three of them, tap one. */
-function SlotsCard() {
-  const SLOTS = ["Today 4:30", "Tomorrow 11:00", "Saturday 2:15"];
-  return (
-    <div className={SHELL}>
-      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Open slots</p>
-      <div className="mt-4 flex flex-col gap-2">
-        {SLOTS.map((s) => (
-          <button
-            key={s}
-            data-row
-            type="button"
-            onClick={() => emitReception({ type: "slot-pick", slot: s })}
-            className={ROW_BTN}
-          >
-            {s}
-            <span aria-hidden className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              →
-            </span>
-          </button>
-        ))}
-      </div>
+            aria-label={it.label}
+            onMouseEnter={() => hot(it.line)}
+            onMouseLeave={() => hot(null)}
+            onFocus={() => hot(it.line)}
+            onBlur={() => hot(null)}
+            onClick={() => pick(it.intent)}
+            className="pointer-events-auto absolute inset-x-0 cursor-pointer rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0bda51]/70"
+            style={{ top: `${b.a * 100}%`, height: `${(b.b - b.a) * 100}%` }}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -599,13 +545,16 @@ export function CardLayer() {
   const [talking, setTalking] = useState(false);
   const [trick, setTrick] = useState<{ found: string; tier: MatchTier } | null>(null);
   const [stub, setStub] = useState<string[] | null>(null);
+  const [glassMenu, setGlassMenu] = useState<{ line: number; label: string; intent: GlassIntent }[] | null>(null);
+  const [glassGeom, setGlassGeom] = useState<{
+    rect: { x: number; y: number; w: number; h: number };
+    bands: { a: number; b: number }[];
+  } | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [receipt, setReceipt] = useState<string | null>(null);
   const [caption, setCaption] = useState<{ text: string; lang?: "es" | "ru" } | null>(null);
-  const [echo, setEcho] = useState<string | null>(null);
   const [subtitle, setSubtitle] = useState<string | null>(null);
   const captionTimer = useRef(0);
-  const echoTimer = useRef(0);
 
   useEffect(
     () =>
@@ -623,9 +572,8 @@ export function CardLayer() {
             setTrick(null);
             setSubtitle(null);
             setCaption(null);
-            setEcho(null);
+            setGlassMenu(null);
             window.clearTimeout(captionTimer.current);
-            window.clearTimeout(echoTimer.current);
           }
           if (d.phase === "idle" || d.phase === "connecting") {
             setReceipt(null);
@@ -644,6 +592,10 @@ export function CardLayer() {
           setActiveChip(d.id);
         } else if (d.type === "popup") {
           setPopup(d.view === null ? null : { view: d.view, visitor: d.visitor, checkedIn: d.checkedIn });
+        } else if (d.type === "screen-menu") {
+          setGlassMenu(d.items);
+        } else if (d.type === "screen-geom") {
+          setGlassGeom({ rect: d.rect, bands: d.bands });
         } else if (d.type === "speaking" && d.who === "pal") {
           setTalking(d.on);
         } else if (d.type === "trick") {
@@ -668,27 +620,19 @@ export function CardLayer() {
           setStub(null);
           setSubtitle(null);
         } else if (d.type === "caption") {
+          // only her lines render — your own pick already glowed under
+          // your finger on the glass, echoing it in type was noise
           if (d.who === "pal") {
             setCaption({ text: d.text, lang: d.lang });
             window.clearTimeout(captionTimer.current);
             captionTimer.current = window.setTimeout(() => setCaption(null), 3500);
-          } else {
-            setEcho(d.text);
-            window.clearTimeout(echoTimer.current);
-            echoTimer.current = window.setTimeout(() => setEcho(null), 2800);
           }
         }
       }),
     [],
   );
 
-  useEffect(
-    () => () => {
-      window.clearTimeout(captionTimer.current);
-      window.clearTimeout(echoTimer.current);
-    },
-    [],
-  );
+  useEffect(() => () => window.clearTimeout(captionTimer.current), []);
 
   const sheetOpen = card !== null || formOpen || receipt !== null || popup !== null;
   const railUp = chips !== null && phase === "live";
@@ -707,27 +651,6 @@ export function CardLayer() {
           </div>
         )}
         <div className="flex max-h-[45vh] flex-col-reverse gap-3 overflow-y-auto md:static md:max-h-none md:overflow-visible">
-          {popup?.view === "names" && (
-            <div className={POP_SLOT}>
-              <Rise k="popup-names">
-                <NamesCard />
-              </Rise>
-            </div>
-          )}
-          {popup?.view === "actions" && (
-            <div className={POP_SLOT}>
-              <Rise k={`popup-actions-${popup.checkedIn ? 1 : 0}`}>
-                <ActionsCard checkedIn={!!popup.checkedIn} />
-              </Rise>
-            </div>
-          )}
-          {popup?.view === "slots" && (
-            <div className={POP_SLOT}>
-              <Rise k="popup-slots">
-                <SlotsCard />
-              </Rise>
-            </div>
-          )}
           {popup?.view === "staff" && (
             <div className={POP_SLOT}>
               <Rise k="popup-staff">
@@ -866,11 +789,16 @@ export function CardLayer() {
           ))}
         </span>
         <style>{`@keyframes f2m-eq { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }`}</style>
+        {/* the ! suffixes matter: .display-2 sets its own clamp size from
+            outside the utility layers and quietly wins otherwise — the
+            grabli this page has hit before */}
         <p
           aria-live="polite"
           lang={caption?.lang}
-          className={`display-2 font-extrabold text-[#dfe7ee] md:text-[2.1rem] md:leading-[1.12] ${
-            sheetOpen ? "w-full truncate text-lg leading-tight md:w-auto md:overflow-visible md:whitespace-normal md:text-clip" : "text-2xl leading-tight"
+          className={`display-2 font-extrabold text-[#dfe7ee] md:text-[2.6rem]! md:leading-[1.1]! ${
+            sheetOpen
+              ? "w-full truncate text-lg! leading-tight! md:w-auto md:overflow-visible md:whitespace-normal md:text-clip"
+              : "text-[1.6rem]! leading-tight!"
           }`}
         >
           {/* the animated words are decoration; the live region reads whole lines */}
@@ -889,17 +817,14 @@ export function CardLayer() {
         </p>
       </div>
 
-      {/* the visitor's tap, echoed on the RIGHT — the other voice of the
-          conversation gets the other margin (desktop only; the phone's
-          chips already show what was pressed). Deliberately aria-hidden:
-          the button the user just activated has already told AT what was
-          picked — re-announcing their own words would be noise. */}
-      <p
-        aria-hidden
-        className="display-2 pointer-events-none absolute right-[5%] top-[11%] hidden w-[22vw] text-right text-2xl font-extrabold leading-tight text-white/35 md:block"
-      >
-        {echo && <Words key={echo} text={echo} from={-14} />}
-      </p>
+      {/* the kiosk's own touch layer: invisible buttons over the glass
+          menu lines the scene draws — hovering burns the line, tapping IS
+          the interaction. This is the product's actual surface. */}
+      {glassMenu && glassGeom && phase === "live" && (
+        <div className="pointer-events-none absolute inset-0">
+          <GlassMenu items={glassMenu} geom={glassGeom} />
+        </div>
+      )}
 
       {/* the kiosk's own status: a pill with a dot and a word — no meter,
           nothing here is being charged for */}

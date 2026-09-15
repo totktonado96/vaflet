@@ -22,10 +22,17 @@ export type CardTopic = "pricing" | "spec" | "languages" | "bundle";
 export type ChipId = "names" | "bill" | "box" | "lang" | "staff" | "real";
 export type Chip = { id: ChipId; label: string; quiet?: boolean };
 
-/** the interactive pop-ups the director can put on the counter. The
-    walk-in journey is names → actions (check in / book) → slots; staff
-    closes the loop by showing your own check-in land in the queue. */
-export type PopupView = "names" | "staff" | "actions" | "slots";
+/** the one DOM pop-up left on the counter: the staff peek. Everything the
+    visitor chooses (names, check-in, slots) happens ON THE GLASS — the
+    dot matrix draws the options and invisible buttons over the screen
+    make them tappable, like the touchscreen the product actually is. */
+export type PopupView = "staff";
+
+/** what tapping a glass menu row means */
+export type GlassIntent =
+  | { kind: "name"; id: NameId }
+  | { kind: "action"; id: "checkin" | "book" }
+  | { kind: "slot"; slot: string };
 
 /**
  * What the kiosk's own screen shows. The dot matrix that draws Ren's face
@@ -54,6 +61,16 @@ export type ReceptionDetail =
      what's already done */
   | { type: "popup"; view: PopupView | null; visitor?: string; checkedIn?: boolean }
   | { type: "screen"; slides: ScreenLine[][] | null; interval?: number }
+  /* a glass menu: which slide lines are tappable and what they mean */
+  | { type: "screen-menu"; items: { line: number; label: string; intent: GlassIntent }[] | null }
+  /* scene -> layer: where the screen (and each text line) sits in pixels */
+  | {
+      type: "screen-geom";
+      rect: { x: number; y: number; w: number; h: number };
+      bands: { a: number; b: number }[];
+    }
+  /* layer -> scene: which glass line the pointer is on */
+  | { type: "screen-hot"; line: number | null }
   /* the name trick: what was said, what was found, and by which pass */
   | { type: "trick"; said: string; found: string; tier: MatchTier }
   | { type: "trick-clear" }

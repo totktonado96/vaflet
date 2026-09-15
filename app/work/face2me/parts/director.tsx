@@ -7,6 +7,7 @@ import {
   type CardTopic,
   type Chip,
   type ChipId,
+  type GlassIntent,
   type NameId,
   type PopupView,
   type ScreenLine,
@@ -270,6 +271,7 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
       // the counter is cleared for the goodbye: the glass gives the face
       // back, pop-ups and the rail go — only the farewell (and its
       // printout) remain
+      emitReception({ type: "screen-menu", items: null });
       emitReception({ type: "screen", slides: null });
       emitReception({ type: "popup", view: null });
       emitReception({ type: "trick-clear" });
@@ -311,14 +313,34 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
     const card = (c: CardTopic | null) => emitReception({ type: "card", card: c });
     const popup = (v: PopupView | null) => emitReception({ type: "popup", view: v });
 
+    /** a menu ON the glass: the dot matrix draws the options, the layer
+        lays invisible buttons over each line. You tap the kiosk itself. */
+    const menu = (title: string, opts: { label: string; intent: GlassIntent }[]) => {
+      scr([[{ text: title, em: 0.34 }, ...opts.map((o) => ({ text: o.label }))]]);
+      emitReception({
+        type: "screen-menu",
+        items: opts.map((o, i) => ({ line: i + 1, label: o.label, intent: o.intent })),
+      });
+    };
+    const menuOff = () => emitReception({ type: "screen-menu", items: null });
+
     /** the counter is swept the instant a pick is accepted — the glass,
         the fact card and the pop-ups must never lag behind the playbill's
         highlight, even by the little pause before she answers */
     const sweep = () => {
+      menuOff();
       scr(null);
       card(null);
       emitReception({ type: "trick-clear" });
       popup(null);
+    };
+
+    /** the journey's standing menu — what you can still do at the desk */
+    const visitMenu = () => {
+      const opts: { label: string; intent: GlassIntent }[] = [];
+      if (!checkedIn) opts.push({ label: "CHECK ME IN", intent: { kind: "action", id: "checkin" } });
+      opts.push({ label: "BOOK A VISIT", intent: { kind: "action", id: "book" } });
+      menu("WHILE YOU'RE HERE", opts);
     };
 
     const topic = (id: ChipId) => {
@@ -334,7 +356,14 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
         case "names":
           play((s) => {
             s.say(again ? "Roster's warm. Go ahead." : "Say a name. Any of these — any accent.");
-            s.cue(() => popup("names"));
+            // the options land on her own glass — tap the kiosk, not a widget
+            s.cue(() =>
+              menu("SAY A NAME", [
+                { label: "MARIA LOPEZ", intent: { kind: "name", id: "maria" } },
+                { label: "MIKHAEL", intent: { kind: "name", id: "mikhael" } },
+                { label: "ZEYNEP", intent: { kind: "name", id: "zeynep" } },
+              ]),
+            );
           }, armIdle);
           break;
         case "bill":
@@ -524,6 +553,7 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
         visitor = d.id;
         checkedIn = false; // a new identity starts a fresh visit
         emitReception({ type: "trick-clear" });
+        emitReception({ type: "screen-menu", items: null });
         play((s) => {
           s.cue(() => emitReception({ type: "caption", who: "user", text: r.said }));
           s.wait(500);
@@ -544,8 +574,8 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
             namesCloserSaid = true;
             s.say("Three passes before I ever ask twice.");
           }
-          // found you — now the visit actually happens
-          s.cue(() => emitReception({ type: "popup", view: "actions", checkedIn }));
+          // found you — now the visit actually happens, on the glass
+          s.cue(visitMenu);
         }, armIdle);
       } else if (d.type === "action-pick") {
         if (phase !== "live" || activeTopic !== "names" || !visitor) return;
@@ -555,25 +585,26 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           speaking = false;
           emitReception({ type: "speaking", who: "pal", on: false });
         }
-        const r = ROSTER[visitor];
+        emitReception({ type: "screen-menu", items: null });
         if (d.id === "checkin") {
           checkedIn = true;
           play((s) => {
-            s.cue(() => emitReception({ type: "caption", who: "user", text: "Check me in" }));
-            s.wait(450);
             s.cue(() => scr([[{ text: "CHECKED" }, { text: "IN" }]]));
             s.say("Done. The back office knows you're here.");
             s.say("That landed live — not in a batch tonight.");
-            // the card re-deals with the check-in stamped done
-            s.cue(() => emitReception({ type: "popup", view: "actions", checkedIn: true }));
             s.say("Staff only shows you the other side of that.");
+            s.cue(visitMenu);
           }, armIdle);
         } else {
           play((s) => {
-            s.cue(() => emitReception({ type: "caption", who: "user", text: "Book a visit" }));
-            s.wait(450);
             s.say("Pick a slot. These are open right now.");
-            s.cue(() => emitReception({ type: "popup", view: "slots" }));
+            s.cue(() =>
+              menu("OPEN SLOTS", [
+                { label: "TODAY 4:30", intent: { kind: "slot", slot: "Today 4:30" } },
+                { label: "TOMORROW 11:00", intent: { kind: "slot", slot: "Tomorrow 11:00" } },
+                { label: "SATURDAY 2:15", intent: { kind: "slot", slot: "Saturday 2:15" } },
+              ]),
+            );
           }, armIdle);
         }
       } else if (d.type === "slot-pick") {
@@ -584,14 +615,13 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           speaking = false;
           emitReception({ type: "speaking", who: "pal", on: false });
         }
+        emitReception({ type: "screen-menu", items: null });
         const parts = d.slot.split(" ");
         play((s) => {
-          s.cue(() => emitReception({ type: "caption", who: "user", text: d.slot }));
-          s.wait(450);
           s.cue(() => scr([[{ text: parts[0].toUpperCase() }, { text: parts.slice(1).join(" "), em: 0.6 }]]));
           s.say("Booked. It's on the schedule already.");
           s.say("First-timers sign up the same way.");
-          s.cue(() => emitReception({ type: "popup", view: "actions", checkedIn }));
+          s.cue(visitMenu);
         }, maybeWrap);
       } else if (d.type === "staff-unlocked") {
         if (phase !== "live" || activeTopic !== "staff") return;
