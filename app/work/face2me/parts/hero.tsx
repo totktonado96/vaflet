@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import dynamic from "next/dynamic";
 import ArrowNE from "@/components/ArrowNE";
+import Magnetic from "@/components/Magnetic";
 import { Director } from "./director";
 import { CardLayer } from "./cards";
 
@@ -32,7 +33,7 @@ const Scene = dynamic(() => import("./hero-scene"), { ssr: false });
 const VOID_BG = "#060809";
 
 const BTN =
-  "group pointer-events-none flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white/80 opacity-0 backdrop-blur-sm transition-[opacity,border-color,color,background-color] duration-500 hover:border-white/50 hover:bg-black/45 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60";
+  "group pointer-events-none relative flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/30 text-white/80 opacity-0 backdrop-blur-sm transition-[opacity,border-color,color,background-color] duration-500 hover:border-white/50 hover:bg-black/45 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/60";
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -130,8 +131,28 @@ export function Hero() {
           </p>
         </div>
 
-        {/* the kiosk's three controls — no words, they appear once it has woken */}
+        {/* the kiosk's three controls — no words, they appear once it has
+            woken; they lean toward the hand like every other control on the
+            site, and the idle bell quietly beckons */}
+        <style>{`
+          @media (prefers-reduced-motion: no-preference) {
+            [data-hero-call][data-beckon="1"]::after {
+              content: "";
+              position: absolute;
+              inset: -2px;
+              border-radius: 9999px;
+              border: 1px solid rgba(11, 218, 81, 0.55);
+              animation: f2m-beckon 2.6s ease-out infinite;
+            }
+          }
+          @keyframes f2m-beckon {
+            0% { transform: scale(1); opacity: 0.9; }
+            70% { transform: scale(1.6); opacity: 0; }
+            100% { transform: scale(1.6); opacity: 0; }
+          }
+        `}</style>
         <div className="absolute inset-x-0 bottom-8 z-10 flex items-center justify-center gap-4">
+          <Magnetic strength={0.35}>
           <button
             ref={callRef}
             type="button"
@@ -156,6 +177,8 @@ export function Hero() {
               <path d="M26 24v1.5a3 3 0 0 1-3 3h-4" />
             </svg>
           </button>
+          </Magnetic>
+          <Magnetic strength={0.35}>
           <button
             ref={rotateRef}
             type="button"
@@ -177,6 +200,8 @@ export function Hero() {
               <path d="M25.5 4.5a12 12 0 0 1 4 6M6.5 27.5a12 12 0 0 1-4-6" />
             </svg>
           </button>
+          </Magnetic>
+          <Magnetic strength={0.35}>
           <button
             ref={fsRef}
             type="button"
@@ -197,6 +222,7 @@ export function Hero() {
               <path d="M12 5H7a2 2 0 0 0-2 2v5M20 5h5a2 2 0 0 1 2 2v5M12 27H7a2 2 0 0 1-2-2v-5M20 27h5a2 2 0 0 0 2-2v-5" />
             </svg>
           </button>
+          </Magnetic>
         </div>
 
         <Director callBtnRef={callRef} />

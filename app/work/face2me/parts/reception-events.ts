@@ -22,8 +22,10 @@ export type CardTopic = "pricing" | "spec" | "languages" | "bundle";
 export type ChipId = "names" | "bill" | "box" | "lang" | "staff" | "real";
 export type Chip = { id: ChipId; label: string; quiet?: boolean };
 
-/** the two interactive pop-ups the director can put on the counter */
-export type PopupView = "names" | "staff";
+/** the interactive pop-ups the director can put on the counter. The
+    walk-in journey is names → actions (check in / book) → slots; staff
+    closes the loop by showing your own check-in land in the queue. */
+export type PopupView = "names" | "staff" | "actions" | "slots";
 
 /**
  * What the kiosk's own screen shows. The dot matrix that draws Ren's face
@@ -47,7 +49,10 @@ export type ReceptionDetail =
   | { type: "subtitle"; text: string | null }
   | { type: "card"; card: CardTopic }
   | { type: "chips"; items: Chip[] | null }
-  | { type: "popup"; view: PopupView | null }
+  /* visitor/checkedIn ride along so the pop-ups can carry the journey's
+     state: the staff queue shows YOUR check-in, the actions card knows
+     what's already done */
+  | { type: "popup"; view: PopupView | null; visitor?: string; checkedIn?: boolean }
   | { type: "screen"; slides: ScreenLine[][] | null; interval?: number }
   /* the name trick: what was said, what was found, and by which pass */
   | { type: "trick"; said: string; found: string; tier: MatchTier }
@@ -59,6 +64,8 @@ export type ReceptionDetail =
   /* readers -> director (UI intent) */
   | { type: "chip-pick"; id: ChipId }
   | { type: "name-pick"; id: NameId }
+  | { type: "action-pick"; id: "checkin" | "book" }
+  | { type: "slot-pick"; slot: string }
   | { type: "staff-unlocked" }
   | { type: "hangup-request" }
   | { type: "call-request" } // the "ring again" button on the over panel

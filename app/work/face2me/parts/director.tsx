@@ -232,6 +232,11 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
     let activeTopic: ChipId | null = null;
     let wrapSaid = false;
     let namesCloserSaid = false;
+    // the walk-in journey: who you said you were, and what you did about it.
+    // It survives topic hops — the staff queue two chips later shows YOUR
+    // check-in landing, which is the whole pitch in one row.
+    let visitor: NameId | null = null;
+    let checkedIn = false;
 
     /** four topics in — she closes. The tour ends where a good sales
         visit ends: on the form, held out, not pushed. */
@@ -397,7 +402,13 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           play((s) => {
             s.say(again ? "Back for the queue? It's a good queue." : "That side's for your team.");
             s.cue(() => scr([[{ text: "STAFF" }, { text: "ONLY", em: 0.62 }]]));
-            s.cue(() => popup("staff"));
+            s.cue(() =>
+              emitReception({
+                type: "popup",
+                view: "staff",
+                visitor: visitor && checkedIn ? ROSTER[visitor].found : undefined,
+              }),
+            );
           }, armIdle);
           break;
         case "real":
@@ -436,6 +447,8 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
       phase = "connecting";
       nudged = false;
       activeTopic = null;
+      visitor = null;
+      checkedIn = false; // every ring is a fresh walk-in
       emitReception({ type: "phase", phase: "connecting" });
       play((s) => {
         s.wait(800); // a beat, not a load — no spinner earns its place here
@@ -460,7 +473,15 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
 
     /* -- what the visitor does -- */
     const offBus = onReception((d) => {
-      if (ending && (d.type === "chip-pick" || d.type === "name-pick" || d.type === "staff-unlocked")) return;
+      if (
+        ending &&
+        (d.type === "chip-pick" ||
+          d.type === "name-pick" ||
+          d.type === "action-pick" ||
+          d.type === "slot-pick" ||
+          d.type === "staff-unlocked")
+      )
+        return;
       if (d.type === "chip-pick") {
         if (phase !== "live") return;
         disarmIdle();
@@ -489,6 +510,8 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
           emitReception({ type: "subtitle", text: null });
         }
         const r = ROSTER[d.id];
+        visitor = d.id;
+        checkedIn = false; // a new identity starts a fresh visit
         emitReception({ type: "trick-clear" });
         play((s) => {
           s.cue(() => emitReception({ type: "caption", who: "user", text: r.said }));
@@ -510,18 +533,74 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
             namesCloserSaid = true;
             s.say("Three passes before I ever ask twice.");
           }
+          // found you — now the visit actually happens
+          s.cue(() => emitReception({ type: "popup", view: "actions", checkedIn }));
         }, armIdle);
+      } else if (d.type === "action-pick") {
+        if (phase !== "live" || activeTopic !== "names" || !visitor) return;
+        disarmIdle();
+        cut();
+        if (speaking) {
+          speaking = false;
+          emitReception({ type: "speaking", who: "pal", on: false });
+        }
+        const r = ROSTER[visitor];
+        if (d.id === "checkin") {
+          checkedIn = true;
+          play((s) => {
+            s.cue(() => emitReception({ type: "caption", who: "user", text: "Check me in" }));
+            s.wait(450);
+            s.cue(() => scr([[{ text: "CHECKED" }, { text: "IN" }]]));
+            s.say("Done. The back office knows you're here.");
+            s.say("That landed live — not in a batch tonight.");
+            // the card re-deals with the check-in stamped done
+            s.cue(() => emitReception({ type: "popup", view: "actions", checkedIn: true }));
+            s.say("Staff only shows you the other side of that.");
+          }, armIdle);
+        } else {
+          play((s) => {
+            s.cue(() => emitReception({ type: "caption", who: "user", text: "Book a visit" }));
+            s.wait(450);
+            s.say("Pick a slot. These are open right now.");
+            s.cue(() => emitReception({ type: "popup", view: "slots" }));
+          }, armIdle);
+        }
+      } else if (d.type === "slot-pick") {
+        if (phase !== "live" || activeTopic !== "names") return;
+        disarmIdle();
+        cut();
+        if (speaking) {
+          speaking = false;
+          emitReception({ type: "speaking", who: "pal", on: false });
+        }
+        const parts = d.slot.split(" ");
+        play((s) => {
+          s.cue(() => emitReception({ type: "caption", who: "user", text: d.slot }));
+          s.wait(450);
+          s.cue(() => scr([[{ text: parts[0].toUpperCase() }, { text: parts.slice(1).join(" "), em: 0.6 }]]));
+          s.say("Booked. It's on the schedule already.");
+          s.say("First-timers sign up the same way.");
+          s.cue(() => emitReception({ type: "popup", view: "actions", checkedIn }));
+        }, maybeWrap);
       } else if (d.type === "staff-unlocked") {
         if (phase !== "live" || activeTopic !== "staff") return;
         disarmIdle();
         cut();
+        const wasYou = visitor !== null && checkedIn;
         play((s) => {
           s.cue(() => scr(null)); // the badge leaves the glass — the queue took over
           s.wait(400);
           s.say("Fine — this is what staff sees.");
           s.say("Real PIN, real queue, on the real one.");
-          s.say("That top row? Live the second someone walks in.");
-          s.say("Not a batch job at midnight.");
+          if (wasYou) {
+            // the journey closes: the check-in from two chips ago is the
+            // row at the top of the queue
+            s.say("Top row look familiar? That's you.");
+            s.say("Landed the second you tapped it.");
+          } else {
+            s.say("That top row? Live the second someone walks in.");
+            s.say("Not a batch job at midnight.");
+          }
         }, maybeWrap);
       } else if (d.type === "hangup-request") {
         if (phase === "live") end("manual");

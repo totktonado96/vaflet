@@ -77,17 +77,55 @@ function Rise({ children, k }: { children: React.ReactNode; k: string }) {
   const el = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (reducedMotion() || !el.current) return;
-    const tw = gsap.fromTo(
-      el.current,
-      { y: 22, autoAlpha: 0, filter: "blur(6px)" },
-      { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.7, ease: "power3.out" },
-    );
-    return () => void tw.kill();
+    const tws = [
+      gsap.fromTo(
+        el.current,
+        { y: 22, autoAlpha: 0, filter: "blur(6px)" },
+        { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.7, ease: "power3.out" },
+      ),
+    ];
+    // the card's own rows deal themselves in a beat behind the shell
+    const rows = el.current.querySelectorAll("[data-row]");
+    if (rows.length) {
+      tws.push(
+        gsap.fromTo(
+          rows,
+          { y: 10, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.45, ease: "power2.out", stagger: 0.055, delay: 0.16 },
+        ),
+      );
+    }
+    return () => tws.forEach((t) => t.kill());
   }, [k]);
   return (
     <div ref={el} className="pointer-events-auto">
       {children}
     </div>
+  );
+}
+
+/** A spoken line arrives word by word — the same way the site's own
+    reveals breathe, not a text swap. The visible words are decoration;
+    the live region reads the whole line. */
+function Words({ text, from = 18 }: { text: string; from?: number }) {
+  const el = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (reducedMotion() || !el.current) return;
+    const tw = gsap.fromTo(
+      el.current.children,
+      { y: from, autoAlpha: 0, filter: "blur(5px)" },
+      { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out", stagger: 0.05 },
+    );
+    return () => void tw.kill();
+  }, [text, from]);
+  return (
+    <span ref={el}>
+      {text.split(" ").map((w, i) => (
+        <span key={`${i}-${w}`} className="inline-block whitespace-pre will-change-transform">
+          {w}{" "}
+        </span>
+      ))}
+    </span>
   );
 }
 
@@ -114,13 +152,17 @@ function TopicCard({ topic, onClose }: { topic: CardTopic; onClose: () => void }
       </div>
       <dl className="mt-4 flex flex-col gap-2.5">
         {d.rows.map(([k, v]) => (
-          <div key={k} className="flex items-baseline justify-between gap-4">
+          <div key={k} data-row className="flex items-baseline justify-between gap-4">
             <dt className="text-xs font-bold uppercase tracking-[0.14em] text-white/50">{k}</dt>
             <dd className="text-right text-sm font-bold">{v}</dd>
           </div>
         ))}
       </dl>
-      {d.foot && <p className="mt-4 text-xs leading-relaxed text-white/55">{d.foot}</p>}
+      {d.foot && (
+        <p data-row className="mt-4 text-xs leading-relaxed text-white/55">
+          {d.foot}
+        </p>
+      )}
     </div>
   );
 }
@@ -135,10 +177,11 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (reducedMotion() || !host.current) return;
+    // the playbill slides in from the wing it lives in
     const tw = gsap.fromTo(
       host.current.children,
-      { y: 14, autoAlpha: 0 },
-      { y: 0, autoAlpha: 1, duration: 0.55, ease: "power3.out", stagger: 0.08 },
+      { y: 10, x: 26, autoAlpha: 0, filter: "blur(4px)" },
+      { y: 0, x: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.6, ease: "power3.out", stagger: 0.09 },
     );
     return () => void tw.kill();
   }, []);
@@ -154,17 +197,26 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
             key={c.id}
             type="button"
             onClick={() => emitReception({ type: "chip-pick", id: c.id })}
-            className={`group flex shrink-0 snap-start items-center gap-2.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 py-2 text-xs font-bold backdrop-blur-sm transition-all duration-300 md:justify-end md:rounded-none md:bg-transparent md:px-0 md:py-0 md:text-[13px] md:uppercase md:tracking-[0.18em] md:backdrop-blur-none ${
+            className={`group flex shrink-0 snap-start items-center gap-2.5 whitespace-nowrap rounded-full bg-white/10 px-3.5 py-2 text-xs font-bold backdrop-blur-sm transition-all duration-300 active:text-[#0bda51] md:justify-end md:rounded-none md:bg-transparent md:px-0 md:py-0 md:text-[13px] md:uppercase md:tracking-[0.18em] md:backdrop-blur-none ${
               c.quiet
                 ? on
                   ? "text-white/80"
                   : "text-white/35 hover:text-white/70 md:mt-3"
                 : on
-                  ? "text-white md:translate-x-[-2px]"
-                  : "text-white/60 hover:text-white"
+                  ? "text-white md:translate-x-[-3px]"
+                  : "text-white/60 hover:text-white md:hover:translate-x-[-3px]"
             }`}
           >
-            {c.label}
+            <span className="relative">
+              {c.label}
+              {/* a malachite rule draws itself under the line you're on */}
+              <span
+                aria-hidden
+                className={`absolute -bottom-1 left-0 right-0 hidden h-px origin-right bg-[#0bda51] transition-transform duration-300 ease-out md:block ${
+                  on ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                }`}
+              />
+            </span>
             <span
               aria-hidden
               className="hidden size-1.5 rounded-full transition-all duration-300 md:inline-block"
@@ -183,6 +235,9 @@ function ChipsRail({ chips, active }: { chips: Chip[]; active: ChipId | null }) 
 
 /* --------------------------------------------------------- the pop-ups */
 
+const ROW_BTN =
+  "group flex w-full items-center justify-between rounded-lg bg-white/8 px-4 py-2.5 text-left text-sm font-bold text-white transition-all duration-300 hover:bg-[#0bda51] hover:text-[#04140a] active:scale-[0.98]";
+
 function NamesCard() {
   const NAMES: { id: NameId; label: string }[] = [
     { id: "maria", label: "Maria Lopez" },
@@ -192,16 +247,82 @@ function NamesCard() {
   return (
     <div className={SHELL}>
       <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Say a name</p>
-      <p className="mt-2 text-xs leading-relaxed text-white/55">Pretend one of these is yours.</p>
+      <p data-row className="mt-2 text-xs leading-relaxed text-white/55">
+        Pretend one of these is yours.
+      </p>
       <div className="mt-4 flex flex-col gap-2">
         {NAMES.map((n) => (
           <button
             key={n.id}
+            data-row
             type="button"
             onClick={() => emitReception({ type: "name-pick", id: n.id })}
-            className="group flex w-full items-center justify-between rounded-lg bg-white/8 px-4 py-2.5 text-left text-sm font-bold text-white transition-colors duration-300 hover:bg-[#0bda51] hover:text-[#04140a]"
+            className={ROW_BTN}
           >
             {n.label}
+            <span aria-hidden className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              →
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Found in the roster — now the visit actually happens: check in, book.
+    The journey is the demo; the buttons are the kiosk's own two verbs. */
+function ActionsCard({ checkedIn }: { checkedIn: boolean }) {
+  return (
+    <div className={SHELL}>
+      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">
+        While you&apos;re here
+      </p>
+      <div className="mt-4 flex flex-col gap-2">
+        <button
+          data-row
+          type="button"
+          disabled={checkedIn}
+          onClick={() => emitReception({ type: "action-pick", id: "checkin" })}
+          className={`${ROW_BTN} disabled:pointer-events-none disabled:bg-transparent disabled:text-[#0bda51] disabled:shadow-[inset_0_0_0_1px_rgba(11,218,81,0.4)]`}
+        >
+          {checkedIn ? "Checked in" : "Check me in"}
+          <span aria-hidden className={checkedIn ? "" : "opacity-0 transition-opacity duration-300 group-hover:opacity-100"}>
+            {checkedIn ? "✓" : "→"}
+          </span>
+        </button>
+        <button
+          data-row
+          type="button"
+          onClick={() => emitReception({ type: "action-pick", id: "book" })}
+          className={ROW_BTN}
+        >
+          Book a visit
+          <span aria-hidden className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            →
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Real open slots, the kiosk's way: three of them, tap one. */
+function SlotsCard() {
+  const SLOTS = ["Today 4:30", "Tomorrow 11:00", "Saturday 2:15"];
+  return (
+    <div className={SHELL}>
+      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">Open slots</p>
+      <div className="mt-4 flex flex-col gap-2">
+        {SLOTS.map((s) => (
+          <button
+            key={s}
+            data-row
+            type="button"
+            onClick={() => emitReception({ type: "slot-pick", slot: s })}
+            className={ROW_BTN}
+          >
+            {s}
             <span aria-hidden className="opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               →
             </span>
@@ -215,7 +336,7 @@ function NamesCard() {
 /** The staff panel, peeked at. A PIN pad that admits it's a prop, then the
     queue staff actually see — the top row stamped the second someone
     walks in. */
-function StaffCard() {
+function StaffCard({ visitor }: { visitor?: string }) {
   const [taps, setTaps] = useState(0);
   const [unlocked, setUnlocked] = useState(false);
   const [time, setTime] = useState("");
@@ -297,19 +418,30 @@ function StaffCard() {
         </>
       ) : (
         <div className="mt-4 flex flex-col gap-2.5">
+          {/* the loop closes: if you checked in two chips ago, the top of
+              the queue is you — the demo remembers its own visitor */}
           <div ref={rowRef} className="flex items-center justify-between gap-3 rounded-lg bg-white/8 px-3 py-2.5">
-            <p className="text-sm font-bold">R. Delgado</p>
+            <p className="whitespace-nowrap text-sm font-bold">
+              {visitor ? `${visitor.split(" ")[0][0]}. ${visitor.split(" ").slice(1).join(" ")}` : "R. Delgado"}
+            </p>
             <span
               ref={stampRef}
-              className="rounded-full border border-[#0bda51]/50 px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.16em] text-[#0bda51]"
+              className="whitespace-nowrap rounded-full border border-[#0bda51]/50 px-2.5 py-1 font-mono text-[9px] font-bold tracking-[0.16em] text-[#0bda51]"
             >
               ARRIVED · {time}
             </span>
           </div>
-          {[
-            ["M. Volkov", "waiting 4 min"],
-            ["S. Chen", "waiting 11 min"],
-          ].map(([name, status]) => (
+          {/* the rest of the queue steps aside for the real visitor */}
+          {(visitor
+            ? [
+                ["R. Delgado", "waiting 4 min"],
+                ["S. Chen", "waiting 11 min"],
+              ]
+            : [
+                ["M. Volkov", "waiting 4 min"],
+                ["S. Chen", "waiting 11 min"],
+              ]
+          ).map(([name, status]) => (
             <div key={name} className="flex items-center justify-between gap-3 rounded-lg bg-white/5 px-3 py-2.5">
               <p className="text-sm font-bold text-white/80">{name}</p>
               <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-white/45">{status}</span>
@@ -340,8 +472,9 @@ function TicketStub({ lines }: { lines: string[] }) {
     if (reducedMotion() || !el.current) return;
     const tw = gsap.fromTo(
       el.current,
-      { yPercent: -104 },
-      { yPercent: 0, duration: 0.9, ease: "power2.out" },
+      // the class keeps the resting -1.2deg; the tween adds a settle on top
+      { yPercent: -104, rotation: -3.5 },
+      { yPercent: 0, rotation: 0, duration: 0.9, ease: "power2.out" },
     );
     return () => void tw.kill();
   }, []);
@@ -457,7 +590,8 @@ export function CardLayer() {
   const [card, setCard] = useState<CardTopic | null>(null);
   const [chips, setChips] = useState<Chip[] | null>(null);
   const [activeChip, setActiveChip] = useState<ChipId | null>(null);
-  const [popup, setPopup] = useState<PopupView | null>(null);
+  const [popup, setPopup] = useState<{ view: PopupView; visitor?: string; checkedIn?: boolean } | null>(null);
+  const [talking, setTalking] = useState(false);
   const [trick, setTrick] = useState<{ found: string; tier: MatchTier } | null>(null);
   const [stub, setStub] = useState<string[] | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -480,6 +614,7 @@ export function CardLayer() {
             setChips(null);
             setActiveChip(null);
             setPopup(null);
+            setTalking(false);
             setTrick(null);
             setSubtitle(null);
             setCaption(null);
@@ -501,7 +636,9 @@ export function CardLayer() {
         } else if (d.type === "chip-pick") {
           setActiveChip(d.id);
         } else if (d.type === "popup") {
-          setPopup(d.view);
+          setPopup(d.view === null ? null : { view: d.view, visitor: d.visitor, checkedIn: d.checkedIn });
+        } else if (d.type === "speaking" && d.who === "pal") {
+          setTalking(d.on);
         } else if (d.type === "trick") {
           setTrick({ found: d.found, tier: d.tier });
         } else if (d.type === "trick-clear") {
@@ -563,17 +700,31 @@ export function CardLayer() {
           </div>
         )}
         <div className="flex max-h-[45vh] flex-col-reverse gap-3 overflow-y-auto md:static md:max-h-none md:overflow-visible">
-          {popup === "names" && (
+          {popup?.view === "names" && (
             <div className={POP_SLOT}>
               <Rise k="popup-names">
                 <NamesCard />
               </Rise>
             </div>
           )}
-          {popup === "staff" && (
+          {popup?.view === "actions" && (
+            <div className={POP_SLOT}>
+              <Rise k={`popup-actions-${popup.checkedIn ? 1 : 0}`}>
+                <ActionsCard checkedIn={!!popup.checkedIn} />
+              </Rise>
+            </div>
+          )}
+          {popup?.view === "slots" && (
+            <div className={POP_SLOT}>
+              <Rise k="popup-slots">
+                <SlotsCard />
+              </Rise>
+            </div>
+          )}
+          {popup?.view === "staff" && (
             <div className={POP_SLOT}>
               <Rise k="popup-staff">
-                <StaffCard />
+                <StaffCard visitor={popup.visitor} />
               </Rise>
             </div>
           )}
@@ -687,6 +838,27 @@ export function CardLayer() {
           sheetOpen ? "bottom-[calc(45vh+6rem)]" : railUp ? "bottom-[8.5rem]" : "bottom-24"
         } md:bottom-auto`}
       >
+        {/* she's mid-sentence: a small malachite pulse keeps time with her
+            voice — pure CSS, gone under reduced motion with everything else */}
+        <span
+          aria-hidden
+          className="flex h-3 items-end gap-[3px] transition-opacity duration-500"
+          style={{ opacity: talking ? 1 : 0 }}
+        >
+          {[0.9, 1.4, 1.1].map((d, i) => (
+            <span
+              key={i}
+              className="w-[3px] rounded-full motion-reduce:animate-none"
+              style={{
+                height: "100%",
+                background: MALACHITE,
+                transformOrigin: "bottom",
+                animation: `f2m-eq ${d}s ease-in-out ${i * 0.14}s infinite`,
+              }}
+            />
+          ))}
+        </span>
+        <style>{`@keyframes f2m-eq { 0%, 100% { transform: scaleY(0.25); } 50% { transform: scaleY(1); } }`}</style>
         <p
           aria-live="polite"
           lang={caption?.lang}
@@ -694,7 +866,9 @@ export function CardLayer() {
             sheetOpen ? "w-full truncate text-lg leading-tight md:w-auto md:overflow-visible md:whitespace-normal md:text-clip" : "text-2xl leading-tight"
           }`}
         >
-          {caption?.text ?? ""}
+          {/* the animated words are decoration; the live region reads whole lines */}
+          <span className="sr-only">{caption?.text ?? ""}</span>
+          <span aria-hidden>{caption && <Words key={caption.text} text={caption.text} />}</span>
         </p>
         {subtitle && (
           <p className="text-sm font-bold tracking-[0.08em] text-white/50 [text-shadow:0_1px_14px_rgba(0,0,0,0.8)] md:text-base">
@@ -715,29 +889,33 @@ export function CardLayer() {
         aria-hidden
         className="display-2 pointer-events-none absolute right-[5%] top-[20%] hidden w-[22vw] text-right text-2xl font-extrabold leading-tight text-white/35 md:block"
       >
-        {echo ?? ""}
+        {echo && <Words key={echo} text={echo} from={-14} />}
       </p>
 
       {/* the kiosk's own status: a pill with a dot and a word — no meter,
           nothing here is being charged for */}
       {(phase === "connecting" || phase === "live") && (
-        <div className="pointer-events-auto absolute inset-x-0 top-16 bottom-auto z-10 flex items-center justify-center gap-3 md:top-auto md:bottom-8 md:left-auto md:right-8 md:inset-x-auto">
-          <div className="flex items-center gap-2.5 rounded-full bg-black/55 px-4 py-2 text-xs font-bold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.12)] backdrop-blur-sm">
-            <span
-              aria-hidden
-              className={`size-2 rounded-full ${phase === "live" ? "bg-[#0bda51]" : "animate-pulse bg-white/50"}`}
-            />
-            <span>{phase === "live" ? "On shift" : "She heard the bell…"}</span>
-          </div>
-          {phase === "live" && (
-            <button
-              type="button"
-              onClick={() => emitReception({ type: "hangup-request" })}
-              className="rounded-full bg-black/55 px-4 py-2 text-xs font-bold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.12)] backdrop-blur-sm transition-colors hover:text-[#0bda51]"
-            >
-              End the visit
-            </button>
-          )}
+        <div className="absolute inset-x-0 top-16 bottom-auto z-10 flex items-center justify-center md:top-auto md:bottom-8 md:left-auto md:right-8 md:inset-x-auto">
+          <Rise k={`pill-${phase}`}>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 rounded-full bg-black/55 px-4 py-2 text-xs font-bold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.12)] backdrop-blur-sm">
+                <span
+                  aria-hidden
+                  className={`size-2 rounded-full ${phase === "live" ? "bg-[#0bda51]" : "animate-pulse bg-white/50"}`}
+                />
+                <span>{phase === "live" ? "On shift" : "She heard the bell…"}</span>
+              </div>
+              {phase === "live" && (
+                <button
+                  type="button"
+                  onClick={() => emitReception({ type: "hangup-request" })}
+                  className="rounded-full bg-black/55 px-4 py-2 text-xs font-bold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.12)] backdrop-blur-sm transition-all hover:text-[#0bda51] active:scale-95"
+                >
+                  End the visit
+                </button>
+              )}
+            </div>
+          </Rise>
         </div>
       )}
 

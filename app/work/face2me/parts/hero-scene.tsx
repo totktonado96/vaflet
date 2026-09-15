@@ -1206,6 +1206,14 @@ export default function HeroScene({
         const hiddenNow = btn.getAttribute("aria-hidden") === "true";
         if (hiddenNow === usable) btn.setAttribute("aria-hidden", String(!usable));
       }
+      // the idle bell beckons: a malachite ring breathes on the call button
+      // while the kiosk waits — and stops the moment a visit starts
+      if (callBtn) {
+        const beckon = ready && !liveish;
+        if ((callBtn.dataset.beckon === "1") !== beckon) {
+          callBtn.dataset.beckon = beckon ? "1" : "0";
+        }
+      }
       if (rotOn && shown < 0.9) setRotation(false);
       // walking away from the desk hangs up — once per visit, and already
       // while it is still connecting (the director expects that too)
