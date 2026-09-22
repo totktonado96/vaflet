@@ -822,7 +822,10 @@ export default function SahypaPage() {
         </Link>
       </section>
 
-      <Footer />
+      {/* the footer's rounded corners bite into ink, not into the paper the page sits on */}
+      <div style={{ backgroundColor: INK }}>
+        <Footer />
+      </div>
     </main>
   );
 }
