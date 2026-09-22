@@ -34,6 +34,35 @@ export default function Header() {
     };
   }, [open]);
 
+  /**
+   * A phone reads a case in a narrow column, and a bar that never moves lands
+   * on somebody's sentence every few screens. So on a phone it steps out of
+   * the way while the reader goes down and comes back the moment they go up;
+   * on a desktop, where the gutters are wide, it never moves.
+   */
+  const [ducked, setDucked] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        const moved = y - last;
+        if (Math.abs(moved) > 6) {
+          setDucked(y > 160 && moved > 0);
+          last = y;
+        }
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
   const trapTab = (e: React.KeyboardEvent) => {
     if (e.key !== "Tab") return;
     const nodes =
@@ -52,7 +81,11 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 mix-blend-difference">
+      <header
+        className={`fixed inset-x-0 top-0 z-50 mix-blend-difference transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] md:translate-y-0 ${
+          ducked && !open ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
         <div className="shell flex items-center justify-between py-5 text-white">
           <a
             href="/"

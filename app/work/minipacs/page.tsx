@@ -73,6 +73,13 @@ export const metadata: Metadata = {
 
 const S = (n: string) => `/photos/minipacs/${n}.jpg`;
 
+/** The two live demos and the product's own address. */
+const DOORS = [
+  { href: "https://demo.minipacs.net/login", label: "MiniPACS demo", open: "read a study" },
+  { href: "https://vendo.minipacs.net/login", label: "Vendo demo", open: "book a slot" },
+  { href: "https://minipacs.net", label: "minipacs.net", open: "bring it home" },
+];
+
 const MOVES = [
   {
     kicker: "The worklist",
@@ -138,24 +145,39 @@ const STRIP = [
 
 /** A door on the obsidian banner: ink rises from the floor of the pill and
     the label rolls away for an "open" — the archive chips' move, inverted. */
-function BannerDoor({ href, label, open }: { href: string; label: string; open: string }) {
+function BannerDoor({
+  href,
+  label,
+  open,
+  onDark = true,
+}: {
+  href: string;
+  label: string;
+  open: string;
+  /** over the obsidian banner, or under it on the page's own paper */
+  onDark?: boolean;
+}) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative isolate inline-block overflow-hidden rounded-full border-2 border-white px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] text-white"
+      className={`group relative isolate inline-block overflow-hidden rounded-full border-2 px-6 py-3 text-[11px] font-bold uppercase tracking-[0.2em] ${
+        onDark ? "border-white text-white" : "border-black text-black"
+      }`}
     >
       <span
         aria-hidden
-        className="absolute inset-0 -z-10 origin-bottom scale-y-0 bg-white transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100"
+        className={`absolute inset-0 -z-10 origin-bottom scale-y-0 transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-y-100 ${
+          onDark ? "bg-white" : "bg-black"
+        }`}
       />
       <span className="block h-[13px] overflow-hidden">
         <span className="flex flex-col transition-transform duration-[450ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-1/2">
           <span className="flex h-[13px] items-center justify-center leading-none">
             {label}
           </span>
-          <span className="flex h-[13px] items-center justify-center gap-1.5 leading-none text-black">
+          <span className={`flex h-[13px] items-center justify-center gap-1.5 leading-none ${onDark ? "text-black" : "text-white"}`}>
             {open}
             <ArrowNE className="block size-[11px]" />
           </span>
@@ -209,19 +231,23 @@ export default function MinipacsPage() {
               priority
             >
               <ReadLight />
-              <span className="absolute inset-x-0 bottom-6 z-10 flex flex-wrap justify-center gap-3 px-4 md:bottom-10">
-                <Magnetic strength={0.3}>
-                  <BannerDoor href="https://demo.minipacs.net/login" label="MiniPACS demo" open="read a study" />
-                </Magnetic>
-                <Magnetic strength={0.3}>
-                  <BannerDoor href="https://vendo.minipacs.net/login" label="Vendo demo" open="book a slot" />
-                </Magnetic>
-                <Magnetic strength={0.3}>
-                  <BannerDoor href="https://minipacs.net" label="minipacs.net" open="bring it home" />
-                </Magnetic>
+              {/* three doors laid over the mark, but only where there is room
+                  for them: on a phone they wrap into three rows and land on
+                  the wordmark, so there they stand under the frame instead */}
+              <span className="absolute inset-x-0 bottom-6 z-10 hidden flex-wrap justify-center gap-3 px-4 md:bottom-10 md:flex">
+                {DOORS.map((d) => (
+                  <Magnetic key={d.href} strength={0.3}>
+                    <BannerDoor href={d.href} label={d.label} open={d.open} />
+                  </Magnetic>
+                ))}
               </span>
             </DriftShot>
           </PointerDrift>
+          <div className="mt-5 flex flex-wrap justify-center gap-3 md:hidden">
+            {DOORS.map((d) => (
+              <BannerDoor key={d.href} href={d.href} label={d.label} open={d.open} onDark={false} />
+            ))}
+          </div>
         </div>
       </section>
 

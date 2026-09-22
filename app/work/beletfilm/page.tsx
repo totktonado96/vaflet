@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ArrowNE from "@/components/ArrowNE";
 import Footer from "@/components/Footer";
 import SplitReveal from "@/components/SplitReveal";
 import { Counters, DriftShot, Reveal } from "@/components/case/kit";
@@ -290,6 +291,15 @@ export default function BeletFilmPage() {
                 </p>
               ))}
               <p className="bf-eyebrow mt-2">{p.stack}</p>
+              <a
+                href="https://belet.tm/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex w-fit items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold tracking-[0.02em] text-white transition-transform duration-300 hover:-translate-y-0.5"
+                style={{ backgroundColor: BLUE_TEXT }}
+              >
+                belet.tm <ArrowNE />
+              </a>
             </div>
           </div>
         </Reveal>

@@ -151,6 +151,34 @@ const TILL = [
   { src: S("t-drawer"), caption: "The drawer — float, takings, movements and the shift’s close" },
 ];
 
+/** Where the line is drawn, in the product's own words. */
+const KNOWS = [
+  [
+    "No account, ever",
+    "No sign-up, no phone number, no app. A phone mints its own token, the server keeps it in a cookie it set, and it never travels in a link — a token in a query string is a credential in every proxy log.",
+  ],
+  [
+    "One restaurant’s own guests",
+    "«First seen» means here, not on the platform: a restaurant is never shown where else a guest eats. Ask for somebody else’s guest and the answer is that there is no such guest.",
+  ],
+  [
+    "Nothing reaches the till",
+    "Guest history, events and reviews stay in the cloud and never replicate to the restaurant’s computer. The machine on the floor has no question they answer.",
+  ],
+  [
+    "The funnel counts itself honestly",
+    "Menu opened, section opened, dish opened, cart opened — measured by the product itself, with no third-party script on a guest’s phone, and sent only after the screen has already drawn. The fifth step is read from the orders, so the surface being measured cannot inflate its own figure.",
+  ],
+  [
+    "A review comes from a seat",
+    "Only from a table the restaurant’s own staff closed, once per seat, within a fortnight. The restaurant may answer it or report it, and only the platform can take it down — until then it stands exactly as written.",
+  ],
+  [
+    "Nobody is named",
+    "A guest is the number their table calls them. The name in the panel is the restaurant’s own note to itself, and the guest is never shown it.",
+  ],
+];
+
 /** The decisions that let a restaurant run it without us. */
 const RUNS = [
   [
@@ -172,6 +200,18 @@ const RUNS = [
   [
     "Paper",
     "Kitchen tickets, receipts and the Z-report go to ordinary network thermal printers. A printer that is off or out of paper never fails an order, a payment or a closed shift.",
+  ],
+  [
+    "The bill, asked for from the table",
+    "Guests press «ask for the bill» on their phones. The cloud takes the tap, the restaurant’s own machine decides from its own database whether anything has changed, and prints once — a second identical request prints nothing, and a jammed printer leaves the next one free to try.",
+  ],
+  [
+    "Who owns what",
+    "There is no merge: every kind of record has one owner. The price of a dish is the cloud’s, having run out of it is the kitchen’s, and a ticket is born in the cloud when a guest scans and becomes the machine’s the moment the floor accepts it. A new kind of record does not compile until somebody has decided.",
+  ],
+  [
+    "A code that outlives us",
+    "A table’s address is derived, not stored: six characters with no 0 or O, no 1 or l, drawn once for the restaurant and never changed. Printed codes outlive deployments, so nothing on the wall has to be reprinted.",
   ],
   [
     "The public page",
@@ -391,6 +431,104 @@ export default function SahypaPage() {
           </Reveal>
         </div>
         <PhoneRail shots={WAITER} edge={EDGE_LIGHT} />
+      </section>
+
+      {/* ---- what the scan leaves behind ---------------------------------- */}
+      <section className="shell py-24 md:py-36" style={paper}>
+        <Pill>What it knows</Pill>
+        <SplitReveal className="display-2 mt-8 max-w-[16ch] leading-[1.06]">
+          A scan leaves more than an order
+        </SplitReveal>
+        <Reveal>
+          <div className="mt-14 grid gap-10 md:mt-20 md:grid-cols-3">
+            <p className={para}>
+              A restaurant has never had a way to count the people who walk in.
+              Here every phone that scans is counted — as a device, not as a
+              person, which is a distinction the panel makes in writing.
+            </p>
+            <p className={para}>
+              Some of it is service, this minute: a table whose phones are about
+              to die shows the waiter a figure, because a dead phone is a table
+              that has to be served by hand — the round taken on paper and the
+              bill carried over.
+            </p>
+            <p className={para}>
+              The rest is the restaurant’s own trade: who came back, what they
+              order every time, which sections guests open, and how far a phone
+              gets before it stops short of ordering.
+            </p>
+          </div>
+        </Reveal>
+
+        <div className="mt-16 grid gap-8 md:mt-24 md:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] md:gap-10">
+          <figure>
+            <div
+              className="relative aspect-[1170/2532] w-full overflow-hidden rounded-[1.1rem] md:rounded-[1.6rem]"
+              style={{ boxShadow: `0 30px 60px -28px rgba(19,22,28,0.4), inset 0 0 0 1px ${EDGE_LIGHT}` }}
+            >
+              <Image
+                src={S("w-battery")}
+                alt="The waiter's room: table 2 carries a 9 per cent battery chip beside its guest count"
+                fill
+                sizes="(min-width: 768px) 32vw, 100vw"
+                className="object-cover"
+              />
+            </div>
+            <figcaption className="mt-4 text-[13px] leading-relaxed opacity-75">
+              <span className="font-bold">9% at table 2.</span> It shows at twenty
+              per cent and below, takes the lowest phone at the table, and is
+              forgotten after half an hour — a healthy battery is not news, and
+              an icon on every table is an icon nobody sees.
+            </figcaption>
+          </figure>
+
+          <div className="grid gap-8 md:gap-10">
+            {[
+              {
+                src: S("p-guests"),
+                alt: "The panel's guests board: devices, new in 30 days, who came back, and rounds that came from a phone",
+                bold: "Devices, not people.",
+                note: "The board says so under its own table: a cleared browser, a private tab, a second phone or a shared one each start a new guest, and returns are undercounted. A screen that promised «regulars» would be claiming more than the row holds.",
+              },
+              {
+                src: S("p-guest"),
+                alt: "One guest's page: visits, rounds, what they spent, what they keep ordering, and every visit with its tickets",
+                bold: "What this one keeps ordering.",
+                note: "Every seating, every ticket inside it, and a private name and note the restaurant writes for itself — «Meret, table by the window». None of it leaves this restaurant.",
+              },
+            ].map((card) => (
+              <figure key={card.src}>
+                <div
+                  className="relative aspect-[16/10] w-full overflow-hidden rounded-[1rem] md:rounded-[1.25rem]"
+                  style={{ boxShadow: `0 30px 60px -28px rgba(19,22,28,0.35), inset 0 0 0 1px ${EDGE_LIGHT}` }}
+                >
+                  <Image src={card.src} alt={card.alt} fill sizes="(min-width: 768px) 60vw, 100vw" className="object-cover" />
+                </div>
+                <figcaption className="mt-4 max-w-[70ch] text-[13px] leading-relaxed opacity-75">
+                  <span className="font-bold">{card.bold}</span> {card.note}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-16 md:mt-24">
+          <p className="sh-display max-w-[20ch] text-[clamp(1.5rem,2.4vw,2.2rem)] leading-[1.1]">
+            And the part it refuses to know
+          </p>
+          <Reveal y={16} stagger={0.05}>
+            {KNOWS.map(([title, note]) => (
+              <div
+                key={title}
+                className="grid gap-2 py-6 md:grid-cols-[26%_1fr] md:gap-10"
+                style={{ borderTop: `1px solid ${LINE_LIGHT}` }}
+              >
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em]">{title}</p>
+                <p className="max-w-[64ch] text-[16px] leading-relaxed opacity-85 md:text-[17px]">{note}</p>
+              </div>
+            ))}
+          </Reveal>
+        </div>
       </section>
 
       {/* ---- the till ---------------------------------------------------- */}

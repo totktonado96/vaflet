@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import ArrowNE from "@/components/ArrowNE";
 import Footer from "@/components/Footer";
 import SplitReveal from "@/components/SplitReveal";
 import {
@@ -367,6 +368,15 @@ export default function AsartechPage() {
               <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.2em] opacity-60">
                 Medusa 2 · Next.js 15 · PostgreSQL · Redis · Playwright
               </p>
+              <a
+                href="https://asarstore.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 inline-flex w-fit items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-bold tracking-[0.02em] text-white transition-transform duration-300 hover:-translate-y-0.5"
+                style={{ backgroundColor: BLUE }}
+              >
+                asarstore.com <ArrowNE />
+              </a>
             </div>
           </div>
         </Reveal>
