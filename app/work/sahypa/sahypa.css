@@ -1,0 +1,43 @@
+/* Sections only: the site footer at the bottom of the case keeps its own voice */
+.sh-case > section {
+  font-family: var(--sh-body), -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+/* The kit sets its display type heavy and uppercase; the product's headings are
+   Unbounded at its heaviest, in sentence case, pulled tight */
+.sh-display,
+.sh-case > section :is(.display-1, .display-2, .display-3) {
+  font-family: var(--sh-display), var(--sh-body), sans-serif;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: -0.035em;
+}
+
+/* SplitText clips each line to its line box, and the tails of y and p hang
+   below it. The clip grows downward without moving the layout. */
+.sh-case > section .pre-reveal > div {
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+/* One word and an address, wide letters: sized to the name, not the kit's scale */
+.sh-case > section .sh-title {
+  font-size: clamp(2.3rem, 10.6vw, 10rem);
+  line-height: 1;
+}
+
+/* The product's label: a pill tinted with whatever colour the text is */
+.sh-pill {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  font-family: var(--sh-display), var(--sh-body), sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}

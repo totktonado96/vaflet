@@ -121,6 +121,45 @@ export const PROJECTS: Project[] = [
     // ripples — a voice leaving a face, which is the whole product
     pattern: 1,
   },
+  // sahypa.menu third and square on purpose: with eleven cases the third
+  // column holds only three cards, so the square and the portrait both go
+  // there — Mirai before Aydym for the same reason — and the other two columns
+  // take four wide frames each
+  {
+    slug: "sahypa",
+    title: "sahypa.menu",
+    desc: "A whole restaurant in one system — the guest’s table, the waiter’s phone, the till, the owner’s panel, and a server in the room that keeps the shift going when the internet drops",
+    services: "Product design · Full-stack build · Desktop app · Restaurant tech",
+    stack: "NestJS · React 19 · Tauri 2 · PostgreSQL · PGlite · PWA",
+    brief:
+      "A restaurant in Ashgabat usually runs on a zoo: a QR menu from one vendor, a till from another, orders carried to the kitchen by hand and the takings in a notebook — and all of it stops when the internet does. We built the whole restaurant as one system instead: five products on one core, and a server in the room that keeps the floor working on its own.",
+    did: [
+      "Designed and built five products on one core: the guest’s menu, the waiter’s phone, the till, the owner’s panel and the restaurant server",
+      "Put ordering on the guest’s own phone — a code on the table, no app, no sign-up, one order from every phone at it",
+      "Turned an ordinary Windows computer into the till and the restaurant’s server with one installer",
+      "Kept the floor working with the internet down: orders, the till and printing live in the room and catch the cloud up by themselves",
+      "Sent the paper where it belongs — kitchen and bar tickets with no prices, the table’s bill, receipts and a Z-report on network thermal printers",
+      "Gave the owner a panel in any browser: menu and stop list, floor and QR codes, staff and permissions, analytics, printed menus and reviews",
+      "Built all of it in four languages — Turkmen, Russian, English and Turkish — with a public directory of the places on it",
+    ],
+    outcome: [
+      "Live at sahypa.menu — the menu, the directory and the panel in the cloud, the till and the server on the restaurant’s own computer",
+      "Five products in one subscription, with sahypa.delivery next on the same core",
+      "161 places already in the public directory, each with its menu, hours and reviews",
+    ],
+    facts: [
+      { value: "5", label: "products on one system, in one subscription" },
+      { value: "4", label: "languages on every screen — Turkmen, Russian, English, Turkish" },
+      { value: "161", label: "places in the public directory" },
+    ],
+    custom: true,
+    tags: ["Restaurant tech", "Ecosystem", "Offline-first"],
+    disciplines: ["Web", "Mobile", "Design"],
+    ratio: "square",
+    photo: "/photos/sahypa/l-hero.jpg",
+    // the mark on the brand's own fire — the grid card reads as the product
+    cover: "/photos/sahypa/cover.jpg",
+  },
   {
     slug: "beletfilm",
     title: "Belet Film",
@@ -254,9 +293,6 @@ export const PROJECTS: Project[] = [
     photo: "/photos/tmcars/main.jpg",
     cover: "/photos/tmcars/cover-white.jpg",
   },
-  // MashynBazar before Aydym on purpose: with ten cases the first column takes
-  // four cards, so it gets only wide frames, and the square and the portrait
-  // go to the columns that would otherwise end first
   {
     slug: "masynbazar",
     title: "MashynBazar",
@@ -289,39 +325,6 @@ export const PROJECTS: Project[] = [
     ratio: "wide",
     photo: "/photos/masynbazar/hero.jpg",
     cover: "/photos/masynbazar/cover.jpg",
-  },
-  {
-    slug: "aydym",
-    title: "Aydym",
-    desc: "Rebrand of the largest music streaming platform in Turkmenistan — mark, colour, type and the book that holds it",
-    services: "Brand identity · Guidelines · Applications",
-    stack: "Logo system · Colour · Typography · Iconography · Pattern",
-    brief:
-      "Aydym streams music to a whole country, and it needed an identity that works at 32 pixels on a phone and on a tote bag in the street. The mark had to say music without a note in sight, and the system had to survive a dark interface, a printed flyer and a gift card.",
-    did: [
-      "Built the mark from a circle that doubles as a play button, with sound bars inside it",
-      "Set Cosmic Violet against near-black as the brand, not as a dark mode",
-      "Added three states — positive, friendly, smart — instead of decorative extras",
-      "Paired SF Pro Display with Inter on one hierarchy, display down to caption",
-      "Cut the icon set to the brand's weight and derived a pattern from the mark's own bars",
-      "Applied it end to end: app screens, social, gift cards, roll-up, flyer, cards, stationery, merch",
-    ],
-    outcome: [
-      "One identity that holds from a 32 px favicon to a printed poster",
-      "A dark-first system, so the product and the brand stopped disagreeing",
-      "A 59-page book covering logo, colour, type, icons, photography, pattern and applications",
-    ],
-    facts: [
-      { value: "59", label: "pages of guidelines" },
-      { value: "6", label: "colours, one of them leading" },
-      { value: "32", label: "px — where the mark still reads" },
-    ],
-    custom: true,
-    tags: ["Brand identity", "Streaming", "Guidelines"],
-    disciplines: ["Design"],
-    ratio: "square",
-    photo: "/photos/aydym/hero-photo.jpg",
-    cover: "/photos/aydym/cover-square.jpg",
   },
   {
     slug: "mirai",
@@ -357,6 +360,39 @@ export const PROJECTS: Project[] = [
     ratio: "portrait",
     photo: "/photos/mirai/cover-v2.jpg",
     cover: "/photos/mirai/cover-portrait.jpg",
+  },
+  {
+    slug: "aydym",
+    title: "Aydym",
+    desc: "Rebrand of the largest music streaming platform in Turkmenistan — mark, colour, type and the book that holds it",
+    services: "Brand identity · Guidelines · Applications",
+    stack: "Logo system · Colour · Typography · Iconography · Pattern",
+    brief:
+      "Aydym streams music to a whole country, and it needed an identity that works at 32 pixels on a phone and on a tote bag in the street. The mark had to say music without a note in sight, and the system had to survive a dark interface, a printed flyer and a gift card.",
+    did: [
+      "Built the mark from a circle that doubles as a play button, with sound bars inside it",
+      "Set Cosmic Violet against near-black as the brand, not as a dark mode",
+      "Added three states — positive, friendly, smart — instead of decorative extras",
+      "Paired SF Pro Display with Inter on one hierarchy, display down to caption",
+      "Cut the icon set to the brand's weight and derived a pattern from the mark's own bars",
+      "Applied it end to end: app screens, social, gift cards, roll-up, flyer, cards, stationery, merch",
+    ],
+    outcome: [
+      "One identity that holds from a 32 px favicon to a printed poster",
+      "A dark-first system, so the product and the brand stopped disagreeing",
+      "A 59-page book covering logo, colour, type, icons, photography, pattern and applications",
+    ],
+    facts: [
+      { value: "59", label: "pages of guidelines" },
+      { value: "6", label: "colours, one of them leading" },
+      { value: "32", label: "px — where the mark still reads" },
+    ],
+    custom: true,
+    tags: ["Brand identity", "Streaming", "Guidelines"],
+    disciplines: ["Design"],
+    ratio: "square",
+    photo: "/photos/aydym/hero-photo.jpg",
+    cover: "/photos/aydym/cover-square.jpg",
   },
   {
     slug: "gotrack",
