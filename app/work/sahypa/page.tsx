@@ -670,7 +670,7 @@ export default function SahypaPage() {
                     alt={`${slip.title} — ${slip.note}`}
                     fill
                     sizes="(min-width: 768px) 25vw, (min-width: 640px) 50vw, 100vw"
-                    className="object-contain p-6 md:p-10"
+                    className="object-contain p-3 md:p-5"
                   />
                 </div>
                 <figcaption className="mt-4 flex flex-wrap items-baseline gap-x-4 gap-y-1">
