@@ -3,7 +3,7 @@ import InkField from "@/components/InkField";
 import SplitReveal from "@/components/SplitReveal";
 
 // Real founders. Roles and one-liners are still ours to confirm.
-// TODO: swap the LinkedIn/Telegram placeholders for the real handles.
+// TODO: swap the LinkedIn placeholder and Baha's Telegram for the real handles.
 const FOUNDERS = [
   {
     initials: "TH",
@@ -16,7 +16,7 @@ const FOUNDERS = [
     photoPosition: "object-[50%_60%]",
     email: "tim@vaflet.com",
     linkedin: "https://www.linkedin.com/in/tim-vaflet",
-    telegram: "https://t.me/tim_vaflet",
+    telegram: "https://t.me/tr00x",
   },
   {
     initials: "BK",
