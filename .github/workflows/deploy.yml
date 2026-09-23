@@ -1,0 +1,58 @@
+# Production deploy: every push to main goes straight to Vercel.
+#
+# The Vercel project is not connected through Vercel's GitHub integration
+# (that needs a GitHub login connection on the Vercel account), so the
+# deploy runs from here with the Vercel CLI instead. The source is uploaded
+# and built on Vercel — the same path as `vercel deploy --prod` from a laptop.
+#
+# Needs one repository secret: VERCEL_TOKEN (a Vercel account token).
+# The org and project ids below are not secrets; they only say *where*.
+
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-production
+  cancel-in-progress: false
+
+env:
+  VERCEL_ORG_ID: team_3uVmZlrLgp7A1nDK94hxPshM
+  VERCEL_PROJECT_ID: prj_6DfQiDX7F2giayMT3fmi2xn5FLcr
+
+jobs:
+  deploy:
+    name: Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that the Vercel token is configured
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::error::Repository secret VERCEL_TOKEN is not set. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Deploy to production
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "### Deployed to production" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "$url" >> "$GITHUB_STEP_SUMMARY"
