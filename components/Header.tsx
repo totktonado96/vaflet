@@ -168,11 +168,11 @@ export default function Header() {
           ))}
         </nav>
         <a
-          href="mailto:cuntact@vaflet.agency"
+          href="mailto:cuntact@vaflet.com"
           tabIndex={open ? 0 : -1}
           className="text-sm font-bold uppercase tracking-[0.15em] underline underline-offset-4 hover:bg-white hover:text-black hover:no-underline"
         >
-          cuntact@vaflet.agency
+          cuntact@vaflet.com
         </a>
       </aside>
     </>

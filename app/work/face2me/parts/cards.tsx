@@ -456,8 +456,8 @@ function LeadForm({ onDone, onClose }: { onDone: (name: string) => void; onClose
       {state === "error" && (
         <p className="mt-3 text-xs leading-relaxed text-white/60">
           The desk dropped the note. Mail it instead:{" "}
-          <a href="mailto:cuntact@vaflet.agency" className="font-bold text-white underline underline-offset-2">
-            cuntact@vaflet.agency
+          <a href="mailto:cuntact@vaflet.com" className="font-bold text-white underline underline-offset-2">
+            cuntact@vaflet.com
           </a>
         </p>
       )}

@@ -92,7 +92,7 @@ export default function Footer({ compact = false }: { compact?: boolean }) {
         <div className="grid gap-14 md:grid-cols-[1fr_auto]">
           <div>
             <div className="flex flex-wrap gap-4">
-              <Pill href="mailto:cuntact@vaflet.agency">cuntact@vaflet.agency</Pill>
+              <Pill href="mailto:cuntact@vaflet.com">cuntact@vaflet.com</Pill>
             </div>
             <div className="mt-10">
               <p className="text-xs font-bold uppercase tracking-[0.2em]">
