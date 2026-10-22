@@ -82,7 +82,7 @@ export default function Face2mePage() {
             {/* ink at reduced opacity, not the muted grey — the grey misses
                 AA contrast at this size on the pale material */}
             <p className="mt-6 max-w-xl text-[15px] font-medium leading-relaxed text-[color:var(--f2m-ink)] opacity-75">
-              Built by two engineers in New York. Installed wherever your lobby is.
+              Built in New York. Installed wherever your lobby is.
             </p>
             <div className="mt-12 flex flex-wrap items-center gap-6">
               <Magnetic>

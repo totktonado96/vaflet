@@ -61,9 +61,9 @@ export default function Hero() {
 
       <div className="mt-14 flex flex-col items-start justify-between gap-10 md:flex-row md:items-end">
         <p className="max-w-md font-medium leading-relaxed">
-          Vaflet LLC is a two-founder studio in New Jersey. We design it, build it
-          and wire the AI in — and you never have to talk to an account
-          manager, because we don&apos;t have any.
+          Vaflet LLC is a digital studio in New Jersey. We design it, build it
+          and wire the AI in — one team from the first call to launch day,
+          nothing passed down the line.
         </p>
         <Magnetic>
           <a

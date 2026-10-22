@@ -105,7 +105,7 @@ export const PROJECTS: Project[] = [
     outcome: [
       "One monthly bill carries the hardware, the software, the integration and the install — there is no per-minute meter anywhere",
       "Month to month, no annual contract: the day it stops earning its place, it goes back",
-      "Built by two engineers in New York — the same two who install it",
+      "Built in New York by the team that installs it",
     ],
     facts: [
       { value: "3", label: "languages — English, Spanish, Russian — followed mid-sentence" },

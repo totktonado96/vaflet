@@ -451,7 +451,7 @@ export function Director({ callBtnRef }: { callBtnRef: RefObject<HTMLButtonEleme
               s.cue(() => scr([[{ text: "AI." }]]));
               s.say("Yes — real AI, really on shift.");
               s.cue(() => scr([[{ text: "NYC" }]]));
-              s.say("Two engineers built me — in New York.");
+              s.say("I was built in New York.");
               s.say("I take the shifts nobody wants.");
               s.cue(() => scr([[{ text: "24/7" }]]));
               s.say("Six a.m. Holidays. Every hour there is.");

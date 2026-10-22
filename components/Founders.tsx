@@ -8,8 +8,8 @@ const FOUNDERS = [
   {
     initials: "TH",
     name: "Tim Hunt",
-    role: "Co-founder — Engineer & AI Alchemist",
-    line: "Builds the whole thing himself, then argues with his AI about who did it better.",
+    role: "Co-founder — Engineering & AI",
+    line: "Sets the bar for every build, then argues with an AI about who cleared it.",
     whisper: "Talks to computers.",
     type: 1 as const,
     photo: "/photos/tim.jpg",
@@ -60,7 +60,7 @@ export default function Founders() {
   return (
     <section id="founders" tabIndex={-1} className="shell pb-28 md:pb-40">
       <SplitReveal className="display-2 mb-12 font-extrabold uppercase leading-[1.0] md:mb-16">
-        Two founders, zero managers
+        Led by the founders
       </SplitReveal>
       <div className="grid gap-10 md:grid-cols-2">
         {FOUNDERS.map((f) => (

@@ -13,7 +13,7 @@ const schibsted = Schibsted_Grotesk({
 
 const TITLE = "Vaflet LLC — Design. Code. AI. End-to-end.";
 const DESCRIPTION =
-  "Vaflet LLC is a two-founder digital studio in New Jersey. Websites, mobile apps, AI agents and automation — designed, built and shipped by the same people you talk to.";
+  "Vaflet LLC is a digital studio in New Jersey. Websites, mobile apps, AI agents and automation — designed, built and shipped end-to-end under one roof.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
