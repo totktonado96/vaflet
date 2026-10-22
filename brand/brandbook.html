@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vaflet Brandbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;700;800&display=swap">
+<style>
+  /* Layout: a stack of sheets, one idea per sheet; each prints as one A4 landscape page. */
+  :root {
+    --ink: #000;
+    --paper: #fff;
+    --mute: #5c5c5c;
+    --rule: #000;
+    --font: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  }
+  @page { size: A4 landscape; margin: 0; }
+  * { box-sizing: border-box; }
+  html { background: #e9e9e9; }
+  body { margin: 0; font-family: var(--font); color: var(--ink); font-size: 15px; line-height: 1.5; }
+  .sheet {
+    background: var(--paper); width: min(1188px, 100%); margin: 24px auto; aspect-ratio: 297 / 210;
+    padding: 56px 64px; display: grid; grid-template-rows: auto 1fr auto; gap: 28px; position: relative; overflow: hidden;
+  }
+  .sheet.ink { background: var(--ink); color: var(--paper); }
+  .head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid currentColor; padding-bottom: 14px; }
+  .head h2 { margin: 0; font-size: 34px; font-weight: 800; text-transform: uppercase; letter-spacing: -.02em; line-height: 1; }
+  .label, .head span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .2em; }
+  .foot { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .2em; }
+  p { margin: 0; max-width: 62ch; }
+  .mute { color: var(--mute); }
+  .ink .mute { color: #b5b5b5; }
+  .cols { display: grid; gap: 40px; align-content: center; }
+  .c2 { grid-template-columns: 1.3fr 1fr; }
+  .c3 { grid-template-columns: repeat(3, 1fr); }
+  .tile { border: 2px solid var(--ink); border-radius: 18px; padding: 24px; display: grid; gap: 14px; align-content: start; }
+  .tile.dark { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .tile .art { display: grid; place-items: center; min-height: 140px; overflow: hidden; }
+  .tile img { max-width: 100%; display: block; }
+  .tile b { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: -.01em; }
+  .tile code, .files code { font: 500 12px/1.4 ui-monospace, Menlo, monospace; }
+  ul.rules { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+  ul.rules li { border-top: 2px solid currentColor; padding-top: 10px; display: grid; grid-template-columns: 2.2rem 1fr; }
+  ul.rules li::before { content: attr(data-k); font-weight: 800; }
+  .swatch { aspect-ratio: 1.4; border-radius: 18px; border: 2px solid var(--ink); display: flex; flex-direction: column; justify-content: flex-end; padding: 22px; gap: 4px; }
+  .swatch strong { font-size: 30px; font-weight: 800; text-transform: uppercase; letter-spacing: -.02em; line-height: 1; }
+  .specimen { font-size: 92px; font-weight: 800; text-transform: uppercase; letter-spacing: -.02em; line-height: .92; }
+  .hatch { height: 160px; border-radius: 18px; border: 2px solid var(--ink);
+    background: repeating-linear-gradient(135deg, var(--ink) 0 6px, transparent 6px 12px); }
+  .files { columns: 2; column-gap: 40px; font-size: 13px; }
+  .files div { break-inside: avoid; padding: 6px 0; border-top: 1px solid #0003; display: flex; justify-content: space-between; gap: 12px; }
+  .cover-logo { width: 78%; justify-self: center; align-self: center; }
+  .clear { position: relative; justify-self: center; align-self: center; width: 70%; padding: 6.5%; outline: 2px dashed var(--ink); outline-offset: 0; }
+  .clear::after { content: "x"; position: absolute; top: 0; left: 0; width: 6.5%; aspect-ratio: 1; display: grid; place-items: center; font-weight: 800; font-size: 12px; background: repeating-linear-gradient(135deg, #0002 0 2px, transparent 2px 6px); }
+  .dont { position: relative; }
+  .dont::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top right, transparent calc(50% - 1.5px), #000 calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px)); pointer-events: none; }
+  .light { width: 100%; max-width: 420px; justify-self: center; }
+  @media print { html { background: none; } .sheet { margin: 0; width: 297mm; height: 210mm; aspect-ratio: auto; break-after: page; } }
+  @media screen and (max-width: 900px) {
+    .sheet { aspect-ratio: auto; padding: 32px 20px; }
+    .c2, .c3 { grid-template-columns: 1fr; }
+    .files { columns: 1; }
+    .specimen { font-size: 56px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 1. cover -->
+<section class="sheet">
+  <div class="head"><span>Vaflet · Brand book</span><span>v1 · October 2026</span></div>
+  <img class="cover-logo" src="svg/vaflet-logo-black.svg" alt="Vaflet logo: an engraved sphere and the word VAFLET casting a hatched shadow">
+  <div class="foot"><span>Design. Code. AI. End-to-end.</span><span>vaflet.com</span></div>
+</section>
+
+<!-- 2. the idea -->
+<section class="sheet ink">
+  <div class="head"><h2>One light</h2><span>The idea</span></div>
+  <div class="cols c2">
+    <div style="display:grid;gap:18px;align-content:center">
+      <p style="font-size:22px;line-height:1.35;font-weight:500">The logo is two objects on a sheet of paper, lit by the same lamp. The sphere is drawn only with engraving lines. The word casts a block shadow, hatched like an etching.</p>
+      <p class="mute">Black ink, white paper, and the light between them. Everything else in the identity comes from that: hatching instead of grey, stripes instead of gradients, and shadows that always fall the same way.</p>
+    </div>
+    <img class="light" src="svg/vaflet-mark-white.svg" alt="">
+  </div>
+  <div class="foot"><span>01</span><span>Vaflet brand book</span></div>
+</section>
+
+<!-- 3. logo versions -->
+<section class="sheet">
+  <div class="head"><h2>Logo versions</h2><span>Pick by size and medium</span></div>
+  <div class="cols c3">
+    <div class="tile"><div class="art"><img src="svg/vaflet-logo-black.svg" alt=""></div><b>Primary</b><p class="mute">Site header, presentations, social. On screen it is animated: the light drifts and follows the pointer. Use from 160 px wide.</p><code>vaflet-logo-*.svg · animated/</code></div>
+    <div class="tile"><div class="art"><img src="svg/vaflet-logo-doc-black.svg" alt=""></div><b>Document</b><p class="mute">Letterheads, invoices, contracts, PDFs, email signatures. A short, fine shadow that survives print and small sizes.</p><code>vaflet-logo-doc-*.svg</code></div>
+    <div class="tile"><div class="art"><img src="svg/vaflet-logo-flat-black.svg" alt=""></div><b>Flat</b><p class="mute">One colour, no shadow: stamps, embroidery, engraving, fax-grade print, anything under 100 px wide.</p><code>vaflet-logo-flat-*.svg</code></div>
+  </div>
+  <div class="foot"><span>02</span><span>Vaflet brand book</span></div>
+</section>
+
+<!-- 4. mark, avatar, favicon -->
+<section class="sheet">
+  <div class="head"><h2>Mark, avatar, favicon</h2><span>The sphere on its own</span></div>
+  <div class="cols c3">
+    <div class="tile"><div class="art"><img src="svg/vaflet-mark-black.svg" alt="" style="width:150px"></div><b>Mark</b><p class="mute">The sphere with its ground shadow. Use where the name is already present: slides, merch, a corner of a page.</p><code>vaflet-mark-*.svg</code></div>
+    <div class="tile"><div class="art"><img src="png/vaflet-avatar-black.png" alt="" style="width:150px;border-radius:50%"></div><b>Avatar</b><p class="mute">Telegram, LinkedIn, GitHub, Slack. Centred sphere, no shadow, black or white square. Platforms crop it to a circle; it is built for that.</p><code>vaflet-avatar-*.svg / .png</code></div>
+    <div class="tile"><div class="art" style="gap:16px;grid-auto-flow:column;align-items:end"><img src="favicon/favicon-48.png" alt="" style="width:48px"><img src="favicon/favicon-32.png" alt="" style="width:32px"><img src="favicon/favicon-16.png" alt="" style="width:16px"></div><b>Favicon</b><p class="mute">Engraving lines turn to grey under 32 px, so the favicon redraws the sphere with four bands that thicken away from the light.</p><code>favicon/ · app/icon.svg</code></div>
+  </div>
+  <div class="foot"><span>03</span><span>Vaflet brand book</span></div>
+</section>
+
+<!-- 5. construction and clear space -->
+<section class="sheet">
+  <div class="head"><h2>Construction</h2><span>Proportions and clear space</span></div>
+  <div class="cols c2">
+    <div class="clear"><img src="svg/vaflet-logo-black.svg" alt="" style="width:100%;display:block"></div>
+    <ul class="rules">
+      <li data-k="48">The mark box is 48 units. The word is 36 units tall including its shadow and sits centred on the mark.</li>
+      <li data-k="8">The gap between mark and word is 8 units. Do not tighten or widen it.</li>
+      <li data-k="x">Clear space on every side equals the gap between the sphere and the word, x. Nothing enters it.</li>
+      <li data-k="↘">Shadows fall down and to the right at rest (54° below the horizon). Every shadow in a layout falls the same way.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>04</span><span>Vaflet brand book</span></div>
+</section>
+
+<!-- 6. colour -->
+<section class="sheet">
+  <div class="head"><h2>Colour</h2><span>One bit</span></div>
+  <div class="cols c2" style="grid-template-columns:1fr 1fr">
+    <div class="swatch" style="background:#000;color:#fff"><strong>Ink</strong><span>#000000 · RGB 0 0 0 · CMYK 0 0 0 100</span></div>
+    <div class="swatch"><strong>Paper</strong><span>#FFFFFF · RGB 255 255 255 · CMYK 0 0 0 0</span></div>
+  </div>
+  <div class="foot"><span>05 · No greys, no accents. Tone comes from hatching and stripes, never from a lighter ink.</span><span>Vaflet brand book</span></div>
+</section>
+
+<!-- 7. type -->
+<section class="sheet">
+  <div class="head"><h2>Type</h2><span>Schibsted Grotesk, one family</span></div>
+  <div class="cols" style="gap:28px">
+    <div class="specimen">We build<br>end-to-end</div>
+    <div class="cols c3" style="gap:28px">
+      <div><span class="label">Display · 800</span><p class="mute">Uppercase, tracking −0.02 em, leading 0.95. Headlines only.</p></div>
+      <div><span class="label">Body · 400 / 500</span><p class="mute">Sentence case, leading 1.5, about 65 characters a line.</p></div>
+      <div><span class="label">Labels · 700</span><p class="mute">Uppercase, tracking +0.2 em, 11–12 px. Eyebrows, buttons, navigation.</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>06 · Free on Google Fonts. The logo word is outlined, so it never needs the font installed.</span><span>Vaflet brand book</span></div>
+</section>
+
+<!-- 8. texture and motion -->
+<section class="sheet ink">
+  <div class="head"><h2>Hatch and motion</h2><span>How it moves</span></div>
+  <div class="cols c2">
+    <ul class="rules">
+      <li data-k="/">Hatching runs at 45°, rising to the right. The stripe equals the gap.</li>
+      <li data-k="∿">Large surfaces use the ink-field patterns from the site: flowing zebra stripes, ripples, topographic lines. Always pure black and white, never blurred.</li>
+      <li data-k="↻">The logo's light drifts about ±30° on an 18-second swing. On hover it follows the pointer, then eases back.</li>
+      <li data-k="■">Respect reduced motion: the logo then rests at the default light.</li>
+    </ul>
+    <div class="hatch" style="--ink:#fff;border-color:#fff;height:100%;min-height:220px"></div>
+  </div>
+  <div class="foot"><span>07</span><span>Vaflet brand book</span></div>
+</section>
+
+<!-- 9. don'ts -->
+<section class="sheet">
+  <div class="head"><h2>Don't</h2><span>The usual ways it breaks</span></div>
+  <div class="cols c3">
+    <div class="tile"><div class="art dont"><img src="svg/vaflet-logo-black.svg" alt="" style="filter:invert(27%) sepia(90%) saturate(3000%) hue-rotate(340deg)"></div><b>Recolour it</b><p class="mute">Ink and paper only.</p></div>
+    <div class="tile"><div class="art dont"><img src="svg/vaflet-logo-black.svg" alt="" style="transform:scaleX(1.35)"></div><b>Stretch or rotate it</b><p class="mute">Scale proportionally, keep it level.</p></div>
+    <div class="tile"><div class="art dont" style="display:flex;align-items:center;gap:6px;justify-content:center"><img src="svg/vaflet-logo-black.svg" alt="" style="width:70%"><span style="font-weight:800;font-size:20px">LLC</span></div><b>Add LLC</b><p class="mute">The legal name lives in legal text, never in the logo.</p></div>
+    <div class="tile"><div class="art dont"><img src="svg/vaflet-logo-black.svg" alt="" style="width:60%"></div><b>Primary under 160 px</b><p class="mute">Switch to the document or flat version.</p></div>
+    <div class="tile"><div class="art dont" style="display:flex;gap:10px;align-items:center;justify-content:center"><img src="svg/vaflet-mark-black.svg" alt="" style="width:60px;transform:scaleX(-1)"><img src="svg/vaflet-word-black.svg" alt="" style="width:60%"></div><b>Split the light</b><p class="mute">Sphere and word always share one light direction.</p></div>
+    <div class="tile"><div class="art dont" style="background:repeating-linear-gradient(90deg,#000 0 8px,#fff 8px 16px);border-radius:10px"><img src="svg/vaflet-logo-black.svg" alt=""></div><b>Lose it in a pattern</b><p class="mute">Over stripes or photos, set it on a solid paper or ink panel.</p></div>
+  </div>
+  <div class="foot"><span>08</span><span>Vaflet brand book</span></div>
+</section>
+
+<!-- 10. voice -->
+<section class="sheet">
+  <div class="head"><h2>Voice</h2><span>How we sound</span></div>
+  <div class="cols c2">
+    <div style="display:grid;gap:18px;align-content:center">
+      <p style="font-size:22px;line-height:1.35;font-weight:500">Plain, confident, a little dry. We say what we build and what happens next, then we stop.</p>
+      <p class="mute">The founders lead every project. We never state a headcount and never describe ourselves by size. The client decides how big we are from the work.</p>
+    </div>
+    <ul class="rules">
+      <li data-k="✓">"A founder on the first call and a founder at launch."</li>
+      <li data-k="✓">"We read every word and answer the same day."</li>
+      <li data-k="✗">"A two-person studio", "just the two of us", "no account managers because we don't have any".</li>
+      <li data-k="✗">"Vaflet LLC" in headlines. It belongs in the footer and contracts.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>09</span><span>Vaflet brand book</span></div>
+</section>
+
+<!-- 11. files -->
+<section class="sheet">
+  <div class="head"><h2>Files</h2><span>Everything is in /brand</span></div>
+  <div class="files">
+    <div><span>Primary logo, vector</span><code>svg/vaflet-logo-black|white.svg</code></div>
+    <div><span>Document logo, vector</span><code>svg/vaflet-logo-doc-*.svg</code></div>
+    <div><span>Flat logo, vector</span><code>svg/vaflet-logo-flat-*.svg</code></div>
+    <div><span>Mark only</span><code>svg/vaflet-mark-*.svg</code></div>
+    <div><span>Word only (+ document)</span><code>svg/vaflet-word-*.svg</code></div>
+    <div><span>Avatars, 1024 px</span><code>png/vaflet-avatar-*.png</code></div>
+    <div><span>Transparent PNGs</span><code>png/*-transparent.png</code></div>
+    <div><span>On paper / on ink</span><code>png/*-on-white|black.png</code></div>
+    <div><span>Favicon, all sizes</span><code>favicon/</code></div>
+    <div><span>Animated, live</span><code>animated/vaflet-logo-animated.html</code></div>
+    <div><span>Animated, video</span><code>animated/*.mp4</code></div>
+    <div><span>Animated, GIF</span><code>animated/*.gif</code></div>
+  </div>
+  <div class="foot"><span>10 · SVGs use masks: open them in a browser or Illustrator. For Figma, use the PNGs.</span><span>Vaflet brand book</span></div>
+</section>
+
+</body>
+</html>
