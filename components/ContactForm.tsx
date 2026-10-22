@@ -5,6 +5,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Magnetic from "@/components/Magnetic";
+import { MAIL_TO } from "@/lib/site";
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -20,7 +21,6 @@ const INTERESTS = [
 
 const BUDGETS = ["< 10k", "10–25k", "25–50k", "50–100k", "> 100k", "No idea yet"];
 
-const MAIL_TO = "cuntact@vaflet.agency";
 
 /**
  * Toggleable pill. Same mechanic as the archive filters: the ink rises from the
@@ -125,7 +125,10 @@ export default function ContactForm() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [sent, setSent] = useState(false);
+  const [company, setCompany] = useState(""); // honeypot
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
 
   const toggle = (tag: string) =>
     setInterests((prev) =>
@@ -155,8 +158,9 @@ export default function ContactForm() {
     { scope: root },
   );
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (status === "sending") return;
     const next: Record<string, string> = {};
     if (!name.trim()) next.name = "We need something to call you";
     if (!/^\S+@\S+\.\S+$/.test(email)) next.email = "That email looks off";
@@ -164,44 +168,40 @@ export default function ContactForm() {
     setErrors(next);
     if (Object.keys(next).length) return;
 
-    const body = [
-      `Name: ${name}`,
-      `Email: ${email}`,
-      `Interested in: ${interests.length ? interests.join(", ") : "—"}`,
-      `Budget: ${budget ?? "—"}`,
-      "",
-      "Project:",
-      message,
-    ].join("\n");
-
-    window.location.href = `mailto:${MAIL_TO}?subject=${encodeURIComponent(
-      `Project inquiry — ${name}`,
-    )}&body=${encodeURIComponent(body)}`;
-    setSent(true);
+    // straight into our inbox from the server — the visitor's mail app stays shut
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, message, interests, budget, company }),
+      });
+      setStatus(res.ok ? "sent" : "error");
+    } catch {
+      setStatus("error");
+    }
   };
 
-  if (sent) {
+  if (status === "sent") {
     return (
-      <div ref={root} className="mt-16 md:mt-24">
+      <div ref={root} role="status">
         <p className="text-[clamp(2rem,5vw,4rem)] font-extrabold uppercase leading-[1.05] tracking-[-0.02em]">
-          Thank you!
+          Got it, {name.trim().split(/\s+/)[0]}.
         </p>
         <p className="mt-6 max-w-md text-lg font-light leading-relaxed">
-          Your mail app should be open with everything filled in — hit send and
-          we&apos;ll come back to you the same day. Nothing happened?{" "}
-          <a
-            href={`mailto:${MAIL_TO}`}
-            className="font-bold underline underline-offset-4 hover:bg-black hover:text-white hover:no-underline"
-          >
-            Write to us directly.
-          </a>
+          Your brief is in our inbox. We&apos;ll answer today, at{" "}
+          <span className="font-bold">{email}</span> — keep an eye on spam
+          the first time.
         </p>
         <button
           type="button"
-          onClick={() => setSent(false)}
+          onClick={() => {
+            setMessage("");
+            setStatus("idle");
+          }}
           className="mt-10 rounded-full border-2 border-black px-7 py-3.5 text-base font-bold transition-colors duration-200 hover:bg-black hover:text-white"
         >
-          Back to the form
+          Send another
         </button>
       </div>
     );
@@ -209,7 +209,18 @@ export default function ContactForm() {
 
   return (
     <div ref={root}>
-      <form onSubmit={submit} noValidate className="mt-16 md:mt-24">
+      <form onSubmit={submit} noValidate>
+        {/* hidden from people; bots fill every field they find */}
+        <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
+          <label htmlFor="company">Company</label>
+          <input
+            id="company"
+            tabIndex={-1}
+            autoComplete="off"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+          />
+        </div>
         <fieldset data-reveal>
           <legend
             data-reveal-item
@@ -279,7 +290,9 @@ export default function ContactForm() {
             <button
               type="submit"
               data-reveal-item
-              className="group/send relative inline-flex items-center overflow-hidden rounded-full border-2 border-black px-10 py-6 md:px-14 md:py-7"
+              disabled={status === "sending"}
+              aria-busy={status === "sending"}
+              className="group/send relative inline-flex items-center overflow-hidden rounded-full border-2 border-black px-10 py-6 disabled:cursor-wait md:px-14 md:py-7"
             >
               <span
                 aria-hidden
@@ -289,31 +302,41 @@ export default function ContactForm() {
                   magnetic wrapper applies a transform. */}
               <span className="relative block overflow-hidden text-lg font-extrabold uppercase leading-none tracking-[0.15em] md:text-xl">
                 <span className="block text-black transition-transform duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/send:-translate-y-[130%]">
-                  Send request
+                  {status === "sending" ? "Sending…" : "Send request"}
                 </span>
                 <span
                   aria-hidden
                   className="absolute inset-0 block translate-y-[130%] text-white transition-transform duration-[700ms] ease-[cubic-bezier(0.22,1,0.36,1)] group-hover/send:translate-y-0"
                 >
-                  Send request
+                  {status === "sending" ? "Sending…" : "Send request"}
                 </span>
               </span>
             </button>
           </Magnetic>
 
-          <p
-            data-reveal-item
-            className="mt-8 max-w-md text-[15px] font-light leading-relaxed"
-          >
-            Hitting send opens your mail app with everything filled in. Prefer
-            to write yourself?{" "}
-            <a
-              href={`mailto:${MAIL_TO}`}
-              className="font-bold underline underline-offset-4 hover:bg-black hover:text-white hover:no-underline"
+          {status === "error" ? (
+            <p
+              role="alert"
+              className="mt-8 max-w-md text-[15px] font-bold leading-relaxed"
             >
-              {MAIL_TO}
-            </a>
-          </p>
+              That didn&apos;t go through on our side. Try again in a minute,
+              or write to us at{" "}
+              <a
+                href={`mailto:${MAIL_TO}`}
+                className="underline underline-offset-4 hover:bg-black hover:text-white hover:no-underline"
+              >
+                {MAIL_TO}
+              </a>{" "}
+              — your answers are still here.
+            </p>
+          ) : (
+            <p
+              data-reveal-item
+              className="mt-8 max-w-md text-[15px] font-light leading-relaxed"
+            >
+              It lands straight in our inbox — nothing opens on your side.
+            </p>
+          )}
         </div>
       </form>
     </div>
