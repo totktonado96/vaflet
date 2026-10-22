@@ -140,8 +140,9 @@ export default function Founders() {
         ))}
       </div>
       <p className="mt-14 max-w-md text-[15px] font-medium leading-relaxed">
-        That&apos;s the whole org chart, by the way. The one answering your
-        messages is the one building your product.
+        Every project gets a founder on the first call and a founder at
+        launch — and a team in between that treats your product like
+        it&apos;s their own.
       </p>
     </section>
   );
