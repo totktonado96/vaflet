@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import LogoMark from "@/components/LogoMark";
+import LogoWord from "@/components/LogoWord";
 
 const LINKS: Array<[string, string]> = [
   ["Work", "#work"],
@@ -89,10 +91,11 @@ export default function Header() {
         <div className="shell flex items-center justify-between py-5 text-white">
           <a
             href="/"
-            className="text-xl font-extrabold uppercase tracking-[-0.02em]"
-            aria-label="Vaflet LLC — home"
+            className="flex items-center gap-2"
+            aria-label="Vaflet — home"
           >
-            Vaflet&nbsp;LLC
+            <LogoMark className="size-10 md:size-12" />
+            <LogoWord className="h-7 md:h-9" />
           </a>
           <nav className="hidden items-center gap-8 md:flex">
             {LINKS.map(([label, hash]) => (
